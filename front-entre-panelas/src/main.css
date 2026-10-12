@@ -1,0 +1,23 @@
+/* Merriweather, Playfair Display, Nunito e Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+:root {
+  --verde: #72bca5;
+  --verde-escuro: #52A388;
+  --bege: #f4ddb4;
+  --amarelo: #f1ae2b;
+  --vermelho: #bc0b27;
+  --marrom: #4a2512;
+  --vinho: #6B1E2E;
+  --cinza-claro: #fdfbf7;
+  --azul:#6aaafa;
+  --roxo-claro: #6366f1;
+  --cinza: #8c7b73;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", sans-serif;
+}
