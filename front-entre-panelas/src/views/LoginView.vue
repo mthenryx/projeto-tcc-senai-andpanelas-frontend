@@ -1,7 +1,6 @@
 <template>
   <div class="corpo">
-    <!-- Banner Esquerdo -->
-    <BannerEsquerdo></BannerEsquerdo>
+    <BannerEsquerdo :tipo="1" />
 
     <div class="login-container">
       <div class="login-card">
@@ -42,9 +41,7 @@
             </div>
           </div>
 
-          <div class="forgot-password">
-            <a href="#">Esqueci a senha</a>
-          </div>
+          <router-link to="/recuperar-senha" class="forgot-password">Esqueci a senha</router-link>
 
           <button type="submit" class="btn-submit">
             Entrar
@@ -174,9 +171,6 @@ function handleLogin() {
 .forgot-password {
   margin-bottom: 1.25rem;
   text-align: left;
-}
-
-.forgot-password a {
   color: var(--verde, #72bca5);
   font-size: 0.8rem;
   text-decoration: none;

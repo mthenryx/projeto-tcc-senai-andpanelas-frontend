@@ -1,7 +1,8 @@
 <template>
     <div class="banner">
     <div class="overlay"></div>
-    <img src="/left-pane.png" alt="Uma pessoa cozinhando" class="fundo" />
+  
+    <img :src="imagemFundo" alt="Imagem de fundo do banner" class="fundo" id="leftBanner"/>
 
     <section class="banner-content">
         <img src="/Logo_Panelas_em_branco.png" alt="Logo do Entre Panelas" class="logo" />
@@ -40,7 +41,23 @@
     </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { computed } from 'vue'
+
+const props = defineProps({
+  tipo: {
+    type: Number,
+    default: 1 
+  }
+})
+
+const imagemFundo = computed(() => {
+  if (props.tipo === 2) {
+    return '../../public/left-pane-woman.png'
+  }
+  return '../../public/left-pane.png'
+})
+</script>
 
 <style scoped>
 .banner {

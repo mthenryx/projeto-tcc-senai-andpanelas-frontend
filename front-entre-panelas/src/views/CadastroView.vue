@@ -1,6 +1,6 @@
 <template>
   <div class="corpo">
-    <BannerEsquerdo></BannerEsquerdo>
+    <BannerEsquerdo :tipo="2" />
     
     <div class="container-formulario">
       <div class="formulario-wrapper">
