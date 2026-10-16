@@ -1,44 +1,44 @@
 <template>
-    <div class="banner">
+  <div class="banner">
     <div class="overlay"></div>
-  
-    <img :src="imagemFundo" alt="Imagem de fundo do banner" class="fundo" id="leftBanner"/>
+
+    <img :src="imagemFundo" alt="Imagem de fundo do banner" class="fundo" id="leftBanner" />
 
     <section class="banner-content">
-        <img src="/Logo_Panelas_em_branco.png" alt="Logo do Entre Panelas" class="logo" />
+      <img src="/Logo_Panelas_em_branco.png" alt="Logo do Entre Panelas" class="logo" />
 
-        <div class="text">
+      <div class="text">
         <h1>Conecte-se pela <span class="amarelo">cozinha.</span></h1>
         <p>
-            Descubra, crie e compartilhe receitas com pessoas que também amam cozinhar.<br />
-            Uma rede social feita de sabor e afeto.
+          Descubra, crie e compartilhe receitas com pessoas que também amam cozinhar.<br />
+          Uma rede social feita de sabor e afeto.
         </p>
 
         <hr class="linha-divisoria" />
 
         <div class="dados">
-            <div class="dado-item">
+          <div class="dado-item">
             <h3>10k+</h3>
             <span>RECEITAS</span>
-            </div>
+          </div>
 
-            <div class="linha-vertical"></div>
+          <div class="linha-vertical"></div>
 
-            <div class="dado-item">
+          <div class="dado-item">
             <h3>45k+</h3>
             <span>COZINHEIROS</span>
-            </div>
+          </div>
 
-            <div class="linha-vertical"></div>
+          <div class="linha-vertical"></div>
 
-            <div class="dado-item">
+          <div class="dado-item">
             <h3>300+</h3>
             <span>COMUNIDADES</span>
-            </div>
+          </div>
         </div>
-        </div>
+      </div>
     </section>
-    </div>
+  </div>
 </template>
 
 <script setup>
@@ -47,7 +47,7 @@ import { computed } from 'vue'
 const props = defineProps({
   tipo: {
     type: Number,
-    default: 1 
+    default: 1
   }
 })
 

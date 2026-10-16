@@ -1,7 +1,7 @@
 <template>
   <div class="corpo">
     <BannerEsquerdo :tipo="2" />
-    
+
     <div class="container-formulario">
       <div class="formulario-wrapper">
         <div class="cabecalho">
@@ -10,14 +10,14 @@
         </div>
 
         <form @submit.prevent="handleSubmit">
-          <!-- Foto de perfil interativa -->
+
           <div class="campo-grupo">
             <label class="label-titulo">Foto de perfil</label>
             <div class="upload-container" @click="dispararInputFoto">
               <div class="avatar-placeholder" :class="{ 'tem-foto': form.fotoPerfilUrl }">
                 <img v-if="form.fotoPerfilUrl" :src="form.fotoPerfilUrl" alt="Foto de perfil" class="avatar-preview" />
                 <img v-else src="/camera_icon.png" alt="Câmera" class="icone-camera-img" />
-                
+
                 <div class="botao-adicionar">+</div>
               </div>
               <div class="upload-info">
@@ -27,118 +27,72 @@
                 <span class="link-carregar">{{ form.fotoPerfilUrl ? 'Trocar foto' : 'Carregar foto' }}</span>
               </div>
             </div>
-            <!-- Input oculto para selecionar o arquivo -->
-            <input 
-              type="file" 
-              ref="inputFotoRef" 
-              @change="handleFileChange" 
-              accept="image/png, image/jpeg, image/jpg" 
-              style="display: none;" 
-            />
+
+            <input type="file" ref="inputFotoRef" @change="handleFileChange" accept="image/png, image/jpeg, image/jpg"
+              style="display: none;" />
           </div>
 
-          <!-- Nome completo -->
           <div class="campo-grupo">
             <label>Nome completo</label>
-            <input 
-              type="text" 
-              placeholder="Seu nome e sobrenome" 
-              v-model="form.nomeCompleto" 
-              maxlength="150"
-              required 
-            />
+            <input type="text" placeholder="Seu nome e sobrenome" v-model="form.nomeCompleto" maxlength="150"
+              required />
           </div>
 
-          <!-- Nome de usuário -->
           <div class="campo-grupo">
             <label>Nome de usuário</label>
-            <input 
-              type="text" 
-              placeholder="@seusuario" 
-              v-model="form.nomeUsuario" 
-              maxlength="20"
-              required 
-            />
+            <input type="text" placeholder="@seusuario" v-model="form.nomeUsuario" maxlength="20" required />
           </div>
 
-          <!-- E-mail -->
           <div class="campo-grupo">
             <label>E-mail</label>
-            <input 
-              type="email" 
-              placeholder="seu@email.com" 
-              v-model="form.email" 
-              maxlength="256"
-              required 
-            />
+            <input type="email" placeholder="seu@email.com" v-model="form.email" maxlength="256" required />
           </div>
 
-          <!-- Data de nascimento com ícone personalizado e interativo -->
           <div class="campo-grupo">
             <label>Data de nascimento</label>
             <div class="input-icone-wrapper" @click="abrirCalendario">
-              <input 
-                type="date" 
-                ref="inputDataRef"
-                placeholder="mm/dd/yyyy" 
-                v-model="form.dataNascimento" 
-                :max="dataMaximaPermitida"
-                required 
-                class="input-com-icone" 
-              />
+              <input type="date" ref="inputDataRef" placeholder="mm/dd/yyyy" v-model="form.dataNascimento"
+                :max="dataMaximaPermitida" required class="input-com-icone" />
               <img src="/calendario_icon.png" alt="Calendário" class="icone-input-direito" />
             </div>
           </div>
 
-          <!-- Senha -->
           <div class="campo-grupo">
             <label>Senha</label>
             <div class="input-senha-wrapper">
-              <input 
-                :type="mostrarSenha ? 'text' : 'password'" 
-                placeholder="********" 
-                v-model="form.senha" 
-                maxlength="15"
-                required 
-              />
+              <input :type="mostrarSenha ? 'text' : 'password'" placeholder="********" v-model="form.senha"
+                maxlength="15" required />
               <button type="button" class="btn-mostrar" @click="mostrarSenha = !mostrarSenha">
                 {{ mostrarSenha ? 'Ocultar' : 'Mostrar' }}
               </button>
             </div>
           </div>
 
-          <!-- Confirmar senha -->
           <div class="campo-grupo">
             <label>Confirmar senha</label>
             <div class="input-senha-wrapper">
-              <input 
-                :type="mostrarConfirmarSenha ? 'text' : 'password'" 
-                placeholder="********" 
-                v-model="form.confirmarSenha" 
-                maxlength="15"
-                required 
-              />
+              <input :type="mostrarConfirmarSenha ? 'text' : 'password'" placeholder="********"
+                v-model="form.confirmarSenha" maxlength="15" required />
               <button type="button" class="btn-mostrar" @click="mostrarConfirmarSenha = !mostrarConfirmarSenha">
                 {{ mostrarConfirmarSenha ? 'Ocultar' : 'Mostrar' }}
               </button>
             </div>
           </div>
 
-          <!-- Termos e Condições -->
           <div class="campo-termos">
             <input type="checkbox" id="termos" v-model="form.aceitaTermos" required />
             <label for="termos">
-              Li e concordo com os 
-              <a href="https://github.com/mthenryx/projeto-tcc-senai-4tech-andpanelas" target="_blank" rel="noopener noreferrer">Termos de Uso</a> 
-              e a 
-              <a href="https://github.com/mthenryx/projeto-tcc-senai-4tech-andpanelas" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>.
+              Li e concordo com os
+              <a href="https://github.com/mthenryx/projeto-tcc-senai-4tech-andpanelas" target="_blank"
+                rel="noopener noreferrer">Termos de Uso</a>
+              e a
+              <a href="https://github.com/mthenryx/projeto-tcc-senai-4tech-andpanelas" target="_blank"
+                rel="noopener noreferrer">Política de Privacidade</a>.
             </label>
           </div>
 
-          <!-- Botão Criar Conta -->
           <button type="submit" class="btn-criar">Criar conta</button>
 
-          <!-- Link para login -->
           <div class="rodape-login">
             <span>Já tem uma conta? </span>
             <router-link to="/" class="link-entrar">Entrar</router-link>
@@ -160,7 +114,7 @@ const mostrarSenha = ref(false)
 const mostrarConfirmarSenha = ref(false)
 const inputFotoRef = ref(null)
 const inputDataRef = ref(null)
-const carregandoFoto = ref(false) 
+const carregandoFoto = ref(false)
 
 const fotoPreview = ref('')
 
@@ -201,9 +155,9 @@ const handleFileChange = async (event) => {
 
   const formData = new FormData()
   formData.append('file', file)
-  formData.append('upload_preset', uploadPreset) 
+  formData.append('upload_preset', uploadPreset)
 
-  carregandoFoto.value = true 
+  carregandoFoto.value = true
 
   try {
     const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
@@ -214,8 +168,8 @@ const handleFileChange = async (event) => {
     const data = await response.json()
 
     if (data.secure_url) {
-      form.fotoPerfilUrl = data.secure_url 
-      fotoPreview.value = data.secure_url 
+      form.fotoPerfilUrl = data.secure_url
+      fotoPreview.value = data.secure_url
       console.log('Foto enviada com sucesso! URL:', form.fotoPerfilUrl)
     } else {
       throw new Error('Falha ao gerar URL no Cloudinary.')
@@ -353,7 +307,7 @@ const handleSubmit = () => {
   align-items: center;
   position: relative;
   flex-shrink: 0;
-  overflow: visible; 
+  overflow: visible;
 }
 
 .avatar-placeholder.tem-foto {
@@ -396,7 +350,7 @@ const handleSubmit = () => {
   justify-content: center;
   align-items: center;
   border: 2px solid white;
-  z-index: 10; 
+  z-index: 10;
 }
 
 .upload-info {
@@ -446,7 +400,7 @@ const handleSubmit = () => {
   right: 12px;
   width: 18px;
   height: 18px;
-  pointer-events: none; 
+  pointer-events: none;
   opacity: 0.7;
 }
 

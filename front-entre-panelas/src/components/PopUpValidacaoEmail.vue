@@ -1,9 +1,10 @@
 <template>
   <div class="popup-card">
-    
+
     <!-- O botão de voltar interno só aparece se a prop for verdadeira -->
     <button v-if="mostrarBotaoVoltar" class="btn-voltar" @click="$emit('voltar')" aria-label="Voltar">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="19" y1="12" x2="5" y2="12"></line>
         <polyline points="12 19 5 12 12 5"></polyline>
       </svg>
@@ -16,7 +17,8 @@
 
     <h2>Código enviado!</h2>
     <p class="descricao">
-      Enviamos um código de 6 dígitos para <span class="email-usuario">{{ email }}</span>. Insira-o abaixo para continuar:
+      Enviamos um código de 6 dígitos para <span class="email-usuario">{{ email }}</span>. Insira-o abaixo para
+      continuar:
     </p>
 
     <div class="codigo-inputs">
@@ -30,8 +32,10 @@
 
     <!-- Botão de Verificar que avança para a próxima etapa -->
     <button class="btn-verificar" @click="$emit('avancar')">
-      Verificar código 
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 6px;">
+      Verificar código
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+        style="margin-left: 6px;">
         <line x1="5" y1="12" x2="19" y2="12"></line>
         <polyline points="12 5 19 12 12 19"></polyline>
       </svg>
@@ -40,7 +44,7 @@
     <div class="popup-rodape">
       <span class="texto-nao-recebeu">Não recebeu?</span>
       <a href="#" @click.prevent="reenviarCodigo" class="link-reenviar" :class="{ 'desativado': tempoRestante > 0 }">
-        Reenviar código 
+        Reenviar código
         <span class="tempo" v-if="tempoRestante > 0">({{ formatarTempo }})</span>
       </a>
     </div>
@@ -55,7 +59,6 @@ defineProps({
     type: String,
     default: 'seu@email.com'
   },
-  // Nova prop para controlar a visibilidade do botão de voltar (padrão é true)
   mostrarBotaoVoltar: {
     type: Boolean,
     default: true
@@ -99,9 +102,7 @@ onUnmounted(() => {
 })
 </script>
 
-<!-- Mantém os estilos do pop-up intactos -->
 <style scoped>
-/* (mantenha o teu CSS do pop-up aqui exatamente como estava) */
 .popup-card {
   background-color: var(--cinza-claro);
   width: 100%;

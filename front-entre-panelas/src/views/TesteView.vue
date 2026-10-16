@@ -1,10 +1,17 @@
 <template>
-  <div style="padding: 20px;">
-    <h1>Área de Testes</h1>
-    <popUp></popUp>
+  <div class="corpo">
+    <BarraNavegacao></BarraNavegacao>
+    <HeaderAplicacao></HeaderAplicacao>
   </div>
 </template>
 
 <script setup>
-import popUp from '../components/PopUpValidacaoEmail.vue'
+import BarraNavegacao from '@/components/BarraNavegacao.vue'
+import HeaderAplicacao from '@/components/HeaderAplicacao.vue'
 </script>
+
+<style scoped>
+.corpo {
+  display: flex;
+}
+</style>

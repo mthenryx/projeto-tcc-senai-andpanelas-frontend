@@ -10,32 +10,15 @@
         <form @submit.prevent="handleLogin" class="login-form">
           <div class="input-group">
             <label for="email">E-mail</label>
-            <input
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="seu@email.com"
-              maxlength="256"
-              required
-            />
+            <input id="email" v-model="email" type="email" placeholder="seu@email.com" maxlength="256" required />
           </div>
 
           <div class="input-group">
             <label for="password">Senha</label>
             <div class="password-wrapper">
-              <input
-                id="password"
-                v-model="password"
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="••••••••"
-                maxlength="15"
-                required
-              />
-              <button
-                type="button"
-                class="toggle-password"
-                @click="showPassword = !showPassword"
-              >
+              <input id="password" v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••"
+                maxlength="15" required />
+              <button type="button" class="toggle-password" @click="showPassword = !showPassword">
                 {{ showPassword ? 'Ocultar' : 'Mostrar' }}
               </button>
             </div>

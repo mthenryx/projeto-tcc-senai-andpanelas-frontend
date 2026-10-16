@@ -3,9 +3,10 @@
 
     <header class="topo-cabecalho">
       <div class="nav-esquerda">
-    
+
         <button class="btn-voltar" @click="voltarEtapa" aria-label="Voltar">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
           </svg>
@@ -36,7 +37,7 @@
     </header>
 
     <main class="conteudo-principal" id="conteudo-principal">
-      
+
       <div class="card-recuperacao" v-if="etapaAtual === 1">
         <div class="badge-recuperacao">
           <span>Recuperação de Acesso</span>
@@ -63,7 +64,9 @@
 
           <button type="submit" class="btn-enviar">
             Enviar código
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 6px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+              style="margin-left: 6px;">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
@@ -76,17 +79,12 @@
         </div>
       </div>
 
-      <PopUpValidacaoEmail 
-        v-else-if="etapaAtual === 2" 
-        :email="email" 
-        :mostrarBotaoVoltar="false"
-        @voltar="etapaAtual = 1"
-        @avancar="etapaAtual = 3" 
-      />
+      <PopUpValidacaoEmail v-else-if="etapaAtual === 2" :email="email" :mostrarBotaoVoltar="false"
+        @voltar="etapaAtual = 1" @avancar="etapaAtual = 3" />
 
       <div class="card-recuperacao" v-else-if="etapaAtual === 3">
         <h1>Crie uma nova senha!</h1>
-        
+
         <form @submit.prevent="salvarNovaSenha" class="form-nova-senha">
           <div class="campo-grupo">
             <label>Nova Senha</label>
@@ -113,11 +111,14 @@
     <footer class="rodape-pagina">
       <span class="copyright">© 2026 Panelas. Todos os direitos reservados.</span>
       <div class="links-rodape">
-        <a href="https://github.com/mthenryx/projeto-tcc-senai-4tech-andpanelas" target="_blank" rel="noopener noreferrer">Termos de Uso</a>
+        <a href="https://github.com/mthenryx/projeto-tcc-senai-4tech-andpanelas" target="_blank"
+          rel="noopener noreferrer">Termos de Uso</a>
         <span class="separador">•</span>
-        <a href="https://github.com/mthenryx/projeto-tcc-senai-4tech-andpanelas" target="_blank" rel="noopener noreferrer">Privacidade</a>
+        <a href="https://github.com/mthenryx/projeto-tcc-senai-4tech-andpanelas" target="_blank"
+          rel="noopener noreferrer">Privacidade</a>
         <span class="separador">•</span>
-        <a href="https://github.com/mthenryx/projeto-tcc-senai-4tech-andpanelas" target="_blank" rel="noopener noreferrer">Central de Ajuda</a>
+        <a href="https://github.com/mthenryx/projeto-tcc-senai-4tech-andpanelas" target="_blank"
+          rel="noopener noreferrer">Central de Ajuda</a>
       </div>
     </footer>
   </div>
@@ -136,14 +137,14 @@ const etapaAtual = ref(1)
 
 const enviarCodigo = () => {
   if (!email.value) return
-  etapaAtual.value = 2 
+  etapaAtual.value = 2
 }
 
 const voltarEtapa = () => {
   if (etapaAtual.value > 1) {
-    etapaAtual.value-- 
+    etapaAtual.value--
   } else {
-    router.push('/') 
+    router.push('/')
   }
 }
 
@@ -152,7 +153,7 @@ const salvarNovaSenha = () => {
     alert('As senhas não coincidem!')
     return
   }
-  
+
 }
 </script>
 
@@ -348,7 +349,8 @@ const salvarNovaSenha = () => {
   font-family: 'Inter', sans-serif;
 }
 
-.input-wrapper, .input-wrapper-email{
+.input-wrapper,
+.input-wrapper-email {
   position: relative;
   display: flex;
   align-items: center;
