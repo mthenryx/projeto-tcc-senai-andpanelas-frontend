@@ -37,25 +37,25 @@ const itensMenu = [
     {
         id: 'inicio',
         nome: 'Início',
-        rota: '/inicio',
+        rota: '/home',
         iconeUrl: '../../public/iconPaginas/home_icon_cinza.png'
     },
     {
         id: 'buscar-receitas',
         nome: 'Buscar Receitas',
-        rota: '/buscar-receitas',
+        rota: '/buscar-receita',
         iconeUrl: '../../public/iconPaginas/lupa_icon_cinza.png'
     },
     {
         id: 'comunidades',
         nome: 'Comunidades',
-        rota: '/comunidades',
+        rota: '/comunidade',
         iconeUrl: '../../public/iconPaginas/comunidade_icon_cinza.png'
     },
     {
         id: 'minha-geladeira',
         nome: 'Minha Geladeira',
-        rota: '/minha-geladeira',
+        rota: '/geladeira',
         iconeUrl: '../../public/iconPaginas/geladeira_icon_cinza.png'
     },
     {
@@ -67,13 +67,13 @@ const itensMenu = [
     {
         id: 'lista-compras',
         nome: 'Lista de Compras',
-        rota: '/lista-de-compras',
+        rota: '/lista-compra',
         iconeUrl: '../../public/iconPaginas/lista_icon_cinza.png'
     },
     {
         id: 'meu-perfil',
         nome: 'Meu Perfil',
-        rota: '/meu-perfil',
+        rota: '/perfil',
         iconeUrl: '../../public/iconPaginas/perfil_icon_cinza.png'
     }
 ]
@@ -81,6 +81,10 @@ const itensMenu = [
 
 <style scoped>
 .menu-lateral {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
     min-width: 200px;
     height: 100vh;
     display: flex;
@@ -88,6 +92,7 @@ const itensMenu = [
     background-color: #ffffff;
     border-right: 1px solid var(--bege);
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 .cabecalho-menu {

@@ -1,11 +1,11 @@
 <template>
     <header class="cabecalho-principal">
         <div class="acoes-direita">
-            <RouterLink to="/" class="botao-acao icone-busca" aria-label="Buscar">
-                <img src="../../public/Symbol.png" alt="Lupa">
+            <RouterLink to="/buscar-receita" class="botao-acao icone-busca" aria-label="Buscar">
+                <img src="../../public/iconPaginas/lupa_icon_cinza.png" alt="Lupa">
             </RouterLink>
             
-            <RouterLink to="/" class="botao-acao avatar-perfil" aria-label="Meu Perfil"">
+            <RouterLink to="/perfil" class="botao-acao avatar-perfil" aria-label="Meu Perfil"">
                 <span>{{ sigla }}</span>
             </RouterLink>
         </div>
@@ -54,6 +54,7 @@ const sigla = ref("MH")
 .icone-busca img {
     width: 18px;
     height: 18px;
+    filter: brightness(0) saturate(100%) invert(77%) sepia(19%) saturate(550%) hue-rotate(93deg) brightness(91%) contrast(86%);
 }
 
 .avatar-perfil {
