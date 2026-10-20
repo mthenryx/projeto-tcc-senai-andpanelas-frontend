@@ -210,7 +210,7 @@ const handleSubmit = () => {
   flex: 1;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   background-color: var(--cinza-claro);
   overflow-y: auto;
   padding: 50px 20px;
