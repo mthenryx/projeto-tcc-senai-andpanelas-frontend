@@ -78,7 +78,7 @@ const router = createRouter({
       component: PerfilView
     },
     {
-      path: '/receita',
+      path: '/receita/:id',
       name: 'receita',
       component: ReceitaView
     },

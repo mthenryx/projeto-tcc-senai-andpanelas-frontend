@@ -51,6 +51,8 @@
                             :authorIniciais="destaqueParaVoce.authorIniciais"
                             :dificuldade="destaqueParaVoce.dificuldade"
                             :badgeTexto="destaqueParaVoce.badgeTexto"
+                            @click="abrirDetalhes(receitaAtual)"
+                            style="cursor: pointer;"
                         />
                         
                         <div class="section-title-wrapper">
@@ -68,6 +70,7 @@
                                 :tempo="receita.tempo"
                                 :porcoes="receita.porcoes"
                                 :dificuldade="receita.dificuldade"
+                                @click="abrirDetalhes(receita)"
                             />
                         </div>
 
@@ -87,6 +90,8 @@
                             :dificuldade="receita.dificuldade"
                             v-model:salvo="receita.salvo" 
                             @toggle-save="tratarSalvarReceita" 
+                            @click="abrirDetalhes(receitaAtual)"
+                            style="cursor: pointer;"
                         />
                     </div>
 
@@ -107,6 +112,8 @@
                             :dificuldade="receita.dificuldade"
                             v-model:salvo="receita.salvo" 
                             @toggle-save="tratarSalvarReceita" 
+                            @click="abrirDetalhes(receitaAtual)"
+                            style="cursor: pointer;"
                         />
                     </div>
 
@@ -126,6 +133,8 @@
                                     :tempo="receita.tempo"
                                     :porcoes="receita.porcoes"
                                     :dificuldade="receita.dificuldade"
+                                    @click="abrirDetalhes(receitaAtual)"
+                                    style="cursor: pointer;"
                                 />
                             </div>
                         </div>
@@ -136,7 +145,7 @@
                             :ouro="receitaOuro"
                             :prata="receitaPrata"
                             :bronze="receitaBronze"
-                            @ver-receita="navegarParaReceita"
+                            @ver-receita="() => abrirDetalhes(receitaAtual)" 
                         />
                     </div>
 
@@ -155,6 +164,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
 import HeaderAplicacao from '@/components/HeaderAplicacao.vue';
 import UserCarousel from '@/components/UserCarousel.vue';
@@ -164,6 +174,88 @@ import RecipeCardMini from '@/components/RecipeCardMini.vue';
 import RecipeBannerCard from '@/components/RecipeBannerCard.vue';
 import RecipePodiumRanking from '@/components/RecipePodiumRanking.vue';
 import ReportModal from '@/components/ReportModal.vue';
+
+const router = useRouter();
+
+const usuarioLogado = ref({
+    id: 101,
+    nome: 'Ana Costa',
+    username: 'anacosta',
+    iniciais: 'AC'
+});
+
+const receitaAtual = ref({
+    id: 1,
+    titulo: 'Frango ao Limão Siciliano',
+    descricao: 'Uma receita deliciosa e perfumada de frango marinado em suco de limão siciliano com ervas frescas. Pronto em menos de 1 hora!',
+    categoria: 'Almoço',
+    imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
+    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    tempo: '40min',
+    dificuldade: 'Fácil',
+    custo: 'Moderado',
+    porcoes: '4 porções',
+    autorId: 202,
+    autorNome: 'Ana Costa',
+    autorUsername: 'anacosta',
+    authorIniciais: 'AC',
+    seguindo: true,
+    curtido: true,
+    curtidas: 342,
+    salvo: false,
+    tags: ['Frango', 'Limão', 'Rápido', 'Saudável'],
+    ingredientes: [
+        { nome: 'Filé de frango', quantidade: '600g' },
+        { nome: 'Limão siciliano', quantidade: '2 unidades' },
+        { nome: 'Alho', quantidade: '4 dentes' },
+        { nome: 'Azeite extra virgem', quantidade: '2 col. de sopa' },
+        { nome: 'Tomilho fresco', quantidade: '2 ramos' },
+        { nome: 'Sal e pimenta-do-reino', quantidade: 'a gosto' },
+        { nome: 'Manteiga', quantidade: '2 col. de sopa' }
+    ],
+    passos: [
+        'Aqueça uma frigideira em fogo alto. Sele os filés por 4 minutos cada lado.',
+        'Adicione a manteiga, o tomilho e o suco de limão restante. Regue os filés por 2 minutos.',
+        'Sirva com o molho da frigideira por cima e rodelas de limão.'
+    ]
+});
+
+const listaComentarios = ref([
+    {
+        id: 1,
+        autorId: 301,
+        nome: 'Mariana Lima',
+        username: 'marilima',
+        iniciais: 'ML',
+        texto: 'Fiz essa receita ontem e ficou incrível! O frango ficou super suculento 🤌',
+        tempo: 'ontem'
+    },
+    {
+        id: 2,
+        autorId: 302,
+        nome: 'Carlos Eduardo',
+        username: 'cadu.cozinha',
+        iniciais: 'CE',
+        texto: 'Perfeito! Substituí o azeite por óleo de coco e ficou ainda mais saboroso. Recomendo!',
+        tempo: '2h'
+    },
+    {
+        id: 3,
+        autorId: 101,
+        nome: 'Ana Costa',
+        username: 'anacosta',
+        iniciais: 'AC',
+        texto: 'Qual o tempo máximo de marinada? Estava com pressa e deixei só 10 minutos...',
+        tempo: '10m'
+    }
+]);
+
+const abrirDetalhes = (idReceita) => {
+    router.push({
+        name: 'receita',
+        params: { id: idReceita }
+    });
+};
 
 const isReportOpen = ref(false);
 const tipoDenuncia = ref('usuario');

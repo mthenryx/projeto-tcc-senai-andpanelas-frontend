@@ -1,5 +1,5 @@
 <template>
-    <div class="recipe-card-mini">
+    <div class="recipe-card-mini" @click="$emit('click')">
         <div class="recipe-image-container" :style="{ backgroundImage: `url(${imagemUrl})` }">
             <span class="difficulty-badge" :class="dificuldadeClass">
                 {{ dificuldade }}
@@ -45,6 +45,8 @@ const props = defineProps({
     porcoes: { type: String, required: true },
     dificuldade: { type: String, required: true }
 });
+
+defineEmits(['click']);
 
 const dificuldadeClass = computed(() => {
     const diff = props.dificuldade.toLowerCase().trim();
