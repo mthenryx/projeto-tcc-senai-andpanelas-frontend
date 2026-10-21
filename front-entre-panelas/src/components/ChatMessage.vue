@@ -3,8 +3,17 @@
         <div v-if="remetente === 'chefinho'" class="avatar-container">
             <img src="/icon chefinho.png" alt="Chefinho IA" class="avatar-img" />
         </div>
-        <div class="message-bubble" :class="remetente">
-            <div v-if="remetente === 'chefinho'" class="message-content" v-html="textoFormatado"></div>
+
+        <div class="message-bubble" :class="[remetente, { 'is-typing': digitando }]">
+
+            <div v-if="digitando" class="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div v-else-if="remetente === 'chefinho'" class="message-content" v-html="textoFormatado"></div>
+
             <div v-else class="message-content">
                 {{ texto }}
             </div>
@@ -18,15 +27,19 @@ import { computed } from 'vue';
 const props = defineProps({
     texto: {
         type: String,
-        required: true
+        default: ''
     },
     remetente: {
         type: String,
         default: 'chefinho',
         validator: (value) => ['chefinho', 'user'].includes(value)
+    },
+
+    digitando: {
+        type: Boolean,
+        default: false
     }
 });
-
 
 const textoFormatado = computed(() => {
     if (!props.texto) return '';
@@ -66,8 +79,8 @@ const textoFormatado = computed(() => {
 }
 
 .avatar-img {
-    width: 30px;
-    height: 30px;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
 }
 
@@ -93,6 +106,45 @@ const textoFormatado = computed(() => {
     color: #ffffff;
     border-radius: 20px 20px 0px 20px;
     font-weight: 500;
+}
+
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+}
+
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background-color: #52ab8b;
+    border-radius: 50%;
+    display: inline-block;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+        opacity: 0.4;
+    }
+
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .message-content :deep(ul) {
