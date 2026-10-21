@@ -12,7 +12,7 @@
 
                     <RouterLink to="/chefinho" class="fast-navegation">
                         <img src="../../public/iconPaginas/chefe_icon_cinza.png" alt="Icon do chefinho">
-                        <span>Chefinho</span>
+                        <span>Chefia</span>
                     </RouterLink>
 
                     <RouterLink to="/lista-compra" class="fast-navegation">
@@ -39,41 +39,106 @@
                 </div>
 
                 <div class="container">
-                    <!-- <RecipeCard v-for="receita in listaDeReceitas" :key="receita.id" :id="receita.id"
-                        :imagemUrl="receita.imagemUrl" :titulo="receita.titulo" :tempo="receita.tempo"
-                        :porcoes="receita.porcoes" :custo="receita.custo" :curtidas="receita.curtidas"
-                        :comentarios="receita.comentarios" :autorNome="receita.autorNome"
-                        :authorIniciais="receita.authorIniciais" :dificuldade="receita.dificuldade"
-                        v-model:salvo="receita.salvo" @toggle-save="tratarSalvarReceita" />
-                    
-                    <RecipeCardMini 
-                        :id="1"
-                        imagemUrl="https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
-                        titulo="Frango ao Limão Siciliano"
-                        tempo="40min"
-                        porcoes="4 porções"
-                        dificuldade="Fácil"
-                    />
+                    <div v-if="abaAtiva === 'para-voce'" class="tab-pane">
+                        <RecipeBannerCard 
+                            :id="destaqueParaVoce.id"
+                            :imagemUrl="destaqueParaVoce.imagemUrl"
+                            :titulo="destaqueParaVoce.titulo"
+                            :tempo="destaqueParaVoce.tempo"
+                            :porcoes="destaqueParaVoce.porcoes"
+                            :custo="destaqueParaVoce.custo"
+                            :autorNome="destaqueParaVoce.autorNome"
+                            :authorIniciais="destaqueParaVoce.authorIniciais"
+                            :dificuldade="destaqueParaVoce.dificuldade"
+                            :badgeTexto="destaqueParaVoce.badgeTexto"
+                        />
+                        
+                        <div class="section-title-wrapper">
+                            <h3 class="section-title">Rápidas e Gostosas</h3>
+                            <span class="see-all">Ver todas</span>
+                        </div>
 
-                    <RecipeBannerCard 
-                        :id="1"
-                        imagemUrl="https://images.unsplash.com/photo-1544025162-d76694265947"
-                        titulo="Feijoá Completa Tradicional"
-                        tempo="180min"
-                        porcoes="6 porções"
-                        custo="Alto"
-                        autorNome="Carlos Ferreira"
-                        authorIniciais="CF"
-                        dificuldade="Difícil"
-                        badgeTexto="Receita do Dia"
-                    /> -->
+                        <div class="grid-mini">
+                            <RecipeCardMini 
+                                v-for="receita in receitasMini"
+                                :key="receita.id"
+                                :id="receita.id"
+                                :imagemUrl="receita.imagemUrl"
+                                :titulo="receita.titulo"
+                                :tempo="receita.tempo"
+                                :porcoes="receita.porcoes"
+                                :dificuldade="receita.dificuldade"
+                            />
+                        </div>
 
-                    <!-- <RecipePodiumRanking 
-                        :ouro="receitaOuro"
-                        :prata="receitaPrata"
-                        :bronze="receitaBronze"
-                        @ver-receita="navegarParaReceita"
-                    /> -->
+                        <RecipeCard 
+                            v-for="receita in listaDeReceitas" 
+                            :key="receita.id" 
+                            :id="receita.id"
+                            :imagemUrl="receita.imagemUrl" 
+                            :titulo="receita.titulo" 
+                            :tempo="receita.tempo"
+                            :porcoes="receita.porcoes" 
+                            :custo="receita.custo" 
+                            :curtidas="receita.curtidas"
+                            :comentarios="receita.comentarios" 
+                            :autorNome="receita.autorNome"
+                            :authorIniciais="receita.authorIniciais" 
+                            :dificuldade="receita.dificuldade"
+                            v-model:salvo="receita.salvo" 
+                            @toggle-save="tratarSalvarReceita" 
+                        />
+                    </div>
+
+                    <div v-else-if="abaAtiva === 'seguindo'" class="tab-pane">
+                        <RecipeCard 
+                            v-for="receita in receitasSeguindo" 
+                            :key="receita.id" 
+                            :id="receita.id"
+                            :imagemUrl="receita.imagemUrl" 
+                            :titulo="receita.titulo" 
+                            :tempo="receita.tempo"
+                            :porcoes="receita.porcoes" 
+                            :custo="receita.custo" 
+                            :curtidas="receita.curtidas"
+                            :comentarios="receita.comentarios" 
+                            :autorNome="receita.autorNome"
+                            :authorIniciais="receita.authorIniciais" 
+                            :dificuldade="receita.dificuldade"
+                            v-model:salvo="receita.salvo" 
+                            @toggle-save="tratarSalvarReceita" 
+                        />
+                    </div>
+
+                    <div v-else-if="abaAtiva === 'populares'" class="tab-pane">
+                        <div class="category-row" v-for="categoria in categoriasPopulares" :key="categoria.titulo">
+                            <div class="section-title-wrapper">
+                                <h3 class="section-title">{{ categoria.titulo }}</h3>
+                                <span class="see-all">Ver todas</span>
+                            </div>
+                            <div class="grid-mini">
+                                <RecipeCardMini 
+                                    v-for="receita in categoria.receitas"
+                                    :key="receita.id"
+                                    :id="receita.id"
+                                    :imagemUrl="receita.imagemUrl"
+                                    :titulo="receita.titulo"
+                                    :tempo="receita.tempo"
+                                    :porcoes="receita.porcoes"
+                                    :dificuldade="receita.dificuldade"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else-if="abaAtiva === 'receitas'" class="tab-pane">
+                        <RecipePodiumRanking 
+                            :ouro="receitaOuro"
+                            :prata="receitaPrata"
+                            :bronze="receitaBronze"
+                            @ver-receita="navegarParaReceita"
+                        />
+                    </div>
 
                     <ReportModal 
                         :is-open="isReportOpen" 
@@ -105,14 +170,13 @@ const tipoDenuncia = ref('usuario');
 const targetIdDenuncia = ref(null);
 
 const abrirDenuncia = (tipo, id) => {
-  tipoDenuncia.value = tipo;
-  targetIdDenuncia.value = id;
-  isReportOpen.value = true;
+    tipoDenuncia.value = tipo;
+    targetIdDenuncia.value = id;
+    isReportOpen.value = true;
 };
 
 const tratarEnvioDenuncia = (dados) => {
-  console.log('Dados da denúncia enviados:', dados);
-  // Aqui você pode fazer a chamada para sua API backend
+    console.log('Dados da denúncia enviados:', dados);
 };
 
 const isModalOpen = ref(false);
@@ -149,6 +213,26 @@ const tabs = [
     { id: 'receitas', label: 'Receitas da semana' }
 ];
 
+const destaqueParaVoce = ref({
+    id: 10,
+    imagemUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947',
+    titulo: 'Feijoada Completa Tradicional',
+    tempo: '180min',
+    porcoes: '6 porções',
+    custo: 'Alto',
+    autorNome: 'Carlos Ferreira',
+    authorIniciais: 'CF',
+    dificuldade: 'Difícil',
+    badgeTexto: 'Receita do Dia'
+});
+
+const receitasMini = ref([
+    { id: 1, imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
+    { id: 2, imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
+    { id: 3, imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Macarrão ao Pesto Caseiro', tempo: '25min', porcoes: '2 porções', dificuldade: 'Fácil' },
+    { id: 4, imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Pão de Queijo Mineiro', tempo: '35min', porcoes: '20 porções', dificuldade: 'Fácil' }
+]);
+
 const listaDeReceitas = ref([
     {
         id: 1,
@@ -156,7 +240,7 @@ const listaDeReceitas = ref([
         titulo: 'Frango ao Limão Siciliano',
         tempo: '40min',
         porcoes: '4 porções',
-        custo: 'Alto',
+        custo: 'Econômico',
         curtidas: 342,
         comentarios: 28,
         autorNome: 'Ana Costa',
@@ -166,8 +250,64 @@ const listaDeReceitas = ref([
     }
 ]);
 
-const tratarSalvarReceita = (dados) => {
+const receitasSeguindo = ref([
+    {
+        id: 2,
+        imagemUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947',
+        titulo: 'Pão de Queijo Mineiro',
+        tempo: '35min',
+        porcoes: '6 porções',
+        custo: 'Econômico',
+        curtidas: 156,
+        comentarios: 14,
+        autorNome: 'Carlos Ferreira',
+        authorIniciais: 'CF',
+        dificuldade: 'Fácil',
+        salvo: false
+    }
+]);
 
+const categoriasPopulares = ref([
+    {
+        titulo: 'Rápidas e Gostosas',
+        receitas: [
+            { id: 1, imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
+            { id: 2, imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
+            { id: 3, imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Macarrão ao Pesto Caseiro', tempo: '25min', porcoes: '2 porções', dificuldade: 'Fácil' },
+            { id: 4, imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Pão de Queijo Mineiro', tempo: '35min', porcoes: '20 porções', dificuldade: 'Fácil' }
+        ]
+    },
+    {
+        titulo: 'Almoço e Jantar',
+        receitas: [
+            { id: 5, imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
+            { id: 6, imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
+            { id: 7, imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Macarrão ao Pesto Caseiro', tempo: '25min', porcoes: '2 porções', dificuldade: 'Fácil' },
+            { id: 8, imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Pão de Queijo Mineiro', tempo: '35min', porcoes: '20 porções', dificuldade: 'Fácil' }
+        ]
+    },
+    {
+        titulo: 'Café da manhã',
+        receitas: [
+            { id: 9, imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
+            { id: 10, imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
+            { id: 11, imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Macarrão ao Pesto Caseiro', tempo: '25min', porcoes: '2 porções', dificuldade: 'Fácil' },
+            { id: 12, imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Pão de Queijo Mineiro', tempo: '35min', porcoes: '20 porções', dificuldade: 'Fácil' }
+        ]
+    },
+    {
+        titulo: 'Doces veganos',
+        receitas: [
+            { id: 13, imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
+            { id: 14, imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
+            { id: 15, imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Macarrão ao Pesto Caseiro', tempo: '25min', porcoes: '2 porções', dificuldade: 'Fácil' },
+            { id: 16, imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Pão de Queijo Mineiro', tempo: '35min', porcoes: '20 porções', dificuldade: 'Fácil' }
+        ]
+    }
+]);
+
+const tratarSalvarReceita = (dados) => {
+    console.log('Receita salva:', dados);
 };
 
 const receitaOuro = ref({
@@ -209,8 +349,6 @@ const receitaBronze = ref({
 const navegarParaReceita = (id) => {
   console.log(`Navegando para a receita ID: ${id}`);
 };
-
-
 </script>
 
 <style scoped>
@@ -237,6 +375,8 @@ const navegarParaReceita = (id) => {
     min-width: 0;
     box-sizing: border-box;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 nav {
@@ -259,6 +399,7 @@ nav {
     font-family: "Inter", sans-serif;
     text-decoration: none;
     font-size: 12px;
+    font-weight: 500;
 }
 
 .fast-navegation:hover {
@@ -321,14 +462,52 @@ nav {
     font-weight: 600;
 }
 
-.tab-content {
-    padding: 16px;
-    color: var(--marrom);
+.container {
+    padding: 15px;
+    padding-bottom: 40px;
+    width: 100%;
+    max-width: 1200px;
+    align-self: center;
+    box-sizing: border-box;
 }
 
-.container {
-    width: 100%;
-    padding: 15px 15px 50px 15px; 
-    box-sizing: border-box;
+.tab-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.category-row {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.section-title-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.section-title {
+    font-family: "Playfair Display", serif;
+    font-size: 20px;
+    color: var(--marrom);
+    font-weight: 700;
+    margin: 0;
+}
+
+.see-all {
+    font-size: 13px;
+    color: var(--verde-escuro);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.grid-mini {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
 }
 </style>

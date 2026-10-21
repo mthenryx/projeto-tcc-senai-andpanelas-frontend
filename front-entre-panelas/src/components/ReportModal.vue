@@ -194,8 +194,8 @@ const fechar = () => {
 
 .close-btn {
     position: absolute;
-    top: 16px;
-    right: 16px;
+    top: 6px;
+    right: 6px;
     background: none;
     border: none;
     cursor: pointer;
