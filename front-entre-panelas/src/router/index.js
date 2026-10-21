@@ -13,6 +13,7 @@ import ListaView from '@/views/ListaView.vue'
 import PerfilView from '@/views/PerfilView.vue'
 import ReceitaView from '@/views/ReceitaView.vue'
 import BuscarView from '@/views/BuscarView.vue'
+import TesteView from '@/views/TesteView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -86,6 +87,11 @@ const router = createRouter({
       path: '/buscar-receita',
       name: 'buscar-receita',
       component: BuscarView
+    },
+    {
+      path: '/teste',
+      name: 'teste',
+      component: TesteView
     }
   ]
 })
