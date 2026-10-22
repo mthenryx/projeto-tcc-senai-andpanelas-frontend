@@ -6,7 +6,7 @@
 
         <nav class="navegacao">
             <RouterLink v-for="item in itensMenu" :key="item.id" :to="item.rota" class="item-menu"
-                :class="{ 'clicou': item.id === itemAtivo }" @click="selecionarItem(item.id)">
+                :class="{ 'clicou': item.rota === rotaAtual }">
                 <img v-if="item.iconeUrl" :src="item.iconeUrl" alt="Icone representativo" class="icone-menu" />
 
                 <span class="texto-item">
@@ -25,13 +25,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 
-const itemAtivo = ref('inicio')
+// Instancia o route para monitorar a rota atual do navegador
+const route = useRoute()
 
-const selecionarItem = (id) => {
-    itemAtivo.value = id
-}
+// Computed que retorna o caminho atual (ex: '/home', '/buscar-receita', etc.)
+const rotaAtual = computed(() => route.path)
 
 const itensMenu = [
     {
