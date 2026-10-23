@@ -16,7 +16,7 @@
         </nav>
 
         <div class="rodape-menu">
-            <RouterLink to="/nova-receita" class="botao-nova-receita">
+            <RouterLink to="/criar-receita" class="botao-nova-receita">
                 <span class="mais">+</span>
                 <span>Nova Receita</span>
             </RouterLink>
@@ -28,10 +28,8 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
-// Instancia o route para monitorar a rota atual do navegador
 const route = useRoute()
 
-// Computed que retorna o caminho atual (ex: '/home', '/buscar-receita', etc.)
 const rotaAtual = computed(() => route.path)
 
 const itensMenu = [
