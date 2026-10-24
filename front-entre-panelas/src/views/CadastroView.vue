@@ -210,7 +210,6 @@ const handleSubmit = () => {
   flex: 1;
   display: flex;
   justify-content: center;
-  align-items: center;
   background-color: var(--cinza-claro);
   overflow-y: auto;
   padding: 50px 20px;
@@ -221,6 +220,8 @@ const handleSubmit = () => {
   width: 100%;
   max-width: 420px;
   color: var(--marrom);
+  align-self: center;
+  margin-top: 100px;
 }
 
 .cabecalho {

@@ -14,6 +14,7 @@ import PerfilView from '@/views/PerfilView.vue'
 import ReceitaView from '@/views/ReceitaView.vue'
 import BuscarView from '@/views/BuscarView.vue'
 import TesteView from '@/views/TesteView.vue'
+import CriarComunidadeView from '@/views/CriarComunidadeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -47,6 +48,11 @@ const router = createRouter({
       path: '/comunidade',
       name: 'comunidade',
       component: ComunidadeView
+    },
+    {
+      path: '/criar-comunidade',
+      name: '/comunidade',
+      component: CriarComunidadeView
     },
     {
       path: '/criar-receita',
