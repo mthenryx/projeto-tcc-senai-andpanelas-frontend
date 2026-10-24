@@ -55,6 +55,11 @@ const router = createRouter({
       component: CriarComunidadeView
     },
     {
+      path: '/comunidade/:id',
+      name: 'ComunidadeDetalhes',
+      component: () => import('@/views/ComunidadeDetalhesView.vue')
+    },
+    {
       path: '/criar-receita',
       name: 'criar-receita',
       component: CriarReceitaView

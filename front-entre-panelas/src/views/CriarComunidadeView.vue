@@ -147,8 +147,8 @@
                     </p>
 
                     <div class="success-actions">
-                        <button type="button" class="btn-primary" @click="irParaComunidades">
-                            Ver minhas comunidades →
+                        <button type="button" class="btn-primary" @click="validarECriarComunidade">
+                            {{ modoEdicao ? 'Salvar alterações' : 'Criar Comunidade →' }}
                         </button>
                     </div>
                 </div>
@@ -159,11 +159,33 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, reactive, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
 
+const route = useRoute();
 const router = useRouter();
+
+const modoEdicao = ref(false);
+const comunidadeId = ref(null);
+
+onMounted(() => {
+    if (route.query.id) {
+        modoEdicao.value = true;
+        comunidadeId.value = route.query.id;
+        carregarDadosComunidadeEdicao(route.query.id);
+    }
+});
+
+const carregarDadosComunidadeEdicao = (id) => {
+    form.nome = 'Veganos Criativos';
+    form.descricao = 'Receitas plant-based deliciosas para mostrar que vegano não come só salada! 🌱';
+    form.categoria = 'Vegano & Vegetariano';
+    previewCapa.value = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1200';
+    previewAvatar.value = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=150';
+    form.banner_url = previewCapa.value;
+    form.foto_url = previewAvatar.value;
+};
 
 const sucessoCriacao = ref(false);
 
@@ -268,17 +290,17 @@ const adicionarCategoriaPersonalizada = () => {
 };
 
 const validarECriarComunidade = () => {
-  erros.nome = !form.nome.trim();
-  erros.descricao = !form.descricao.trim();
-  
-  erros.capa = !form.banner_url;
-  erros.avatar = !form.foto_url;
+    erros.nome = !form.nome.trim();
+    erros.descricao = !form.descricao.trim();
 
-  if (erros.nome || erros.descricao || erros.capa || erros.avatar) {
-    return;
-  }
+    erros.capa = !form.banner_url;
+    erros.avatar = !form.foto_url;
 
-  sucessoCriacao.value = true;
+    if (erros.nome || erros.descricao || erros.capa || erros.avatar) {
+        return;
+    }
+
+    sucessoCriacao.value = true;
 };
 
 const voltarParaComunidades = () => {
@@ -622,8 +644,8 @@ const irParaComunidades = () => {
 
 .error-input,
 .error-border {
-  border-color: var(--vermelho) !important;
-  background-color: #FFFDFD !important;
+    border-color: var(--vermelho) !important;
+    background-color: #FFFDFD !important;
 }
 
 .categories-chips-row {
