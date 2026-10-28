@@ -25,7 +25,7 @@
 
                 <section class="secao-bloco">
                     <h3 class="titulo-secao">Destaque da semana</h3>
-                    <div class="banner-destaque" :style="{ backgroundImage: `url(${comunidadeDestaque.banner_url})` }">
+                    <div class="banner-destaque" :style="{ backgroundImage: `url(${comunidadeDestaque.banner_url})` }" @click="irParaDetalhes(comunidadeDestaque.id)">
                         <div class="banner-overlay">
                             <div class="badge-emalta">
                                 <span>🔥 Em alta</span>
@@ -49,7 +49,7 @@
                                 type="button" 
                                 class="banner-status-participando" 
                                 :class="{ 'participando': comunidadeDestaque.participa }"
-                                @click="alternarParticipacao(comunidadeDestaque)"
+                                @click.stop="alternarParticipacao(comunidadeDestaque)"
                             >
                                 {{ comunidadeDestaque.participa ? '✓ Participando' : '+ Entrar' }}
                             </button>
@@ -68,7 +68,7 @@
                         @mouseup="pararArrasto"
                         @mousemove="arrastar"
                     >
-                        <div v-for="com in minhasComunidades" :key="com.id" class="minha-comunidade-card">
+                        <div v-for="com in minhasComunidades" :key="com.id" class="minha-comunidade-card" @click="irParaDetalhes(com.id)">
                             <img :src="com.foto_url" :alt="com.nome" class="minha-comunidade-foto" draggable="false" />
                             <span class="minha-comunidade-nome">{{ com.nome }}</span>
                         </div>
@@ -78,7 +78,7 @@
                 <section class="secao-bloco">
                     <h3 class="titulo-secao">Explorar comunidades</h3>
                     <div class="lista-explorar">
-                        <div v-for="com in comunidadesFiltradas" :key="com.id" class="comunidade-card-item">
+                        <div v-for="com in comunidadesFiltradas" :key="com.id" class="comunidade-card-item" @click="irParaDetalhes(com.id)">
                             <div class="comunidade-card-left">
                                 <img :src="com.foto_url" :alt="com.nome" class="comunidade-item-foto" />
                                 <div class="comunidade-item-detalhes">
@@ -91,7 +91,7 @@
                                 </div>
                             </div>
                             <button type="button" class="btn-participar" :class="{ 'participando': com.participa }"
-                                @click="alternarParticipacao(com)">
+                                @click.stop="alternarParticipacao(com)">
                                 {{ com.participa ? '✓ Participando' : '+ Entrar' }}
                             </button>
                         </div>
@@ -173,12 +173,11 @@ const alternarParticipacao = (com) => {
     com.participa = !com.participa;
 };
 
-const alternarParticipacaoDestaque = () => {
-    comunidadeDestaque.value.participa = !comunidadeDestaque.value.participa;
+const irParaDetalhes = (id) => {
+    router.push({ name: 'ComunidadeDetalhes', params: { id } });
 };
 
 const minhasComunidades = computed(() => {
-
     const listGeral = comunidadesGeral.value
         .filter(com => com.participa || com.criador)
         .map(com => ({
@@ -245,7 +244,6 @@ const arrastar = (e) => {
     scroll-behavior: smooth;
     cursor: grab; 
     user-select: none;
-
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -360,6 +358,7 @@ const arrastar = (e) => {
     background-position: center;
     position: relative;
     overflow: hidden;
+    cursor: pointer;
 }
 
 .banner-overlay {
@@ -471,6 +470,7 @@ const arrastar = (e) => {
     align-items: center;
     justify-content: space-between;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
+    cursor: pointer;
 }
 
 .comunidade-card-left {

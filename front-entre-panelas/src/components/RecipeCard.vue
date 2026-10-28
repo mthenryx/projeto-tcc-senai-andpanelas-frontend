@@ -1,5 +1,5 @@
 <template>
-    <div class="recipe-card">
+    <div class="recipe-card" @click="irParaDetalhes">
         <div class="recipe-image-container" :style="{ backgroundImage: `url(${imagemUrl})` }">
             <span class="difficulty-badge" :class="dificuldadeClass">
                 {{ dificuldade }}
@@ -70,7 +70,7 @@
                     </div>
                 </div>
 
-                <button class="save-btn" :class="{ 'saved': salvo }" @click="toggleSalvo"
+                <button class="save-btn" :class="{ 'saved': salvo }" @click.stop="toggleSalvo"
                     :aria-label="salvo ? 'Remover dos salvos' : 'Salvar receita'">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
                         :fill="salvo ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"
@@ -85,6 +85,9 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useRouter } from 'vue-router'; 
+
+const router = useRouter();
 
 const props = defineProps({
     id: { type: [Number, String], required: true },
@@ -102,6 +105,10 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:salvo', 'toggle-save']);
+
+const irParaDetalhes = () => {
+    router.push(`/receita/${props.id}`);
+};
 
 const toggleSalvo = () => {
     const novoEstado = !props.salvo;

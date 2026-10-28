@@ -1,13 +1,10 @@
 <template>
     <div class="corpo">
-        <!-- Barra de navegação global reutilizada -->
         <BarraNavegacao />
 
         <div class="coluna">
-            <!-- HEADER COM BANNER DE CAPA -->
             <header class="banner-capa-header" :style="{ backgroundImage: `url(${comunidade.banner_url})` }">
                 <div class="banner-overlay">
-                    <!-- Botão Voltar para o Histórico -->
                     <button class="back-btn-circle" @click="voltar" aria-label="Voltar">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -16,7 +13,6 @@
                         </svg>
                     </button>
 
-                    <!-- Título e Stats sobrepostos na capa (Utilizando os ícones PNG com filtro marrom/branco) -->
                     <div class="banner-info-bottom">
                         <h1 class="comunidade-titulo">{{ comunidade.nome }}</h1>
                         <div class="comunidade-stats">
@@ -34,17 +30,17 @@
                 </div>
             </header>
 
-            <!-- CONTEÚDO DA PÁGINA -->
             <main class="conteudo-principal">
-                <!-- Descrição -->
                 <p class="comunidade-descricao">{{ comunidade.descricao }}</p>
 
-                <!-- Avatares em Grupo (Até 5 participantes + Contador restante) -->
                 <div class="membros-avatares-row">
                     <div class="avatares-stack">
-                        <div v-for="(membro, idx) in primeirosMembros" :key="membro.id" class="avatar-circle"
-                            :style="{ backgroundColor: obterCorAvatar(idx) }">
-                            {{ obterIniciais(membro.nome) }}
+                        <div v-for="(membro, idx) in primeirosMembros" :key="membro.id" class="avatar-circle-wrapper">
+                            <img v-if="membro.foto_url && membro.foto_url.trim() !== ''" :src="membro.foto_url"
+                                :alt="membro.nome" class="avatar-img-stack" />
+                            <div v-else class="avatar-circle" :style="{ backgroundColor: obterCorAvatar(idx) }">
+                                {{ obterIniciais(membro.nome) }}
+                            </div>
                         </div>
                     </div>
                     <span class="membros-restantes-text" v-if="membrosRestantesCount > 0">
@@ -52,7 +48,6 @@
                     </span>
                 </div>
 
-                <!-- Botão Denunciar -->
                 <div class="denunciar-row">
                     <button class="btn-denunciar" @click="abrirModalDenuncia">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -64,7 +59,6 @@
                     </button>
                 </div>
 
-                <!-- Ações do Usuário: Participar / Sair / Editar -->
                 <div class="acoes-comunidade-row">
                     <template v-if="!ehCriador">
                         <button type="button" class="btn-acao-participacao" :class="{ 'participando': ehParticipante }"
@@ -89,7 +83,6 @@
                     </button>
                 </div>
 
-                <!-- ABAS DE NAVEGAÇÃO: RECEITAS vs MEMBROS (Com ícones PNG customizados e contraste ativo) -->
                 <div class="abas-container">
                     <button class="aba-btn" :class="{ active: abaAtiva === 'receitas' }" @click="abaAtiva = 'receitas'">
                         <img src="/icon_fileira.png" alt="Receitas" class="icone-aba" />
@@ -101,30 +94,28 @@
                     </button>
                 </div>
 
-                <!-- Botão de Editar Comunidade (Se o usuário atual for o criador) -->
                 <div v-if="ehCriador" class="btn-editar-wrapper">
                     <button class="btn-editar-comunidade" @click="irParaEdicao">
                         ✏️ Editar comunidade
                     </button>
                 </div>
 
-                <!-- ABA 1: RECEITAS DA COMUNIDADE (Utilizando RecipeCard.vue) -->
                 <div v-if="abaAtiva === 'receitas'" class="lista-receitas-grid">
                     <RecipeCard v-for="rec in receitasComunidade" :key="rec.id" :id="rec.id" :imagemUrl="rec.imagem_url"
                         :titulo="rec.titulo" :tempo="rec.tempo" :porcoes="String(rec.porcoes)" :custo="rec.custo"
                         :curtidas="rec.curtidas" :comentarios="rec.comentarios" :autorNome="rec.autor_nome"
                         :authorIniciais="obterIniciais(rec.autor_nome)" :dificuldade="rec.dificuldade"
-                        v-model:salvo="rec.salvo" />
+                        v-model:salvo="rec.salvo" @click="irParaReceita(rec.id)" />
                     <div v-if="receitasComunidade.length === 0" class="sem-resultados">
                         <p>Nenhuma receita cadastrada nesta comunidade ainda.</p>
                     </div>
                 </div>
 
-                <!-- ABA 2: LISTA DE MEMBROS (Com Badge MOD para o Criador) -->
                 <div v-else-if="abaAtiva === 'membros'" class="lista-membros-vertical">
                     <div v-for="membro in comunidade.participantes" :key="membro.id" class="membro-card-item">
                         <div class="membro-left">
-                            <img v-if="membro.foto_url" :src="membro.foto_url" :alt="membro.nome" class="membro-foto" />
+                            <img v-if="membro.foto_url && membro.foto_url.trim() !== ''" :src="membro.foto_url"
+                                :alt="membro.nome" class="membro-foto" />
                             <div v-else class="membro-avatar-fallback"
                                 :style="{ backgroundColor: obterCorAvatar(membro.id) }">
                                 {{ obterIniciais(membro.nome) }}
@@ -134,12 +125,11 @@
                                 <h4 class="membro-nome">{{ membro.nome }}</h4>
                                 <p class="membro-sub">
                                     {{ membro.id === comunidade.criador_id ? 'Moderador(a)' : 'Membro' }} • {{
-                                    membro.quantidade_receitas }} receitas
+                                        membro.quantidade_receitas }} receitas
                                 </p>
                             </div>
                         </div>
 
-                        <!-- BADGE MODERADOR (Apenas para o criador da comunidade) -->
                         <div v-if="membro.id === comunidade.criador_id" class="badge-mod">
                             MOD
                         </div>
@@ -148,7 +138,6 @@
             </main>
         </div>
 
-        <!-- MODAL DE DENÚNCIA REUTILIZADO -->
         <ReportModal :isOpen="modalDenunciaAberto" tipo="comunidade" :targetId="comunidade.id"
             @close="modalDenunciaAberto = false" @send="tratarEnvioDenuncia" />
     </div>
@@ -167,7 +156,7 @@ const route = useRoute();
 const abaAtiva = ref('membros');
 const modalDenunciaAberto = ref(false);
 
-const usuarioAtualId = ref(101);
+const usuarioAtualId = ref(1);
 
 const comunidade = ref({
     id: route.params.id || 1,
@@ -179,7 +168,7 @@ const comunidade = ref({
     criador_id: 1,
     participantes: [
         { id: 1, nome: 'Mariana Lima', foto_url: '', quantidade_receitas: 89 },
-        { id: 2, nome: 'Ana Costa', foto_url: '', quantidade_receitas: 47 },
+        { id: 2, nome: 'Ana Costa', foto_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', quantidade_receitas: 47 },
         { id: 3, nome: 'Pedro Souza', foto_url: '', quantidade_receitas: 21 },
         { id: 4, nome: 'Beatriz Alves', foto_url: '', quantidade_receitas: 63 },
         { id: 5, nome: 'Carlos Ferreira', foto_url: '', quantidade_receitas: 22 },
@@ -235,6 +224,10 @@ const voltar = () => {
     router.back();
 };
 
+const irParaReceita = (id) => {
+    router.push({ name: 'ReceitaDetalhes', params: { id } });
+};
+
 const obterIniciais = (nome) => {
     if (!nome) return '';
     const partes = nome.trim().split(' ');
@@ -266,7 +259,6 @@ const abrirModalDenuncia = () => {
 };
 
 const tratarEnvioDenuncia = (dadosDenuncia) => {
-    console.log('Denúncia enviada com sucesso:', dadosDenuncia);
     modalDenunciaAberto.value = false;
 };
 
@@ -300,7 +292,6 @@ const compartilhar = () => {
     min-height: 100vh;
 }
 
-/* Header Banner com Capa */
 .banner-capa-header {
     width: 100%;
     height: 220px;
@@ -358,17 +349,17 @@ const compartilhar = () => {
     gap: 6px;
 }
 
-/* Tratamento de contraste dos ícones PNG via CSS Filter */
 .icone-estendido-marrom {
     width: 14px;
     height: 14px;
     object-fit: contain;
-    filter: brightness(100);
+    filter: brightness(0) saturate(100%) invert(44%) sepia(13%) saturate(1062%) hue-rotate(345deg) brightness(93%) contrast(87%);
 }
 
 .conteudo-principal {
+    align-self: center;
     padding: 24px 32px 60px 32px;
-    max-width: 900px;
+    max-width: 1200px;
     width: 100%;
     box-sizing: border-box;
 }
@@ -392,6 +383,22 @@ const compartilhar = () => {
     align-items: center;
 }
 
+.avatar-circle-wrapper {
+    margin-left: -8px;
+}
+
+.avatar-circle-wrapper:first-child {
+    margin-left: 0;
+}
+
+.avatar-img-stack {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #FFFFFF;
+    object-fit: cover;
+}
+
 .avatar-circle {
     width: 32px;
     height: 32px;
@@ -403,11 +410,6 @@ const compartilhar = () => {
     font-size: 11px;
     font-weight: 700;
     color: var(--marrom, #4A3E3D);
-    margin-left: -8px;
-}
-
-.avatar-circle:first-child {
-    margin-left: 0;
 }
 
 .membros-restantes-text {
@@ -473,7 +475,6 @@ const compartilhar = () => {
     color: var(--marrom, #4A3E3D);
 }
 
-/* Abas Receitas / Membros */
 .abas-container {
     display: flex;
     gap: 12px;
@@ -487,7 +488,6 @@ const compartilhar = () => {
     border: 1px solid #EFEAE1;
     background-color: #FFFFFF;
     color: #7A675B;
-    /* Cor padrão Marrom #7A675B */
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -498,7 +498,6 @@ const compartilhar = () => {
     transition: all 0.2s;
 }
 
-/* Ícones dentro das abas (Padrão Marrom #7A675B) */
 .icone-aba {
     width: 16px;
     height: 16px;
@@ -507,7 +506,6 @@ const compartilhar = () => {
     transition: filter 0.2s;
 }
 
-/* Quando a aba estiver ATIVA ou com FOCO: Fundo escuro e ícones BRANCOS (#FFFFFF) */
 .aba-btn.active,
 .aba-btn:focus {
     background-color: #3B2416;
@@ -519,7 +517,6 @@ const compartilhar = () => {
 .aba-btn.active .icone-aba,
 .aba-btn:focus .icone-aba {
     filter: brightness(0) invert(1);
-    /* Torna o ícone totalmente branco */
 }
 
 .btn-editar-wrapper {
@@ -612,5 +609,16 @@ const compartilhar = () => {
     padding: 30px;
     color: var(--cinza);
     font-size: 14px;
+}
+
+.criador-badge-info {
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #7a998f;
+    height: 40px;
+    width: 100%;
+    border-radius: 15px;
 }
 </style>

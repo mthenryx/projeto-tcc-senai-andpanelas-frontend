@@ -13,8 +13,8 @@
                         </svg>
                     </button>
                     <div class="header-titles">
-                        <h2>Criar Nova Comunidade</h2>
-                        <p>Reúna pessoas apaixonadas pelas mesmas receitas, dietas ou tradições culinárias.</p>
+                        <h2>{{ modoEdicao ? 'Editar Comunidade' : 'Criar Nova Comunidade' }}</h2>
+                        <p>{{ modoEdicao ? 'Atualize as informações da sua comunidade.' : 'Reúna pessoas apaixonadas pelas mesmas receitas, dietas ou tradições culinárias.' }}</p>
                     </div>
                 </div>
             </header>
@@ -25,8 +25,7 @@
 
                     <div class="secao-form-bloco">
                         <h3 class="section-title-sm">Identidade Visual</h3>
-                        <p class="section-subtitle">Personalize o visual da sua comunidade para torná-la reconhecível e
-                            atraente.</p>
+                        <p class="section-subtitle">Personalize o visual da sua comunidade para torná-la reconhecível e atraente.</p>
 
                         <div class="identidade-visual-wrapper">
 
@@ -118,8 +117,7 @@
                             <img src="/icon_globo.png" alt="Globo" class="privacy-icon-png" />
                             <div class="privacy-text">
                                 <strong>Pública</strong>
-                                <p>Qualquer utilizador do Panelas pode ver as receitas, participar e postar livremente.
-                                </p>
+                                <p>Qualquer utilizador do Panelas pode ver as receitas, participar e postar livremente.</p>
                             </div>
                         </div>
                     </div>
@@ -129,7 +127,7 @@
                             Cancelar
                         </button>
                         <button type="button" class="btn-primary" @click="validarECriarComunidade">
-                            Criar Comunidade →
+                            {{ modoEdicao ? 'Salvar alterações' : 'Criar Comunidade' }}
                         </button>
                     </div>
 
@@ -140,15 +138,14 @@
                         <img src="/icon_ok.png" alt="Sucesso" class="success-ok-icon" />
                     </div>
 
-                    <h2 class="success-title">Comunidade criada!</h2>
+                    <h2 class="success-title">{{ modoEdicao ? 'Comunidade atualizada' : 'Comunidade criada!' }}</h2>
                     <p class="success-desc">
-                        A sua comunidade foi criada com sucesso e já está aberta para receber membros e receitas
-                        culinárias! 🎉
+                        {{ modoEdicao ? 'As alterações da sua comunidade foram salvas com sucesso.' : 'A sua comunidade foi criada com sucesso e já está aberta para receber membros e receitas culinárias! 🎉' }}
                     </p>
 
                     <div class="success-actions">
-                        <button type="button" class="btn-primary" @click="validarECriarComunidade">
-                            {{ modoEdicao ? 'Salvar alterações' : 'Criar Comunidade →' }}
+                        <button type="button" class="btn-primary" @click="voltarParaComunidades">
+                            Ir para comunidades
                         </button>
                     </div>
                 </div>
@@ -243,7 +240,6 @@ const enviarParaCloudinary = async (arquivo, tipo) => {
         }
         throw new Error('Falha no upload');
     } catch (error) {
-        console.error('Erro no upload:', error);
         return null;
     }
 };
@@ -304,10 +300,6 @@ const validarECriarComunidade = () => {
 };
 
 const voltarParaComunidades = () => {
-    router.push('/comunidade');
-};
-
-const irParaComunidades = () => {
     router.push('/comunidade');
 };
 </script>
