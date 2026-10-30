@@ -17,9 +17,14 @@
       <div class="gold-content-side">
         <div class="gold-header">
           <div class="author-info">
-            <div class="author-avatar" :style="{ backgroundColor: getAuthorColor(ouro.autorNome) }">
-              {{ ouro.authorIniciais }}
-            </div>
+            <UserAvatar 
+              :fotoUrl="ouro.autorFotoUrl" 
+              :nome="ouro.autorNome" 
+              :iniciais="ouro.authorIniciais" 
+              tamanho="38"
+              :tamanhoFonte="13"
+              :pesoFonte="600"
+            />
             <div class="author-details">
               <span class="author-label">Chef / Autor</span>
               <span class="author-name">{{ ouro.autorNome }}</span>
@@ -58,9 +63,14 @@
 
         <div class="card-body">
           <div class="author-small">
-            <div class="author-avatar-small" :style="{ backgroundColor: getAuthorColor(prata.autorNome) }">
-              {{ prata.authorIniciais }}
-            </div>
+            <UserAvatar 
+              :fotoUrl="prata.autorFotoUrl" 
+              :nome="prata.autorNome" 
+              :iniciais="prata.authorIniciais" 
+              tamanho="26"
+              :tamanhoFonte="11"
+              :pesoFonte="600"
+            />
             <span>Por {{ prata.autorNome }}</span>
           </div>
 
@@ -85,9 +95,14 @@
 
         <div class="card-body">
           <div class="author-small">
-            <div class="author-avatar-small" :style="{ backgroundColor: getAuthorColor(bronze.autorNome) }">
-              {{ bronze.authorIniciais }}
-            </div>
+            <UserAvatar 
+              :fotoUrl="bronze.autorFotoUrl" 
+              :nome="bronze.autorNome" 
+              :iniciais="bronze.authorIniciais" 
+              tamanho="26"
+              :tamanhoFonte="11"
+              :pesoFonte="600"
+            />
             <span>Por {{ bronze.autorNome }}</span>
           </div>
 
@@ -108,6 +123,8 @@
 </template>
 
 <script setup>
+import UserAvatar from '@/components/UserAvatar.vue';
+
 defineProps({
   ouro: { type: Object, required: true },
   prata: { type: Object, required: true },
@@ -115,15 +132,6 @@ defineProps({
 });
 
 defineEmits(['ver-receita']);
-
-const getAuthorColor = (name) => {
-  const palette = ['#72bca5', '#f1ae2b', '#bc0b27', '#4a2512', '#6B1E2E', '#6aaafa', '#6366f1'];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return palette[Math.abs(hash) % palette.length];
-};
 </script>
 
 <style scoped>
@@ -195,18 +203,6 @@ const getAuthorColor = (name) => {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.author-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 13px;
 }
 
 .author-details {
@@ -382,18 +378,6 @@ const getAuthorColor = (name) => {
   font-size: 13px;
   color: #6E655F;
   font-weight: 500;
-}
-
-.author-avatar-small {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 11px;
 }
 
 .card-title {

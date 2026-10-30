@@ -78,19 +78,8 @@
                             <h3 class="section-label-bold">Quais ingredientes você procura na receita?</h3>
 
                             <div class="ingredient-inputs-row">
-                                <input type="text" v-model="novoIngredienteNome" class="input-field flex-2"
-                                    placeholder="Digite um ingrediente..." @keyup.enter="adicionarIngredienteInput" />
-
-                                <select v-model="novoIngredienteMedida" class="input-field select-field flex-2">
-                                    <option value="" disabled selected>Selecione a medida</option>
-                                    <option v-for="medida in unidadesMedidaSimuladas" :key="medida" :value="medida">
-                                        {{ medida }}
-                                    </option>
-                                </select>
-
-                                <input type="number" v-model.number="novoIngredienteQtd" class="input-field flex-1"
-                                    placeholder="Qtd." min="0.01" max="9999.99" step="0.01"
-                                    @input="validarQuantidade" />
+                                <input type="text" v-model="novoIngredienteNome" class="input-field flex-grow"
+                                    placeholder="Digite um ingrediente..." ref="inputNomeRef" @keyup.enter="adicionarIngredienteInput" />
 
                                 <button class="add-ing-btn" @click="adicionarIngredienteInput" aria-label="Adicionar">
                                     {{ editandoIndex !== null ? '✓' : '+' }}
@@ -107,22 +96,26 @@
 
                             <div v-if="ingredientesSelecionados.length > 0" class="selected-ingredients-block">
                                 <div class="selected-header">
-                                    <span>Na geladeira ({{ ingredientesSelecionados.length }}) <small
+                                    <span>Meus Ingredientes ({{ ingredientesSelecionados.length }}) <small
                                             class="edit-hint">(Clique para editar)</small></span>
                                     <button class="clear-btn" @click="limparIngredientes">Limpar tudo</button>
                                 </div>
                                 <div class="selected-chips-row">
                                     <div v-for="(item, index) in ingredientesSelecionados" :key="index"
                                         class="selected-chip" @click="carregarParaEdicao(index)">
-                                        <span>{{ item.nome }} <template v-if="item.qtd">| {{ item.qtd }} {{ item.medida
-                                                }}</template></span>
+                                        <span class="texto-chip-ativo">{{ item.nome }}</span>
                                         <button class="remove-chip-btn"
                                             @click.stop="removerIngrediente(index)">×</button>
                                     </div>
                                 </div>
                             </div>
 
-                            <button class="action-submit-btn" @click="executarBuscaPorIngredientes">
+                            <button 
+                                class="action-submit-btn" 
+                                :class="{ 'desativado': ingredientesSelecionados.length === 0 }"
+                                :disabled="ingredientesSelecionados.length === 0"
+                                @click="executarBuscaPorIngredientes"
+                            >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round">
@@ -204,18 +197,11 @@ const termoBusca = ref('');
 const abaAtiva = ref('receitas');
 const semResultados = ref(false);
 
+const inputNomeRef = ref(null);
 const novoIngredienteNome = ref('');
-const novoIngredienteMedida = ref('');
-const novoIngredienteQtd = ref('');
 const editandoIndex = ref(null);
 
-const unidadesMedidaSimuladas = ref([
-    'g', 'kg', 'ml', 'L', 'unidade(s)', 'col. de sopa', 'col. de chá', 'xícara(s)', 'pitada', 'dente(s)'
-]);
-
-const ingredientesSelecionados = ref([
-    { nome: 'queijo', qtd: '150', medida: 'g' }
-]);
+const ingredientesSelecionados = ref([]);
 
 const emAlta = ref(['frango', 'bolo', 'vegano', 'rápido', 'massa', 'sopa']);
 
@@ -233,7 +219,7 @@ const ingredientesRapidos = ref([
     'arroz', 'feijão', 'batata', 'cenoura', 'leite', 'manteiga',
     'farinha', 'açúcar', 'azeite', 'pimentão', 'carne moída',
     'creme de leite', 'milho', 'ervilha', 'manjericão', 'pimenta',
-    'limão', 'sal', 'pimenta-do-reino', 'margarina', 'aveia', 'mel'
+    'limão', 'sal', 'pimenta do reino', 'margarina', 'aveia', 'mel'
 ]);
 
 const comunidades = ref([
@@ -283,70 +269,55 @@ const resetarBusca = () => {
     semResultados.value = false;
 };
 
-const validarQuantidade = () => {
-    if (novoIngredienteQtd.value !== '' && novoIngredienteQtd.value !== null) {
-        let val = parseFloat(novoIngredienteQtd.value);
-        if (val < 0) novoIngredienteQtd.value = 0.01;
-        if (val > 9999.99) novoIngredienteQtd.value = 9999.99;
-
-        const partes = novoIngredienteQtd.value.toString().split('.');
-        if (partes[1] && partes[1].length > 2) {
-            novoIngredienteQtd.value = parseFloat(val.toFixed(2));
-        }
-    }
-};
-
 const adicionarIngredienteRapido = (nome) => {
-    if (!ingredientesSelecionados.value.some(i => i.nome === nome)) {
-        ingredientesSelecionados.value.push({ nome, qtd: '1', medida: 'unidade(s)' });
+    novoIngredienteNome.value = nome;
+    editandoIndex.value = null;
+    if (inputNomeRef.value) {
+        inputNomeRef.value.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        inputNomeRef.value.focus();
     }
 };
 
 const adicionarIngredienteInput = () => {
     if (!novoIngredienteNome.value.trim()) return;
 
-    const itemData = {
-        nome: novoIngredienteNome.value.trim(),
-        qtd: novoIngredienteQtd.value ? novoIngredienteQtd.value.toString() : '',
-        medida: novoIngredienteMedida.value || ''
-    };
-
     if (editandoIndex.value !== null) {
-        ingredientesSelecionados.value[editandoIndex.value] = itemData;
+        ingredientesSelecionados.value[editandoIndex.value].nome = novoIngredienteNome.value.trim();
         editandoIndex.value = null;
     } else {
-        ingredientesSelecionados.value.push(itemData);
+        ingredientesSelecionados.value.push({
+            nome: novoIngredienteNome.value.trim()
+        });
     }
 
     novoIngredienteNome.value = '';
-    novoIngredienteMedida.value = '';
-    novoIngredienteQtd.value = '';
 };
 
 const carregarParaEdicao = (index) => {
     const item = ingredientesSelecionados.value[index];
     novoIngredienteNome.value = item.nome;
-    novoIngredienteQtd.value = item.qtd;
-    novoIngredienteMedida.value = item.medida;
     editandoIndex.value = index;
+    if (inputNomeRef.value) {
+        inputNomeRef.value.focus();
+    }
 };
 
 const removerIngrediente = (index) => {
-    ingredientesSelecionados.value.splice(index, 1);
     if (editandoIndex.value === index) {
         editandoIndex.value = null;
         novoIngredienteNome.value = '';
-        novoIngredienteQtd.value = '';
-        novoIngredienteMedida.value = '';
     }
+    ingredientesSelecionados.value.splice(index, 1);
 };
 
 const limparIngredientes = () => {
     ingredientesSelecionados.value = [];
     editandoIndex.value = null;
+    novoIngredienteNome.value = '';
 };
 
 const executarBuscaPorIngredientes = () => {
+    if (ingredientesSelecionados.value.length === 0) return;
     console.log('Buscando receitas com ingredientes:', ingredientesSelecionados.value);
 };
 
@@ -377,7 +348,7 @@ const abrirComunidade = (id) => {
     width: 100%;
     height: 60px;
     background-color: white;
-    border-bottom: 1px solid var(--bege, #eae5df);
+    border-bottom: 1px solid var(--bege);
     display: flex;
     align-items: center;
     padding: 0 24px;
@@ -422,7 +393,7 @@ const abrirComunidade = (id) => {
 
 .search-container {
     width: 100%;
-    max-width: 820px;
+    max-width: 1000px;
     display: flex;
     flex-direction: column;
     gap: 30px;
@@ -444,7 +415,7 @@ const abrirComunidade = (id) => {
 .search-input-wrapper input {
     width: 100%;
     padding: 14px 16px 14px 46px;
-    border: 1px solid #EFEAE1;
+    border: 1px solid var(--bege);
     border-radius: 25px;
     background-color: #FFFFFF;
     font-size: 14px;
@@ -454,7 +425,7 @@ const abrirComunidade = (id) => {
 }
 
 .search-input-wrapper input::placeholder {
-    color: #A39B95;
+    color: var(--cinza-branco);
 }
 
 .tabs-filter {
@@ -488,7 +459,7 @@ const abrirComunidade = (id) => {
 .section-block {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 25px;
 }
 
 .section-label {
@@ -519,7 +490,7 @@ const abrirComunidade = (id) => {
 
 .chip-btn {
     background-color: #FFFFFF;
-    border: 1px solid #EFEAE1;
+    border: 1px solid var(--bege);
     border-radius: 20px;
     padding: 8px 16px;
     font-size: 13px;
@@ -530,16 +501,19 @@ const abrirComunidade = (id) => {
     gap: 6px;
     cursor: pointer;
     white-space: nowrap;
+    transition: 0.2s;
 }
 
 .chip-btn.light {
     background-color: #FAF8F5;
-    border-color: #F0ECE6;
-    color: #5C524A;
+    border-color: #E0D5C1;
+    color: var(--marrom);
 }
 
 .chip-btn:hover {
-    background-color: #F7F4EC;
+    background-color: rgba(114, 188, 165, 0.15);
+    color: var(--verde-escuro);
+    border-color: var(--verde);
 }
 
 .categories-grid {
@@ -574,54 +548,47 @@ const abrirComunidade = (id) => {
 
 .ingredient-inputs-row {
     display: flex;
-    gap: 8px;
+    gap: 12px;
+    align-items: center;
 }
 
 .input-field {
     padding: 12px 16px;
-    border: 1px solid #EFEAE1;
-    border-radius: 14px;
+    border: 1px solid #E0D5C1;
+    border-radius: 12px;
     background-color: #FFFFFF;
-    font-size: 13px;
+    font-size: 14px;
     outline: none;
     color: var(--marrom);
     box-sizing: border-box;
 }
 
-.select-field {
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.36%22%20height%3D%22292.36%22%3E%3Cpath%20fill%3D%22%238C827A%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 10px auto;
-    padding-right: 30px;
+.flex-grow {
+    flex: 1;
 }
 
 .input-field::placeholder {
-    color: #A39B95;
-}
-
-.flex-2 {
-    flex: 2;
-}
-
-.flex-1 {
-    flex: 1;
-    width: 20px;
+    color: var(--cinza-branco);
 }
 
 .add-ing-btn {
     background-color: var(--verde);
     color: #FFFFFF;
     border: none;
-    border-radius: 14px;
-    min-width: 46px;
+    border-radius: 12px;
+    width: 44px;
+    height: 44px;
     font-size: 20px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+}
+
+.add-ing-btn:hover {
+    background-color: var(--verde-escuro);
 }
 
 .subtext {
@@ -633,7 +600,7 @@ const abrirComunidade = (id) => {
 .selected-ingredients-block {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
     margin-top: 10px;
 }
 
@@ -660,6 +627,10 @@ const abrirComunidade = (id) => {
     cursor: pointer;
 }
 
+.clear-btn:hover {
+    color: var(--vermelho);
+}
+
 .selected-chips-row {
     display: flex;
     gap: 8px;
@@ -667,12 +638,13 @@ const abrirComunidade = (id) => {
 }
 
 .selected-chip {
-    background-color: #E3F4ED;
-    color: var(--verde-escuro);
-    padding: 6px 14px;
+    background-color: rgba(114, 188, 165, 0.15);
+    border: 1px solid var(--verde);
+    color: var(--marrom);
+    padding: 6px 12px;
     border-radius: 16px;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -681,7 +653,11 @@ const abrirComunidade = (id) => {
 }
 
 .selected-chip:hover {
-    background-color: #d1eee3;
+    background-color: rgba(114, 188, 165, 0.25);
+}
+
+.texto-chip-ativo {
+    text-transform: capitalize;
 }
 
 .remove-chip-btn {
@@ -690,22 +666,35 @@ const abrirComunidade = (id) => {
     color: var(--verde-escuro);
     font-size: 14px;
     cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .action-submit-btn {
     background-color: var(--verde);
     color: #FFFFFF;
     border: none;
-    border-radius: 14px;
+    border-radius: 12px;
     padding: 14px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
     cursor: pointer;
-    margin-top: 12px;
+    transition: all 0.2s;
+}
+
+.action-submit-btn:hover:not(:disabled) {
+    background-color: var(--verde-escuro);
+}
+
+.action-submit-btn.desativado {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 .communities-list {
@@ -716,7 +705,7 @@ const abrirComunidade = (id) => {
 
 .community-card {
     background-color: #FFFFFF;
-    border: 1px solid #EFEAE1;
+    border: 1px solid var(--bege);
     border-radius: 16px;
     padding: 16px;
     display: flex;
@@ -729,7 +718,7 @@ const abrirComunidade = (id) => {
     width: 42px;
     height: 42px;
     border-radius: 12px;
-    background-color: #E3F4ED;
+    background-color: rgba(114, 188, 165, 0.15);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -831,7 +820,7 @@ const abrirComunidade = (id) => {
 }
 
 .banner-geladeira {
-    background-color: #E3F4ED;
+    background-color: rgba(114, 188, 165, 0.15);
     border-radius: 16px;
     padding: 16px 20px;
     display: flex;

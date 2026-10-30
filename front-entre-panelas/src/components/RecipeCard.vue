@@ -6,9 +6,17 @@
             </span>
 
             <div class="recipe-author">
-                <div class="author-avatar" :style="{ backgroundColor: getAuthorColor(autorNome) }">
-                    {{ authorIniciais }}
-                </div>
+                <UserAvatar 
+                    :fotoUrl="autorFotoUrl" 
+                    :nome="autorNome" 
+                    :iniciais="authorIniciais" 
+                    tamanho="38"
+                    borda="white"
+                    sombra
+                    :tamanhoFonte="14"
+                    :pesoFonte="600"
+                    class="author-avatar-custom"
+                />
                 <span class="author-name">{{ autorNome }}</span>
             </div>
         </div>
@@ -86,6 +94,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useRouter } from 'vue-router'; 
+import UserAvatar from '@/components/UserAvatar.vue';
 
 const router = useRouter();
 
@@ -100,6 +109,7 @@ const props = defineProps({
     comentarios: { type: Number, default: 0 },
     autorNome: { type: String, required: true },
     authorIniciais: { type: String, required: true },
+    autorFotoUrl: { type: String, default: '' },
     dificuldade: { type: String, required: true },
     salvo: { type: Boolean, default: false }
 });
@@ -129,15 +139,6 @@ const custoClass = computed(() => {
     if (c.includes('moderado')) return 'cost-moderado';
     return 'cost-alto';
 });
-
-const getAuthorColor = (name) => {
-    const palette = ['#72bca5', '#f1ae2b', '#bc0b27', '#4a2512', '#6B1E2E', '#6aaafa', '#6366f1'];
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return palette[Math.abs(hash) % palette.length];
-};
 </script>
 
 <style scoped>
@@ -192,20 +193,6 @@ const getAuthorColor = (name) => {
     display: flex;
     align-items: center;
     gap: 10px;
-}
-
-.author-avatar {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    color: #FFFFFF;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 14px;
-    border: 2px solid #FFFFFF;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .author-name {

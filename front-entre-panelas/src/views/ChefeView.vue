@@ -1,11 +1,8 @@
 <template>
     <div class="chefe-view-layout">
-        <!-- 1. Componente de Menu Lateral Existente -->
         <MenuLateral />
-
-        <!-- 2. Área Principal do Chat (Centro) -->
+        
         <main class="chat-main-area">
-            <!-- Header do Chat com Status Dinâmico -->
             <header class="chat-header">
                 <div class="chefe-info">
                     <button class="back-btn" @click="voltar" aria-label="Voltar">
@@ -27,7 +24,6 @@
                     </div>
                 </div>
 
-                <!-- Status Online/Offline Dinâmico -->
                 <div class="status-indicator-badge" :class="{ 'offline': !statusOnline }">
                     <span class="status-dot"></span>
                     {{ statusOnline ? 'Online' : 'Offline' }}
@@ -240,7 +236,7 @@ const voltar = () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 24px;
+    padding: 10px 24px;
     background-color: #3b2219;
     color: #ffffff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);

@@ -9,9 +9,16 @@
 
         <div class="carousel-scroll">
             <div v-for="user in users" :key="user.id" class="user-item">
-                <div class="circle-btn user-avatar" :style="{ backgroundColor: getUserColor(user) }">
-                    <span class="initials">{{ user.iniciais }}</span>
-                </div>
+                <UserAvatar 
+                    :fotoUrl="user.fotoUrl" 
+                    :nome="user.nome" 
+                    :iniciais="user.iniciais" 
+                    tamanho="72"
+                    borda="white"
+                    sombra
+                    :tamanhoFonte="24"
+                    :pesoFonte="500"
+                />
                 <span class="item-label" :title="user.nome">{{ user.nome }}</span>
             </div>
         </div>
@@ -20,6 +27,7 @@
 
 <script setup>
 import { defineProps, defineEmits } from 'vue';
+import UserAvatar from '@/components/UserAvatar.vue';
 
 const props = defineProps({
     users: {
@@ -33,25 +41,6 @@ const emit = defineEmits(['search-click']);
 
 const handleSearchClick = () => {
     emit('search-click');
-};
-
-const getUserColor = (user) => {
-    const colorPalette = [
-        '#71B89A', '#72CE18', '#D7001E', '#8C5023', '#2A80B9',
-        '#8E44AD', '#E67E22', '#16A085', '#D35400', '#C0392B',
-        '#27AE60', '#2980B9', '#8E44AD', '#F39C12', '#D35400',
-        '#C0392B', '#BDC3C7', '#7F8C8D', '#2C3E50', '#16A085',
-        '#9B59B6', '#E74C3C', '#1ABC9C', '#34495E', '#00A8FF'
-    ];
-
-    const str = `${user.id}-${user.nome || ''}`;
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    const index = Math.abs(hash) % colorPalette.length;
-    return colorPalette[index];
 };
 </script>
 
@@ -83,9 +72,7 @@ const getUserColor = (user) => {
     scroll-behavior: smooth;
     white-space: nowrap;
     cursor: pointer;
-
     -webkit-overflow-scrolling: touch;
-
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -133,18 +120,6 @@ const getUserColor = (user) => {
 .search-icon {
     width: 28px;
     height: 28px;
-}
-
-.user-avatar {
-    border: 2px solid #FFFFFF;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-.initials {
-    color: #FFFFFF;
-    font-size: 24px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
 }
 
 .item-label {

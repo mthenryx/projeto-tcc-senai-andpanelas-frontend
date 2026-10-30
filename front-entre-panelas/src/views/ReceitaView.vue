@@ -26,10 +26,14 @@
 
                             <div class="author-row">
                                 <div class="author-info-left">
-                                    <div class="author-avatar"
-                                        :style="{ backgroundColor: getAuthorColor(receita.autorNome) }">
-                                        {{ receita.authorIniciais }}
-                                    </div>
+                                    <UserAvatar 
+                                        :fotoUrl="receita.autorFotoUrl" 
+                                        :nome="receita.autorNome" 
+                                        :iniciais="receita.authorIniciais" 
+                                        tamanho="42"
+                                        :tamanhoFonte="14"
+                                        :pesoFonte="600"
+                                    />
                                     <div class="author-text">
                                         <span class="author-name">{{ receita.autorNome }}</span>
                                         <span class="author-username">@{{ receita.autorUsername }}</span>
@@ -117,7 +121,7 @@
                             </button>
 
                             <button class="interact-btn primary-action" @click="adicionarTudoLista">
-                                <img src="../../public/icon_carrinho_compras.png" alt="Carriho de compras" class="carrinho">
+                                <img src="../../public/icon_carrinho_compras.png" alt="Carrinho de compras" class="carrinho">
                                 <span>Lista</span>
                             </button>
                         </div>
@@ -200,20 +204,28 @@
                             </div>
 
                             <div class="add-comment-box">
-                                <div class="author-avatar small"
-                                    :style="{ backgroundColor: getAuthorColor(usuarioAtual.nome) }">
-                                    {{ usuarioAtual.iniciais }}
-                                </div>
+                                <UserAvatar 
+                                    :fotoUrl="usuarioAtual.fotoUrl" 
+                                    :nome="usuarioAtual.nome" 
+                                    :iniciais="usuarioAtual.iniciais" 
+                                    tamanho="32"
+                                    :tamanhoFonte="12"
+                                    :pesoFonte="600"
+                                />
                                 <input type="text" v-model="novoComentarioTexto" placeholder="Adicione um comentário..."
                                     @keyup.enter="adicionarComentario" />
                             </div>
 
                             <div class="comments-list">
                                 <div v-for="comentario in comentarios" :key="comentario.id" class="comment-item">
-                                    <div class="comment-avatar"
-                                        :style="{ backgroundColor: getAuthorColor(comentario.nome) }">
-                                        {{ comentario.iniciais }}
-                                    </div>
+                                    <UserAvatar 
+                                        :fotoUrl="comentario.fotoUrl" 
+                                        :nome="comentario.nome" 
+                                        :iniciais="comentario.iniciais" 
+                                        tamanho="30"
+                                        :tamanhoFonte="12"
+                                        :pesoFonte="600"
+                                    />
 
                                     <div class="comment-body">
                                         <div class="comment-user-info">
@@ -281,18 +293,18 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
 import ReportModal from '@/components/ReportModal.vue';
+import UserAvatar from '@/components/UserAvatar.vue';
 
 const route = useRoute();
 
-// Usuário logado padrão para testes
 const usuarioAtual = ref({
     id: 101,
     nome: 'Ana Costa',
     username: 'anacosta',
-    iniciais: 'AC'
+    iniciais: 'AC',
+    fotoUrl: ''
 });
 
-// Objeto da receita que será preenchido com base no ID da rota (Futura chamada de API)
 const receita = ref({
     id: null,
     titulo: 'Carregando receita...',
@@ -307,6 +319,7 @@ const receita = ref({
     autorNome: '',
     autorUsername: '',
     authorIniciais: '',
+    autorFotoUrl: '',
     seguindo: false,
     curtido: false,
     curtidas: 0,
@@ -323,17 +336,16 @@ const comentarios = ref([
         nome: 'Mariana Lima',
         username: 'marilima',
         iniciais: 'ML',
+        fotoUrl: '',
         texto: 'Receita incrível!',
         tempo: 'ontem'
     }
 ]);
 
-// Simula a busca de dados na API usando o ID recebido na URL
 onMounted(() => {
     const idReceitaRecebido = route.params.id;
     console.log("Buscando dados para a receita ID:", idReceitaRecebido);
 
-    // Mock temporário para pré-visualização (futuramente aqui entra o axios/fetch na API)
     receita.value = {
         id: idReceitaRecebido,
         titulo: 'Frango ao Limão Siciliano (ID: ' + idReceitaRecebido + ')',
@@ -349,6 +361,7 @@ onMounted(() => {
         autorNome: 'Ana Costa',
         autorUsername: 'anacosta',
         authorIniciais: 'AC',
+        autorFotoUrl: '',
         seguindo: true,
         curtido: true,
         curtidas: 342,
@@ -407,6 +420,7 @@ const adicionarComentario = () => {
         nome: usuarioAtual.value.nome,
         username: usuarioAtual.value.username,
         iniciais: usuarioAtual.value.iniciais,
+        fotoUrl: usuarioAtual.value.fotoUrl,
         texto: novoComentarioTexto.value.trim(),
         tempo: 'agora'
     });
@@ -429,7 +443,6 @@ const excluirComentario = (id) => {
     comentarios.value = comentarios.value.filter(c => c.id !== id);
 };
 
-
 const getIconFilter = (tipo) => {
     const t = (tipo || '').toLowerCase();
 
@@ -447,33 +460,9 @@ const getIconFilter = (tipo) => {
 
     return 'none';
 };
-
-  
-const getAuthorColor = (name) => {
-    const safeName = name || 'User';
-    const palette = ['#72bca5', '#f1ae2b', '#bc0b27', '#4a2512', '#6B1E2E', '#6aaafa', '#6366f1'];
-    let hash = 0;
-    for (let i = 0; i < safeName.length; i++) {
-        hash = safeName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return palette[Math.abs(hash) % palette.length];
-};
 </script>
 
 <style scoped>
-.comment-avatar {
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 12px;
-    font-weight: 600;
-    font-family: "Inter", sans-serif;
-}
-
 .corpo {
     display: flex;
     width: 100%;
@@ -597,24 +586,6 @@ const getAuthorColor = (name) => {
     display: flex;
     align-items: center;
     gap: 12px;
-}
-
-.author-avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    color: #FFFFFF;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.author-avatar.small {
-    width: 32px;
-    height: 32px;
-    font-size: 12px;
 }
 
 .author-text {

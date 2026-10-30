@@ -5,18 +5,32 @@
                 <img src="../../public/iconPaginas/lupa_icon_cinza.png" alt="Lupa">
             </RouterLink>
             
-            <RouterLink to="/perfil" class="botao-acao avatar-perfil" aria-label="Meu Perfil"">
-                <span>{{ sigla }}</span>
+            <RouterLink to="/perfil" class="botao-acao avatar-perfil-link" aria-label="Meu Perfil">
+                <UserAvatar 
+                    :fotoUrl="usuario.fotoUrl" 
+                    :nome="usuario.nome" 
+                    :iniciais="usuario.iniciais" 
+                    tamanho="42"
+                    borda="verde"
+                    corFundo="#eaf2ec"
+                    corTexto="var(--verde)"
+                    :tamanhoFonte="16"
+                    :pesoFonte="600"
+                />
             </RouterLink>
         </div>
     </header>
-    
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import UserAvatar from '@/components/UserAvatar.vue'
 
-const sigla = ref("MH") 
+const usuario = ref({
+    nome: 'Ana Costa',
+    iniciais: 'MH',
+    fotoUrl: '' 
+})
 </script>
 
 <style scoped>
@@ -57,11 +71,8 @@ const sigla = ref("MH")
     filter: brightness(0) saturate(100%) invert(77%) sepia(19%) saturate(550%) hue-rotate(93deg) brightness(91%) contrast(86%);
 }
 
-.avatar-perfil {
-    border: 1.5px solid var(--verde); 
-    background-color: #eaf2ec;
-    color: var(--verde); 
-    font-weight: 600;
-    font-size: 16px;
+.avatar-perfil-link {
+    padding: 0;
+    overflow: visible;
 }
 </style>
