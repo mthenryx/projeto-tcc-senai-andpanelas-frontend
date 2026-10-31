@@ -9,16 +9,18 @@
 
         <div class="carousel-scroll">
             <div v-for="user in users" :key="user.id" class="user-item">
-                <UserAvatar 
-                    :fotoUrl="user.fotoUrl" 
-                    :nome="user.nome" 
-                    :iniciais="user.iniciais" 
-                    tamanho="72"
-                    borda="white"
-                    sombra
-                    :tamanhoFonte="24"
-                    :pesoFonte="500"
-                />
+                <div class="avatar">
+                    <UserAvatar 
+                        :fotoUrl="user.fotoUrl" 
+                        :nome="user.nome" 
+                        :iniciais="user.iniciais" 
+                        tamanho="72"
+                        borda="white"
+                        sombra
+                        :tamanhoFonte="24"
+                        :pesoFonte="500"
+                    />
+                </div>
                 <span class="item-label" :title="user.nome">{{ user.nome }}</span>
             </div>
         </div>
@@ -75,6 +77,10 @@ const handleSearchClick = () => {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     -ms-overflow-style: none;
+}
+
+.avatar {
+    width: 72px;
 }
 
 .carousel-scroll::-webkit-scrollbar {

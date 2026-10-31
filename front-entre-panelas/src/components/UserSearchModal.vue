@@ -26,8 +26,10 @@
             <div class="users-scroll-list">
                 <div v-for="user in usuariosFiltrados" :key="user.id" class="user-row">
 
-                    <UserAvatar :fotoUrl="user.fotoUrl" :nome="user.nome" :iniciais="user.iniciais" tamanho="50" sombra
+                    <div class="avatar">
+                        <UserAvatar :fotoUrl="user.fotoUrl" :nome="user.nome" :iniciais="user.iniciais" tamanho="50" sombra
                         :tamanhoFonte="18" :pesoFonte="600" class="user-avatar-custom" />
+                    </div>
 
                     <div class="user-info">
                         <span class="user-name">{{ user.nome }}</span>
@@ -163,6 +165,10 @@ const fecharModal = () => {
     width: 20px;
     height: 20px;
     color: #7A6B68;
+}
+
+.avatar {
+    margin-right: 10px;
 }
 
 .search-input {

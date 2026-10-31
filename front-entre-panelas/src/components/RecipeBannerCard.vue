@@ -15,8 +15,10 @@
 
         <div class="banner-metadata">
           <div class="author-info">
-            <UserAvatar :fotoUrl="autorFotoUrl" :nome="autorNome" :iniciais="authorIniciais" tamanho="32" borda="white"
-              sombra :tamanhoFonte="12" :pesoFonte="600" />
+            <div class="avatar">
+              <UserAvatar :fotoUrl="autorFotoUrl" :nome="autorNome" :iniciais="authorIniciais" tamanho="32" borda="white"
+                sombra :tamanhoFonte="12" :pesoFonte="600" />
+            </div>
             <span class="author-name">{{ autorNome }}</span>
           </div>
 
@@ -109,6 +111,10 @@ defineProps({
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   margin: 0;
   line-height: 1.2;
+}
+
+.avatar {
+  width: 35px;
 }
 
 .banner-metadata {

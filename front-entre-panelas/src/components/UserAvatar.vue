@@ -105,6 +105,8 @@ const bordaClass = computed(() => {
     box-sizing: border-box;
     flex-shrink: 0;
     aspect-ratio: 1 / 1;
+    width: 100%;
+    height: 100%;
 }
 
 .border-white {

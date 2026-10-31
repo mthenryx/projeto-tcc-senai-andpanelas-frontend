@@ -6,17 +6,19 @@
             </span>
 
             <div class="recipe-author">
-                <UserAvatar 
-                    :fotoUrl="autorFotoUrl" 
-                    :nome="autorNome" 
-                    :iniciais="authorIniciais" 
-                    tamanho="38"
-                    borda="white"
-                    sombra
-                    :tamanhoFonte="14"
-                    :pesoFonte="600"
-                    class="author-avatar-custom"
-                />
+                <div class="avatar">
+                    <UserAvatar 
+                        :fotoUrl="autorFotoUrl" 
+                        :nome="autorNome" 
+                        :iniciais="authorIniciais" 
+                        tamanho="38"
+                        borda="white"
+                        sombra
+                        :tamanhoFonte="14"
+                        :pesoFonte="600"
+                        class="author-avatar-custom"
+                    />
+                </div>
                 <span class="author-name">{{ autorNome }}</span>
             </div>
         </div>
@@ -179,6 +181,10 @@ const custoClass = computed(() => {
 
 .badge-facil {
     background-color: var(--verde);
+}
+
+.avatar {
+    width: 35px;
 }
 
 .badge-medio {

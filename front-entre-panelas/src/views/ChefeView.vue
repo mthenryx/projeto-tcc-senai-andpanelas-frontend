@@ -222,7 +222,7 @@ const voltar = () => {
 
 .chat-main-area {
     margin-left: 200px; 
-    margin-right: 260px; 
+    margin-right: 230px; 
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -236,7 +236,7 @@ const voltar = () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 24px;
+    padding: 10px 20px;
     background-color: #3b2219;
     color: #ffffff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
@@ -429,7 +429,7 @@ const voltar = () => {
     position: fixed;
     right: 0;
     top: 0;
-    width: 260px;
+    width: 230px;
     height: 100vh;
     background-color: #ffffff;
     border-left: 1px solid var(--bege, #f3efea);

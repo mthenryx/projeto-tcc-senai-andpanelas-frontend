@@ -1,6 +1,6 @@
 <template>
   <div class="ranking-section">
-   
+
     <div class="podium-gold">
 
       <div class="gold-image-side" :style="{ backgroundImage: `url(${ouro.imagemUrl})` }">
@@ -17,14 +17,10 @@
       <div class="gold-content-side">
         <div class="gold-header">
           <div class="author-info">
-            <UserAvatar 
-              :fotoUrl="ouro.autorFotoUrl" 
-              :nome="ouro.autorNome" 
-              :iniciais="ouro.authorIniciais" 
-              tamanho="38"
-              :tamanhoFonte="13"
-              :pesoFonte="600"
-            />
+            <div class="avatar">
+              <UserAvatar :fotoUrl="ouro.autorFotoUrl" :nome="ouro.autorNome" :iniciais="ouro.authorIniciais"
+                tamanho="38" :tamanhoFonte="13" :pesoFonte="600" />
+            </div>
             <div class="author-details">
               <span class="author-label">Chef / Autor</span>
               <span class="author-name">{{ ouro.autorNome }}</span>
@@ -63,14 +59,10 @@
 
         <div class="card-body">
           <div class="author-small">
-            <UserAvatar 
-              :fotoUrl="prata.autorFotoUrl" 
-              :nome="prata.autorNome" 
-              :iniciais="prata.authorIniciais" 
-              tamanho="26"
-              :tamanhoFonte="11"
-              :pesoFonte="600"
-            />
+            <div class="avatar">
+              <UserAvatar :fotoUrl="prata.autorFotoUrl" :nome="prata.autorNome" :iniciais="prata.authorIniciais"
+                tamanho="26" :tamanhoFonte="11" :pesoFonte="600" />
+            </div>
             <span>Por {{ prata.autorNome }}</span>
           </div>
 
@@ -95,14 +87,10 @@
 
         <div class="card-body">
           <div class="author-small">
-            <UserAvatar 
-              :fotoUrl="bronze.autorFotoUrl" 
-              :nome="bronze.autorNome" 
-              :iniciais="bronze.authorIniciais" 
-              tamanho="26"
-              :tamanhoFonte="11"
-              :pesoFonte="600"
-            />
+            <div class="avatar">
+              <UserAvatar :fotoUrl="bronze.autorFotoUrl" :nome="bronze.autorNome" :iniciais="bronze.authorIniciais"
+                tamanho="26" :tamanhoFonte="11" :pesoFonte="600" />
+            </div>
             <span>Por {{ bronze.autorNome }}</span>
           </div>
 
@@ -166,6 +154,11 @@ defineEmits(['ver-receita']);
   box-sizing: border-box;
 }
 
+.avatar {
+  width: 35px;
+  height: 35px;
+}
+
 .gold-badge {
   position: absolute;
   top: 20px;
@@ -185,7 +178,7 @@ defineEmits(['ver-receita']);
 
 .gold-content-side {
   background-color: #FFFFFF;
-  padding: 32px 28px;
+  padding: 32px 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -225,7 +218,7 @@ defineEmits(['ver-receita']);
 .gold-tag {
   color: #B27B12;
   border: 1px solid #F3E3B6;
-  padding: 5px 12px;
+  padding: 5px 10px;
   border-radius: 16px;
   font-size: 12px;
   font-weight: 600;

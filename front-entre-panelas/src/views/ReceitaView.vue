@@ -26,14 +26,16 @@
 
                             <div class="author-row">
                                 <div class="author-info-left">
-                                    <UserAvatar 
-                                        :fotoUrl="receita.autorFotoUrl" 
-                                        :nome="receita.autorNome" 
-                                        :iniciais="receita.authorIniciais" 
-                                        tamanho="42"
-                                        :tamanhoFonte="14"
-                                        :pesoFonte="600"
-                                    />
+                                    <div class="avatar">
+                                        <UserAvatar 
+                                            :fotoUrl="receita.autorFotoUrl" 
+                                            :nome="receita.autorNome" 
+                                            :iniciais="receita.authorIniciais" 
+                                            tamanho="42"
+                                            :tamanhoFonte="14"
+                                            :pesoFonte="600"
+                                        />
+                                    </div>
                                     <div class="author-text">
                                         <span class="author-name">{{ receita.autorNome }}</span>
                                         <span class="author-username">@{{ receita.autorUsername }}</span>
@@ -204,29 +206,32 @@
                             </div>
 
                             <div class="add-comment-box">
-                                <UserAvatar 
-                                    :fotoUrl="usuarioAtual.fotoUrl" 
-                                    :nome="usuarioAtual.nome" 
-                                    :iniciais="usuarioAtual.iniciais" 
-                                    tamanho="32"
-                                    :tamanhoFonte="12"
-                                    :pesoFonte="600"
-                                />
+                                <div class="avatar">
+                                    <UserAvatar 
+                                        :fotoUrl="usuarioAtual.fotoUrl" 
+                                        :nome="usuarioAtual.nome" 
+                                        :iniciais="usuarioAtual.iniciais" 
+                                        tamanho="32"
+                                        :tamanhoFonte="12"
+                                        :pesoFonte="600"
+                                    />
+                                </div>
                                 <input type="text" v-model="novoComentarioTexto" placeholder="Adicione um comentário..."
                                     @keyup.enter="adicionarComentario" />
                             </div>
 
                             <div class="comments-list">
                                 <div v-for="comentario in comentarios" :key="comentario.id" class="comment-item">
-                                    <UserAvatar 
-                                        :fotoUrl="comentario.fotoUrl" 
-                                        :nome="comentario.nome" 
-                                        :iniciais="comentario.iniciais" 
-                                        tamanho="30"
-                                        :tamanhoFonte="12"
-                                        :pesoFonte="600"
-                                    />
-
+                                    <div class="avatar">
+                                        <UserAvatar 
+                                            :fotoUrl="comentario.fotoUrl" 
+                                            :nome="comentario.nome" 
+                                            :iniciais="comentario.iniciais" 
+                                            tamanho="30"
+                                            :tamanhoFonte="12"
+                                            :pesoFonte="600"
+                                        />
+                                    </div>
                                     <div class="comment-body">
                                         <div class="comment-user-info">
                                             <span class="comment-username">@{{ comentario.username }}</span>
@@ -479,6 +484,11 @@ const getIconFilter = (tipo) => {
     flex-direction: column;
     min-height: 100vh;
     background-color: #fdfbf7;
+}
+
+.avatar {
+    width: 35px;
+    height: 35px;
 }
 
 .conteudo {
