@@ -26,7 +26,7 @@
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
-                        <input type="text" v-model="termoBusca" placeholder="Buscar receitas, ingredientes..."
+                        <input type="text" v-model="termoBusca" :placeholder="placeholderDinamico"
                             @keyup.enter="executarBusca" />
                     </div>
 
@@ -129,7 +129,7 @@
 
                     <div v-else-if="abaAtiva === 'comunidades' && !semResultados" class="tab-content">
                         <div class="communities-list">
-                            <div v-for="com in comunidades" :key="com.id" class="community-card"
+                            <div v-for="com in comunidadesFiltradas" :key="com.id" class="community-card"
                                 @click="abrirComunidade(com.id)">
                                 <div class="com-icon-box">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
@@ -145,6 +145,9 @@
                                     <h4>{{ com.nome }}</h4>
                                     <p>{{ com.membros }} membros · {{ com.receitas }} receitas</p>
                                 </div>
+                            </div>
+                            <div v-if="comunidadesFiltradas.length === 0" class="sem-resultados">
+                                <p>Nenhuma comunidade encontrada com o nome "{{ termoBusca }}".</p>
                             </div>
                         </div>
                     </div>
@@ -187,7 +190,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
 
@@ -222,16 +225,32 @@ const ingredientesRapidos = ref([
     'limão', 'sal', 'pimenta do reino', 'margarina', 'aveia', 'mel'
 ]);
 
+// Dados simulados de comunidades
 const comunidades = ref([
     { id: 1, nome: 'Cozinha Brasileira', membros: '12.4k', receitas: '3.2k' },
     { id: 2, nome: 'Veganos Criativos', membros: '12.4k', receitas: '3.2k' },
-    { id: 3, nome: 'Bolos & Confeitaria', membros: '12.4k', receitas: '3.2k' },
-    { id: 4, nome: 'Fitness & Saúde', membros: '12.4k', receitas: '3.2k' }
+    { id: 3, nome: 'Bolos & Confeitaria', membros: '5.1k', receitas: '1.4k' },
+    { id: 4, nome: 'Fitness & Saúde', membros: '8.9k', receitas: '2.1k' }
 ]);
+
+// Placeholder dinâmico dependendo da aba ativa
+const placeholderDinamico = computed(() => {
+    if (abaAtiva.value === 'comunidades') return 'Buscar comunidades pelo nome...';
+    if (abaAtiva.value === 'ingredientes') return 'Buscar ingredientes...';
+    return 'Buscar receitas, ingredientes...';
+});
+
+// Computed para filtrar comunidades dinamicamente com base no termo digitado
+const comunidadesFiltradas = computed(() => {
+    if (!termoBusca.value.trim()) return comunidades.value;
+    const busca = termoBusca.value.toLowerCase();
+    return comunidades.value.filter(com => com.nome.toLowerCase().includes(busca));
+});
 
 const mudarAba = (aba) => {
     abaAtiva.value = aba;
     semResultados.value = false;
+    termoBusca.value = ''; // Opcional: limpa a busca ao trocar de aba
 };
 
 const voltarParaHome = () => {
@@ -257,7 +276,7 @@ const buscarPorCategoria = (catId) => {
 
 const executarBusca = () => {
     if (!termoBusca.value.trim()) return;
-    if (termoBusca.value.toLowerCase() === 'teste') {
+    if (abaAtiva.value === 'receitas' && termoBusca.value.toLowerCase() === 'teste') {
         semResultados.value = true;
     } else {
         semResultados.value = false;
@@ -321,12 +340,14 @@ const executarBuscaPorIngredientes = () => {
     console.log('Buscando receitas com ingredientes:', ingredientesSelecionados.value);
 };
 
+// Navega para a tela de detalhes passando o ID da comunidade via route params
 const abrirComunidade = (id) => {
-    console.log('Navegando para comunidade ID:', id);
+    router.push({ name: 'ComunidadeDetalhes', params: { id } });
 };
 </script>
 
 <style scoped>
+/* Estilos mantidos conforme o seu original */
 .corpo {
     display: flex;
     width: 100%;
@@ -736,6 +757,13 @@ const abrirComunidade = (id) => {
     font-size: 12px;
     color: var(--cinza);
     margin: 2px 0 0 0;
+}
+
+.sem-resultados {
+    text-align: center;
+    padding: 20px;
+    color: var(--cinza);
+    font-size: 13px;
 }
 
 .empty-state-container {
