@@ -290,6 +290,15 @@
 
         <ReportModal :is-open="isReportOpen" tipo="receita" :target-id="receita.id" @close="isReportOpen = false"
             @send="tratarEnvioDenuncia" />
+
+        <transition name="fade-popup">
+            <div v-if="mostrarPopupSucesso" class="popup-sucesso-overlay">
+                <div class="popup-sucesso-card">
+                    <img src="/icon_ok.png" alt="Sucesso" class="popup-ok-icon" />
+                    <p>Adicionado com sucesso!</p>
+                </div>
+            </div>
+        </transition>
     </div>
 </template>
 
@@ -404,13 +413,26 @@ const isReportOpen = ref(false);
 const novoComentarioTexto = ref('');
 const comentarioEditandoId = ref(null);
 const textoEditado = ref('');
+const mostrarPopupSucesso = ref(false);
 
 const abrirModalDenuncia = () => { isReportOpen.value = true; };
 const tratarEnvioDenuncia = (dados) => { emit('enviar-denuncia', dados); };
 const toggleCurtir = () => { receita.value.curtido = !receita.value.curtido; };
 const toggleSalvar = () => { receita.value.salvo = !receita.value.salvo; };
 const toggleSeguir = () => { receita.value.seguindo = !receita.value.seguindo; };
-const adicionarTudoLista = () => { alert('Adicionado à lista!'); };
+
+const ingredientesAdicionadosNaLista = ref(false);
+
+const adicionarTudoLista = () => {
+    if (ingredientesAdicionadosNaLista.value) return;
+
+    ingredientesAdicionadosNaLista.value = true;
+    mostrarPopupSucesso.value = true;
+    setTimeout(() => {
+        mostrarPopupSucesso.value = false;
+    }, 2000);
+};
+
 const voltar = () => { window.history.back(); };
 
 const podeEditarOuExcluir = (comentario) => {
@@ -1101,5 +1123,54 @@ const getIconFilter = (tipo) => {
     border-radius: 6px;
     font-size: 12px;
     cursor: pointer;
+}
+
+.popup-sucesso-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.popup-sucesso-card {
+    background-color: #FFFFFF;
+    border: 1px solid var(--bege, #EFEAE1);
+    border-radius: 16px;
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.popup-ok-icon {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.popup-sucesso-card p {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--marrom, #2D241E);
+    margin: 0;
+}
+
+.fade-popup-enter-active,
+.fade-popup-leave-active {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-popup-enter-from,
+.fade-popup-leave-to {
+    opacity: 0;
+    transform: scale(0.95);
 }
 </style>
