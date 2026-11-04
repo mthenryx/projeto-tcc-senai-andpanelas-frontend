@@ -31,101 +31,67 @@
 
                 <UserSearchModal :is-open="isModalOpen" :users="listaDeUsuarios" @close="fecharModal" />
 
-                <div class="tabs-container">
-                    <button v-for="tab in tabs" :key="tab.id" class="tab-btn" :class="{ 'active': abaAtiva === tab.id }"
-                        @click="abaAtiva = tab.id">
-                        {{ tab.label }}
-                    </button>
+                <!-- Se estiver visualizando a listagem de uma categoria específica ("Ver todas") -->
+                <div v-if="categoriaSelecionada" class="container">
+                    <div class="section-title-wrapper" style="margin-bottom: 20px;">
+                        <button class="btn-voltar-cat" @click="categoriaSelecionada = null">← Voltar</button>
+                        <h3 class="section-title">{{ categoriaSelecionada }}</h3>
+                        <div></div>
+                    </div>
+
+                    <div class="grid-mini">
+                        <RecipeCardMini 
+                            v-for="receita in receitasFiltradasPorCategoria"
+                            :key="receita.id"
+                            :id="receita.id"
+                            :imagemUrl="receita.imagemUrl"
+                            :titulo="receita.titulo"
+                            :tempo="receita.tempo"
+                            :porcoes="receita.porcoes"
+                            :dificuldade="receita.dificuldade"
+                            @click="abrirDetalhes(receita.id)"
+                            style="cursor: pointer;"
+                        />
+                    </div>
+                    <p v-if="receitasFiltradasPorCategoria.length === 0" class="sem-receitas">
+                        Nenhuma receita encontrada para esta categoria.
+                    </p>
                 </div>
 
-                <div class="container">
-                    <div v-if="abaAtiva === 'para-voce'" class="tab-pane">
-                        <RecipeBannerCard 
-                            :id="destaqueParaVoce.id"
-                            :imagemUrl="destaqueParaVoce.imagemUrl"
-                            :titulo="destaqueParaVoce.titulo"
-                            :tempo="destaqueParaVoce.tempo"
-                            :porcoes="destaqueParaVoce.porcoes"
-                            :custo="destaqueParaVoce.custo"
-                            :autorNome="destaqueParaVoce.autorNome"
-                            :authorIniciais="destaqueParaVoce.authorIniciais"
-                            :dificuldade="destaqueParaVoce.dificuldade"
-                            :badgeTexto="destaqueParaVoce.badgeTexto"
-                            @click="abrirDetalhes(receitaAtual)"
-                            style="cursor: pointer;"
-                        />
-                        
-                        <div class="section-title-wrapper">
-                            <h3 class="section-title">Rápidas e Gostosas</h3>
-                            <span class="see-all">Ver todas</span>
-                        </div>
+                <!-- Conteúdo normal da Home -->
+                <template v-else>
+                    <div class="tabs-container">
+                        <button v-for="tab in tabs" :key="tab.id" class="tab-btn" :class="{ 'active': abaAtiva === tab.id }"
+                            @click="abaAtiva = tab.id">
+                            {{ tab.label }}
+                        </button>
+                    </div>
 
-                        <div class="grid-mini">
-                            <RecipeCardMini 
-                                v-for="receita in receitasMini"
-                                :key="receita.id"
-                                :id="receita.id"
-                                :imagemUrl="receita.imagemUrl"
-                                :titulo="receita.titulo"
-                                :tempo="receita.tempo"
-                                :porcoes="receita.porcoes"
-                                :dificuldade="receita.dificuldade"
-                                @click="abrirDetalhes(receita)"
+                    <div class="container">
+                        <div v-if="abaAtiva === 'para-voce'" class="tab-pane">
+                            <RecipeBannerCard 
+                                :id="destaqueParaVoce.id"
+                                :imagemUrl="destaqueParaVoce.imagemUrl"
+                                :titulo="destaqueParaVoce.titulo"
+                                :tempo="destaqueParaVoce.tempo"
+                                :porcoes="destaqueParaVoce.porcoes"
+                                :custo="destaqueParaVoce.custo"
+                                :autorNome="destaqueParaVoce.autorNome"
+                                :authorIniciais="destaqueParaVoce.authorIniciais"
+                                :dificuldade="destaqueParaVoce.dificuldade"
+                                :badgeTexto="destaqueParaVoce.badgeTexto"
+                                @click="abrirDetalhes(receitaAtual.id)"
+                                style="cursor: pointer;"
                             />
-                        </div>
-
-                        <RecipeCard 
-                            v-for="receita in listaDeReceitas" 
-                            :key="receita.id" 
-                            :id="receita.id"
-                            :imagemUrl="receita.imagemUrl" 
-                            :titulo="receita.titulo" 
-                            :tempo="receita.tempo"
-                            :porcoes="receita.porcoes" 
-                            :custo="receita.custo" 
-                            :curtidas="receita.curtidas"
-                            :comentarios="receita.comentarios" 
-                            :autorNome="receita.autorNome"
-                            :authorIniciais="receita.authorIniciais" 
-                            :dificuldade="receita.dificuldade"
-                            v-model:salvo="receita.salvo" 
-                            @toggle-save="tratarSalvarReceita" 
-                            @click="abrirDetalhes(receitaAtual)"
-                            style="cursor: pointer;"
-                        />
-                    </div>
-
-                    <div v-else-if="abaAtiva === 'seguindo'" class="tab-pane">
-                        <RecipeCard 
-                            v-for="receita in receitasSeguindo" 
-                            :key="receita.id" 
-                            :id="receita.id"
-                            :imagemUrl="receita.imagemUrl" 
-                            :titulo="receita.titulo" 
-                            :tempo="receita.tempo"
-                            :porcoes="receita.porcoes" 
-                            :custo="receita.custo" 
-                            :curtidas="receita.curtidas"
-                            :comentarios="receita.comentarios" 
-                            :autorNome="receita.autorNome"
-                            :authorIniciais="receita.authorIniciais" 
-                            :dificuldade="receita.dificuldade"
-                            v-model:salvo="receita.salvo" 
-                            @toggle-save="tratarSalvarReceita" 
-                            @click="abrirDetalhes(receitaAtual)"
-                            style="cursor: pointer;"
-                        />
-                    </div>
-
-                    <div v-else-if="abaAtiva === 'populares'" class="tab-pane">
-                        <div class="category-row" v-for="categoria in categoriasPopulares" :key="categoria.titulo">
+                            
                             <div class="section-title-wrapper">
-                                <h3 class="section-title">{{ categoria.titulo }}</h3>
-                                <span class="see-all">Ver todas</span>
+                                <h3 class="section-title">Rápidas e Gostosas</h3>
+                                <span class="see-all" @click="verTodasCategoria('Rápidas e Gostosas')">Ver todas</span>
                             </div>
+
                             <div class="grid-mini">
                                 <RecipeCardMini 
-                                    v-for="receita in categoria.receitas"
+                                    v-for="receita in receitasMini"
                                     :key="receita.id"
                                     :id="receita.id"
                                     :imagemUrl="receita.imagemUrl"
@@ -133,30 +99,94 @@
                                     :tempo="receita.tempo"
                                     :porcoes="receita.porcoes"
                                     :dificuldade="receita.dificuldade"
-                                    @click="abrirDetalhes(receitaAtual)"
-                                    style="cursor: pointer;"
+                                    @click="abrirDetalhes(receita.id)"
                                 />
                             </div>
-                        </div>
-                    </div>
 
-                    <div v-else-if="abaAtiva === 'receitas'" class="tab-pane">
-                        <RecipePodiumRanking 
-                            :ouro="receitaOuro"
-                            :prata="receitaPrata"
-                            :bronze="receitaBronze"
-                            @ver-receita="() => abrirDetalhes(receitaAtual)" 
+                            <RecipeCard 
+                                v-for="receita in listaDeReceitas" 
+                                :key="receita.id" 
+                                :id="receita.id"
+                                :imagemUrl="receita.imagemUrl" 
+                                :titulo="receita.titulo" 
+                                :tempo="receita.tempo"
+                                :porcoes="receita.porcoes" 
+                                :custo="receita.custo" 
+                                :curtidas="receita.curtidas"
+                                :comentarios="receita.comentarios" 
+                                :autorNome="receita.autorNome"
+                                :authorIniciais="receita.authorIniciais" 
+                                :dificuldade="receita.dificuldade"
+                                v-model:salvo="receita.salvo" 
+                                @toggle-save="tratarSalvarReceita" 
+                                @click="abrirDetalhes(receita.id)"
+                                style="cursor: pointer;"
+                            />
+                        </div>
+
+                        <div v-else-if="abaAtiva === 'seguindo'" class="tab-pane">
+                            <RecipeCard 
+                                v-for="receita in receitasSeguindo" 
+                                :key="receita.id" 
+                                :id="receita.id"
+                                :imagemUrl="receita.imagemUrl" 
+                                :titulo="receita.titulo" 
+                                :tempo="receita.tempo"
+                                :porcoes="receita.porcoes" 
+                                :custo="receita.custo" 
+                                :curtidas="receita.curtidas"
+                                :comentarios="receita.comentarios" 
+                                :autorNome="receita.autorNome"
+                                :authorIniciais="receita.authorIniciais" 
+                                :dificuldade="receita.dificuldade"
+                                v-model:salvo="receita.salvo" 
+                                @toggle-save="tratarSalvarReceita" 
+                                @click="abrirDetalhes(receita.id)"
+                                style="cursor: pointer;"
+                            />
+                        </div>
+
+                        <div v-else-if="abaAtiva === 'populares'" class="tab-pane">
+                            <div class="category-row" v-for="categoria in categoriasPopulares" :key="categoria.titulo">
+                                <div class="section-title-wrapper">
+                                    <h3 class="section-title">{{ categoria.titulo }}</h3>
+                                    <span class="see-all" @click="verTodasCategoria(categoria.titulo)">Ver todas</span>
+                                </div>
+                                <div class="grid-mini">
+                                    <RecipeCardMini 
+                                        v-for="receita in categoria.receitas"
+                                        :key="receita.id"
+                                        :id="receita.id"
+                                        :imagemUrl="receita.imagemUrl"
+                                        :titulo="receita.titulo"
+                                        :tempo="receita.tempo"
+                                        :porcoes="receita.porcoes"
+                                        :dificuldade="receita.dificuldade"
+                                        @click="abrirDetalhes(receita.id)"
+                                        style="cursor: pointer;"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-else-if="abaAtiva === 'receitas'" class="tab-pane">
+                            <RecipePodiumRanking 
+                                :ouro="receitaOuro"
+                                :prata="receitaPrata"
+                                :bronze="receitaBronze"
+                                @ver-receita="() => abrirDetalhes(receitaOuro.id)" 
+                            />
+                        </div>
+
+                        <ReportModal 
+                            :is-open="isReportOpen" 
+                            :tipo="tipoDenuncia" 
+                            :target-id="targetIdDenuncia"
+                            @close="isReportOpen = false"
+                            @send="tratarEnvioDenuncia"
                         />
                     </div>
-
-                    <ReportModal 
-                        :is-open="isReportOpen" 
-                        :tipo="tipoDenuncia" 
-                        :target-id="targetIdDenuncia"
-                        @close="isReportOpen = false"
-                        @send="tratarEnvioDenuncia"
-                    />
-                </div>
+                </template>
             </div>
         </div>
     </div>
@@ -176,6 +206,55 @@ import RecipePodiumRanking from '@/components/RecipePodiumRanking.vue';
 import ReportModal from '@/components/ReportModal.vue';
 
 const router = useRouter();
+
+const categoriaSelecionada = ref(null);
+
+// Simulação de todas as receitas vindas da API para filtro dinâmico
+const todasAsReceitasDaApi = ref([
+    { id: 1, categoria: 'Rápidas e Gostosas', imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
+    { id: 2, categoria: 'Rápidas e Gostosas', imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
+    { id: 3, categoria: 'Rápidas e Gostosas', imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Macarrão ao Pesto Caseiro', tempo: '25min', porcoes: '2 porções', dificuldade: 'Fácil' },
+    { id: 4, categoria: 'Rápidas e Gostosas', imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Pão de Queijo Mineiro', tempo: '35min', porcoes: '20 porções', dificuldade: 'Fácil' },
+    { id: 5, categoria: 'Almoço', imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
+    { id: 6, categoria: 'Jantar', imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
+    { id: 7, categoria: 'Café da manhã', imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Omelete de Forno com Ervas', tempo: '15min', porcoes: '2 porções', dificuldade: 'Fácil' },
+    { id: 8, categoria: 'Doces veganos', imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Bolo de Chocolate Vegano', tempo: '50min', porcoes: '8 porções', dificuldade: 'Médio' }
+]);
+
+const verTodasCategoria = (nomeCategoria) => {
+    categoriaSelecionada.value = nomeCategoria;
+};
+
+const receitasFiltradasPorCategoria = computed(() => {
+    if (!categoriaSelecionada.value) return [];
+    
+    const tituloNormalizado = categoriaSelecionada.value.trim().toLowerCase();
+
+    if (tituloNormalizado === 'rápidas e gostosas') {
+        return todasAsReceitasDaApi.value.filter(rec => {
+            const tempoNum = parseInt(rec.tempo) || 0;
+            return tempoNum <= 30;
+        });
+    }
+
+    if (tituloNormalizado === 'doces veganos') {
+        return todasAsReceitasDaApi.value.filter(rec => 
+            rec.categoria.toLowerCase() === 'sobremesa' &&
+            (rec.tags?.some(tag => tag.toLowerCase() === 'vegano') || rec.titulo.toLowerCase().includes('vegano'))
+        );
+    }
+
+    if (tituloNormalizado.includes(' e ')) {
+        const subCategorias = tituloNormalizado.split(' e ').map(c => c.trim());
+        return todasAsReceitasDaApi.value.filter(rec => 
+            subCategorias.some(sub => rec.categoria.toLowerCase() === sub.toLowerCase())
+        );
+    }
+
+    return todasAsReceitasDaApi.value.filter(
+        rec => rec.categoria.toLowerCase() === tituloNormalizado
+    );
+});
 
 const usuarioLogado = ref({
     id: 101,
@@ -430,17 +509,13 @@ const receitaBronze = ref({
   id: 3,
   imagemUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947',
   titulo: 'Picanha na Brasa ao Alho Confitado',
-  descricao: 'Picanha no ponto perfeito com crosta de sal grosso e chimichurri rústico, guarnecida com cabeças de alho assadas e macias.',
+  descricao: 'Picanha na ponto perfeito com crosta de sal grosso e chimichurri rústico, guarnecida com cabeças de alho assadas e macias.',
   tempo: '40 min',
   porcoes: '6 porções',
   dificuldade: 'Médio',
   autorNome: 'Pedro Souza',
   authorIniciais: 'PS'
 });
-
-const navegarParaReceita = (id) => {
-  console.log(`Navegando para a receita ID: ${id}`);
-};
 </script>
 
 <style scoped>
@@ -601,5 +676,26 @@ nav {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 20px;
+}
+
+.btn-voltar-cat {
+    background: none;
+    border: none;
+    color: var(--marrom);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.btn-voltar-cat:hover {
+    text-decoration: underline;
+}
+
+.sem-receitas {
+    font-size: 14px;
+    color: var(--cinza);
+    text-align: center;
+    margin-top: 20px;
 }
 </style>

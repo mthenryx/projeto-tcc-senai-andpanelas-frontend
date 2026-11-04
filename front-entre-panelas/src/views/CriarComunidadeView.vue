@@ -163,6 +163,9 @@ import BarraNavegacao from '@/components/BarraNavegacao.vue';
 const route = useRoute();
 const router = useRouter();
 
+const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const uploadPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
+
 const modoEdicao = ref(false);
 const comunidadeId = ref(null);
 
@@ -222,12 +225,9 @@ const dispararInputCapa = () => { fileCapaRef.value.click(); };
 const dispararInputAvatar = () => { fileAvatarRef.value.click(); };
 
 const enviarParaCloudinary = async (arquivo, tipo) => {
-    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-    const preset = import.meta.env.VITE_CLOUDINARY_PRESET;
-
     const formData = new FormData();
     formData.append('file', arquivo);
-    formData.append('upload_preset', preset);
+    formData.append('upload_preset', uploadPreset);
 
     try {
         const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${tipo}/upload`, {
@@ -240,6 +240,7 @@ const enviarParaCloudinary = async (arquivo, tipo) => {
         }
         throw new Error('Falha no upload');
     } catch (error) {
+        console.error('Erro no upload para o Cloudinary:', error);
         return null;
     }
 };

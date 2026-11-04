@@ -10,11 +10,14 @@ import EditarInformacoesView from '@/views/EditarInformacoesView.vue'
 import EditarPerfilView from '@/views/EditarPerfilView.vue'
 import GeladeiraView from '@/views/GeladeiraView.vue'
 import ListaView from '@/views/ListaView.vue'
-import PerfilView from '@/views/PerfilView.vue'
 import ReceitaView from '@/views/ReceitaView.vue'
 import BuscarView from '@/views/BuscarView.vue'
 import TesteView from '@/views/TesteView.vue'
 import CriarComunidadeView from '@/views/CriarComunidadeView.vue'
+import ComunidadeDetalhesView from '@/views/ComunidadeDetalhesView.vue'
+import PerfilView from '@/views/PerfilView.vue'
+import UserPerfilView from '@/views/OthersPerfilView.vue'
+import OthersPerfilView from '@/views/OthersPerfilView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -57,7 +60,7 @@ const router = createRouter({
     {
       path: '/comunidade/:id',
       name: 'ComunidadeDetalhes',
-      component: () => import('@/views/ComunidadeDetalhesView.vue')
+      component: ComunidadeDetalhesView
     },
     {
       path: '/criar-receita',
@@ -84,11 +87,7 @@ const router = createRouter({
       name: 'lista-compra',
       component: ListaView
     },
-    {
-      path: '/perfil',
-      name: 'perfil',
-      component: PerfilView
-    },
+    
     {
       path: '/receita/:id',
       name: 'receita',
@@ -98,6 +97,16 @@ const router = createRouter({
       path: '/buscar-receita',
       name: 'buscar-receita',
       component: BuscarView
+    },
+    {
+      path: '/perfil',
+      name: 'perfil',
+      component: PerfilView
+    },
+    {
+      path: '/others-perfil',
+      name: 'others-perfil',
+      component: OthersPerfilView
     },
     {
       path: '/teste',

@@ -128,12 +128,20 @@
 
                         <div class="dynamic-list-container">
                             <div v-for="(ing, index) in form.ingredientes" :key="index" class="dynamic-row">
-                                <input type="text" v-model="ing.nome" class="text-input flex-3"
+                                <input type="text" v-model="ing.nome" class="text-input flex-2"
                                     :class="{ 'error-input': erros.ingredientes && !ing.nome.trim() }"
                                     placeholder="Ingrediente" maxlength="35" />
 
-                                <input type="text" v-model="ing.quantidade" class="text-input flex-1"
-                                    :class="{ 'error-input': erros.ingredientes && !ing.quantidade.toString().trim() }"
+                                <select v-model="ing.unidadeMedida" class="select-input flex-1"
+                                    :class="{ 'error-input': erros.ingredientes && !ing.unidadeMedida }">
+                                    <option value="" disabled selected>Unidade de medida</option>
+                                    <option v-for="uni in unidadesMedidaDisponiveis" :key="uni" :value="uni">
+                                        {{ uni }}
+                                    </option>
+                                </select>
+
+                                <input type="number" v-model.number="ing.quantidade" min="0" max="1000" class="text-input flex-1"
+                                    :class="{ 'error-input': erros.ingredientes && (ing.quantidade === '' || ing.quantidade < 0) }"
                                     placeholder="Qtd." />
 
                                 <button type="button" class="remove-row-btn" @click="removerIngrediente(index)"
@@ -186,7 +194,7 @@
                             </div>
                             <div class="chips-tags-list" v-if="form.tags.length > 0">
                                 <span v-for="(tag, idx) in form.tags" :key="idx" class="tag-chip-item">
-                                    #{{ tag }} <button type="button" @click="removerTag(idx)">×</button>
+                                    {{ tag }} <button type="button" @click="removerTag(idx)">×</button>
                                 </span>
                             </div>
                         </div>
@@ -244,6 +252,9 @@ import BarraNavegacao from '@/components/BarraNavegacao.vue';
 
 const router = useRouter();
 
+const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const uploadPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
+
 const etapaAtual = ref(1);
 const sucessoPublicacao = ref(false);
 
@@ -256,6 +267,7 @@ const categoriasDisponiveis = ref(['Café da manhã', 'Almoço', 'Jantar', 'Sobr
 const dificuldadesDisponiveis = ref(['Fácil', 'Médio', 'Difícil']);
 const custosDisponiveis = ref(['Econômico', 'Moderado', 'Elevado']);
 const porcoesDisponiveis = ref([1, 2, 4, 6, 8, 10, 12]);
+const unidadesMedidaDisponiveis = ref(['g', 'kg', 'ml', 'L', 'Xícara(s)', 'Colher(es) de sopa', 'Colher(es) de chá', 'Unidade(s)', 'Pitada', 'Dente(s)']);
 const comunidadesDisponiveis = ref([
     { id: 1, nome: 'Cozinha Brasileira' },
     { id: 2, nome: 'Veganos Criativos' },
@@ -273,8 +285,8 @@ const form = reactive({
     fotoUrl: '',
     videoUrl: '',
     ingredientes: [
-        { nome: '', quantidade: '' },
-        { nome: '', quantidade: '' }
+        { nome: '', unidadeMedida: '', quantidade: 1 },
+        { nome: '', unidadeMedida: '', quantidade: 1 }
     ],
     passos: [
         '',
@@ -300,12 +312,9 @@ const dispararInputFoto = () => { fileFotoRef.value.click(); };
 const dispararInputVideo = () => { fileVideoRef.value.click(); };
 
 const enviarParaCloudinary = async (arquivo, tipo) => {
-    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-    const preset = import.meta.env.VITE_CLOUDINARY_PRESET;
-
     const formData = new FormData();
     formData.append('file', arquivo);
-    formData.append('upload_preset', preset);
+    formData.append('upload_preset', uploadPreset);
 
     try {
         const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${tipo}/upload`, {
@@ -313,6 +322,7 @@ const enviarParaCloudinary = async (arquivo, tipo) => {
             body: formData
         });
         const data = await response.json();
+        
         if (data.secure_url) {
             return data.secure_url;
         }
@@ -368,7 +378,7 @@ const avancarParaEtapa2 = () => {
 };
 
 const avancarParaEtapa3 = () => {
-    const temIngredientesInvalidos = form.ingredientes.some(i => !i.nome.trim() || !i.quantidade.toString().trim());
+    const temIngredientesInvalidos = form.ingredientes.some(i => !i.nome.trim() || !i.unidadeMedida || i.quantidade === '' || i.quantidade < 0 || i.quantidade > 1000);
     erros.ingredientes = temIngredientesInvalidos || form.ingredientes.length === 0;
 
     if (erros.ingredientes) {
@@ -378,7 +388,7 @@ const avancarParaEtapa3 = () => {
 };
 
 const adicionarIngrediente = () => {
-    form.ingredientes.push({ nome: '', quantidade: '' });
+    form.ingredientes.push({ nome: '', unidadeMedida: '', quantidade: 1 });
 };
 
 const removerIngrediente = (index) => {
@@ -398,8 +408,18 @@ const removerPasso = (index) => {
 };
 
 const adicionarTag = () => {
-    const t = novaTagInput.value.trim().replace(/^#/, '');
-    if (t && !form.tags.includes(t)) {
+    let t = novaTagInput.value.trim();
+    if (!t) return;
+
+    // Remove todos os espaços internos (ex: "Comida Boa" -> "ComidaBoa")
+    t = t.replace(/\s+/g, '');
+
+    // Garante que começa com #
+    if (!t.startsWith('#')) {
+        t = '#' + t;
+    }
+
+    if (t.length > 1 && !form.tags.includes(t)) {
         form.tags.push(t);
     }
     novaTagInput.value = '';
@@ -652,7 +672,7 @@ const voltarEtapa = () => {
     border: 1px solid #EFEAE1;
     border-radius: 12px;
     background-color: #FFFFFF;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--marrom);
     outline: none;
     box-sizing: border-box;
