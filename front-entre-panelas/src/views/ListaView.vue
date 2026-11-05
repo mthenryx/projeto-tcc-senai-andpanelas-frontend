@@ -101,6 +101,7 @@
                             placeholder="Adicionar item manualmente..." 
                             @input="erroNome = false"
                             @keyup.enter="adicionarItemManual"
+                            maxlength="35"
                         />
                         <div class="select-wrapper" :class="{ 'input-erro': erroUnidade }">
                             <select v-model="novaUnidadeMedida" class="select-field" @change="erroUnidade = false">

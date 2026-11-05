@@ -60,6 +60,7 @@
                         @keyup.enter="enviarMensagem(novaMensagemTexto)"
                         placeholder="Pergunte ao Chefinho..." 
                         class="chat-input"
+                        maxlength="3000"
                     />
                     <button 
                         class="send-btn" 

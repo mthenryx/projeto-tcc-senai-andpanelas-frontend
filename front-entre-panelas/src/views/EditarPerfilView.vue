@@ -74,7 +74,7 @@
                     <div class="campos-grid">
                         <div class="campo-grupo">
                             <label>Nome de exibição</label>
-                            <input type="text" v-model="form.nomeCompleto" maxlength="150" required />
+                            <input type="text" v-model="form.nomeCompleto" maxlength="150" required/>
                         </div>
 
                         <div class="campo-grupo">
@@ -85,7 +85,7 @@
 
                     <div class="campo-grupo bio-grupo">
                         <label>Bio</label>
-                        <textarea v-model="form.descricao" rows="3" maxlength="250"></textarea>
+                        <textarea v-model="form.descricao" rows="3" maxlength="200"></textarea>
                         <span class="bio-helper">Sua bio aparecerá abaixo do nome no perfil.</span>
                     </div>
 
