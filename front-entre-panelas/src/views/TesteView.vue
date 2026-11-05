@@ -1,7 +1,7 @@
 <template>
-    <UserAvatar></UserAvatar>
+    <LoadingSpinner :tamanho="60" :espessura="5" />
 </template>
 
 <script setup>
-    import UserAvatar from '@/components/UserAvatar.vue'
+    import LoadingSpinner from '@/components/LoadingSpinner.vue'
 </script>
