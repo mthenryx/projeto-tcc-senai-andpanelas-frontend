@@ -1,7 +1,6 @@
 const BASE_URL = "http://localhost:8080/v1/entrepanelas"
 const url = `${BASE_URL}/denuncias`
 
-// POST /denuncias/usuario
 export async function postDenunciaUsuario(dados, jwt) {
     const options = {
         method: "POST",
@@ -16,7 +15,6 @@ export async function postDenunciaUsuario(dados, jwt) {
     return response.json()
 }
 
-// POST /denuncias/comunidade
 export async function postDenunciaComunidade(dados, jwt) {
     const options = {
         method: "POST",
@@ -31,7 +29,6 @@ export async function postDenunciaComunidade(dados, jwt) {
     return response.json()
 }
 
-// POST /denuncias/receita
 export async function postDenunciaReceita(dados, jwt) {
     const options = {
         method: "POST",

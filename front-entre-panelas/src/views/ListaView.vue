@@ -5,7 +5,7 @@
         <div class="coluna">
             <div class="conteudo">
                 <header class="header-normal">
-                    <div class="header-topo-lista">
+                    <div class="header-topo-lista none">
                         <button class="back-btn" @click="voltar" aria-label="Voltar">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -911,5 +911,68 @@ header.header-normal {
     font-size: 11px;
     color: var(--cinza);
     margin: 2px 0 0 0;
+}
+
+@media (max-width: 768px) {
+    .corpo {
+        flex-direction: column;
+    }
+
+    .coluna {
+        width: 100%;
+        margin-left: 0;
+        flex: 1;
+        min-height: auto;
+    }
+
+    header.header-normal {
+        padding: 12px 16px;
+        background-color: transparent;
+        border: none;
+    }
+
+    .progress-bar-container {
+        margin-top: 14px;
+        height: 6px;
+    }
+
+    .lista-container {
+        padding: 16px 12px 40px 12px;
+        gap: 16px;
+    }
+
+    .add-manual-row {
+        gap: 8px;
+    }
+
+    .add-manual-row input[type="text"],
+    .add-manual-row input[type="number"] {
+        min-width: 0;
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .select-wrapper {
+        min-width: 0;
+    }
+
+    .select-field {
+        font-size: 13px;
+        padding: 10px 28px 10px 12px;
+    }
+
+    .add-manual-btn {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+    }
+
+    .item-card {
+        padding: 10px 12px;
+    }
+
+    .none {
+        display: none;
+    }
 }
 </style>

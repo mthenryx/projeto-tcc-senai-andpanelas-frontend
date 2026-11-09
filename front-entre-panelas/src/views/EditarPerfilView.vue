@@ -3,7 +3,7 @@
         <BarraNavegacao />
 
         <main class="conteudo-principal">
-            <div class="topo-pagina">
+            <div class="topo-pagina none">
                 <button class="botao-icone-1" @click="voltarPerfil" aria-label="Voltar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -448,5 +448,57 @@ const salvarPerfil = () => {
 
 .btn-salvar:hover {
     background-color: var(--verde-escuro);
+}
+
+@media (max-width: 768px) {
+    .perfil-layout {
+        flex-direction: column;
+    }
+
+    .conteudo-principal {
+        margin-left: 0;
+        padding-bottom: 24px;
+    }
+
+    .topo-pagina {
+        padding: 16px;
+    }
+
+    .conteudo-container {
+        padding: 16px;
+        margin-top: 20px;
+    }
+
+    .card-formulario {
+        padding: 20px 16px;
+    }
+
+    .banner-edicao {
+        height: 140px;
+        padding: 12px;
+    }
+
+    .avatar-edicao-wrapper {
+        width: 80px;
+        margin-bottom: -25px;
+    }
+
+    .campos-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .acoes-formulario {
+        justify-content: stretch;
+    }
+
+    .btn-cancelar,
+    .btn-salvar {
+        flex: 1;
+    }
+
+    .none {
+        display: none;
+    }
 }
 </style>

@@ -207,4 +207,65 @@ const itensMenu = [
     font-size: 20px;
     line-height: 1;
 }
+
+@media (max-width: 768px) {
+    .menu-lateral {
+        position: relative;
+        top: auto;
+        left: auto;
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        border-right: none;
+        border-bottom: 1px solid var(--bege);
+        overflow: visible;
+    }
+
+    .cabecalho-menu {
+        order: 1;
+        flex: 1;
+        height: 60px;
+        padding: 0 16px;
+        border-bottom: none;
+    }
+
+    .rodape-menu {
+        order: 2;
+        margin-top: 0;
+        padding: 8px 16px;
+        border-top: none;
+    }
+
+    .botao-nova-receita {
+        width: auto;
+        padding: 0 16px;
+    }
+
+    .navegacao {
+        border-top: 1px solid var(--bege);
+        order: 3;
+        width: 100%;
+        flex-direction: row;
+        gap: 4px;
+        padding: 12px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        box-sizing: border-box;
+    }
+
+    .navegacao::-webkit-scrollbar {
+        display: none;
+    }
+
+    .item-menu {
+        width: auto;
+        flex-shrink: 0;
+        padding: 12px 18px;
+        font-size: 13px;
+        border-radius: 25px;
+    }
+}
 </style>

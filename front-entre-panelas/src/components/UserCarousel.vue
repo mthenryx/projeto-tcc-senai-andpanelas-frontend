@@ -8,7 +8,12 @@
         </div>
 
         <div class="carousel-scroll">
-            <div v-for="user in users" :key="user.id" class="user-item">
+            <div 
+                v-for="user in users" 
+                :key="user.id" 
+                class="user-item"
+                @click="abrirPerfil(user.id)"
+            >
                 <div class="avatar">
                     <UserAvatar 
                         :fotoUrl="user.fotoUrl" 
@@ -29,7 +34,10 @@
 
 <script setup>
 import { defineProps, defineEmits } from 'vue';
+import { useRouter } from 'vue-router';
 import UserAvatar from '@/components/UserAvatar.vue';
+
+const router = useRouter();
 
 const props = defineProps({
     users: {
@@ -43,6 +51,10 @@ const emit = defineEmits(['search-click']);
 
 const handleSearchClick = () => {
     emit('search-click');
+};
+
+const abrirPerfil = (userId) => {
+    router.push({ path: '/others-perfil', query: { id: userId } });
 };
 </script>
 

@@ -35,7 +35,7 @@
 
                 <div class="membros-avatares-row">
                     <div class="avatares-stack">
-                        <div v-for="(membro, idx) in primeirosMembros" :key="membro.id" class="avatar-circle-wrapper">
+                        <div v-for="(membro, idx) in primeirosMembros" :key="membro.id" class="avatar-circle-wrapper" @click="abrirPerfilMembro(membro.id)">
                             <img v-if="membro.foto_url && membro.foto_url.trim() !== ''" :src="membro.foto_url"
                                 :alt="membro.nome" class="avatar-img-stack" />
                             <div v-else class="avatar-circle" :style="{ backgroundColor: obterCorAvatar(idx) }">
@@ -96,7 +96,7 @@
 
                 <div v-if="ehCriador" class="btn-editar-wrapper">
                     <button class="btn-editar-comunidade" @click="irParaEdicao">
-                        ✏️ Editar comunidade
+                        ✏️ㅤEditar comunidade
                     </button>
                 </div>
 
@@ -112,7 +112,7 @@
                 </div>
 
                 <div v-else-if="abaAtiva === 'membros'" class="lista-membros-vertical">
-                    <div v-for="membro in comunidade.participantes" :key="membro.id" class="membro-card-item">
+                    <div v-for="membro in comunidade.participantes" :key="membro.id" class="membro-card-item" @click="abrirPerfilMembro(membro.id)">
                         <div class="membro-left">
                             <img v-if="membro.foto_url && membro.foto_url.trim() !== ''" :src="membro.foto_url"
                                 :alt="membro.nome" class="membro-foto" />
@@ -219,6 +219,10 @@ const receitasComunidade = ref([
         imagem_url: 'https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=600'
     }
 ]);
+
+const abrirPerfilMembro = (membroId) => {
+    router.push({ path: '/others-perfil', query: { id: membroId } });
+};
 
 const voltar = () => {
     router.back();
@@ -385,6 +389,7 @@ const compartilhar = () => {
 
 .avatar-circle-wrapper {
     margin-left: -8px;
+    cursor: pointer;
 }
 
 .avatar-circle-wrapper:first-child {
@@ -548,6 +553,7 @@ const compartilhar = () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    cursor: pointer;
 }
 
 .membro-left {
@@ -620,5 +626,46 @@ const compartilhar = () => {
     height: 40px;
     width: 100%;
     border-radius: 15px;
+}
+
+@media (max-width: 768px) {
+    .corpo {
+        flex-direction: column;
+    }
+
+    .coluna {
+        width: 100%;
+        margin-left: 0;
+        flex: 1;
+        min-height: auto;
+    }
+
+    .banner-capa-header {
+        height: 180px;
+    }
+
+    .banner-overlay {
+        padding: 16px;
+    }
+
+    .comunidade-titulo {
+        font-size: 22px;
+    }
+
+    .conteudo-principal {
+        padding: 16px 12px 40px 12px;
+    }
+
+    .acoes-comunidade-row {
+        gap: 8px;
+    }
+
+    .membro-card-item {
+        padding: 12px 14px;
+    }
+
+    .none {
+        display: none;
+    }
 }
 </style>

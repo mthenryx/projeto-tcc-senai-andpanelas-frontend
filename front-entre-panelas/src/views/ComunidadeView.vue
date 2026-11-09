@@ -4,7 +4,7 @@
 
         <div class="coluna">
             <header class="header-topo">
-                <div class="header-titles">
+                <div class="header-titles none">
                     <h2>Comunidades</h2>
                 </div>
                 <button class="btn-criar-topo" @click="irParaCriarComunidade">
@@ -530,5 +530,50 @@ const arrastar = (e) => {
     padding: 20px;
     color: var(--cinza);
     font-size: 13px;
+}
+
+@media (max-width: 768px) {
+    .corpo {
+        flex-direction: column;
+    }
+
+    .coluna {
+        width: 100%;
+        margin-left: 0;
+        flex: 1;
+        min-height: auto;
+    }
+
+    .header-topo {
+        padding: 0px 12px;
+        border: none;
+        background-color: transparent;
+    }
+
+    .conteudo-comunidades {
+        padding: 16px 12px;
+        gap: 20px;
+    }
+
+    .banner-destaque {
+        height: 200px;
+    }
+
+    .banner-overlay {
+        padding: 16px;
+    }
+
+    .titulo-secao {
+        font-size: 16px;
+        margin-bottom: 16px;
+    }
+
+    .comunidade-card-item {
+        padding: 14px;
+    }
+
+    .search-input {
+        margin-top: -10px;
+    }
 }
 </style>

@@ -1,8 +1,6 @@
 const BASE_URL = "http://localhost:8080/v1/entrepanelas"
 const url = `${BASE_URL}/usuarios`
 
-// GET /usuarios
-// query: pagina, limite, busca
 export async function getListarUsuarios(params = {}) {
     const query = new URLSearchParams(params).toString()
     const response = await fetch(`${url}${query ? `?${query}` : ""}`)
@@ -10,8 +8,6 @@ export async function getListarUsuarios(params = {}) {
     return response.json()
 }
 
-// GET /usuarios/busca/username
-// query: username
 export async function getBuscarUsuarioPorUsername(params = {}) {
     const query = new URLSearchParams(params).toString()
     const response = await fetch(`${url}/busca/username${query ? `?${query}` : ""}`)
@@ -19,14 +15,12 @@ export async function getBuscarUsuarioPorUsername(params = {}) {
     return response.json()
 }
 
-// GET /usuarios/{id}
 export async function getBuscarUsuario(id) {
     const response = await fetch(`${url}/${id}`)
     if(!response.ok) throw new Error(`Erro ao buscar o usuário: ${id}`)
     return response.json()
 }
 
-// GET /usuarios/me
 export async function getUsuarioLogado(jwt) {
     const options = {
         method: "GET",
@@ -39,7 +33,6 @@ export async function getUsuarioLogado(jwt) {
     return response.json()
 }
 
-// PUT /usuarios/me
 export async function putUsuarioLogado(dados, jwt) {
     const options = {
         method: "PUT",
@@ -54,7 +47,6 @@ export async function putUsuarioLogado(dados, jwt) {
     return response.json()
 }
 
-// POST /usuarios/me/alterar-email
 export async function postAlterarEmail(dados, jwt) {
     const options = {
         method: "POST",
@@ -69,7 +61,6 @@ export async function postAlterarEmail(dados, jwt) {
     return response.json()
 }
 
-// POST /usuarios/me/confirmar-alteracao
 export async function postConfirmarAlteracaoEmail(dados, jwt) {
     const options = {
         method: "POST",
@@ -84,7 +75,6 @@ export async function postConfirmarAlteracaoEmail(dados, jwt) {
     return response.json()
 }
 
-// POST /usuarios/me/alterar-senha
 export async function postAlterarSenha(dados, jwt) {
     const options = {
         method: "POST",
@@ -99,7 +89,6 @@ export async function postAlterarSenha(dados, jwt) {
     return response.json()
 }
 
-// POST /usuarios/{id}/seguir
 export async function postSeguirUsuario(id, jwt) {
     const options = {
         method: "POST",
@@ -112,7 +101,6 @@ export async function postSeguirUsuario(id, jwt) {
     return response.json()
 }
 
-// POST /usuarios/{id}/deixar-seguir
 export async function postDeixarSeguirUsuario(id, jwt) {
     const options = {
         method: "POST",
@@ -125,8 +113,6 @@ export async function postDeixarSeguirUsuario(id, jwt) {
     return response.json()
 }
 
-// GET /usuarios/{id}/seguidores
-// query: pagina, limite
 export async function getSeguidoresUsuario(id, params = {}) {
     const query = new URLSearchParams(params).toString()
     const response = await fetch(`${url}/${id}/seguidores${query ? `?${query}` : ""}`)
@@ -134,8 +120,6 @@ export async function getSeguidoresUsuario(id, params = {}) {
     return response.json()
 }
 
-// GET /usuarios/{id}/seguindo
-// query: pagina, limite
 export async function getSeguindoUsuario(id, params = {}) {
     const query = new URLSearchParams(params).toString()
     const response = await fetch(`${url}/${id}/seguindo${query ? `?${query}` : ""}`)

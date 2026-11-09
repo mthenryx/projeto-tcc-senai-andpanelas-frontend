@@ -1,7 +1,6 @@
 const BASE_URL = "http://localhost:8080/v1/entrepanelas"
 const url = `${BASE_URL}/comentarios`
 
-// PUT /comentarios/{id}
 export async function putComentario(id, dados, jwt) {
     const options = {
         method: "PUT",
@@ -16,7 +15,6 @@ export async function putComentario(id, dados, jwt) {
     return response.json()
 }
 
-// DELETE /comentarios/{id}
 export async function deleteComentario(id, jwt) {
     const options = {
         method: "DELETE",

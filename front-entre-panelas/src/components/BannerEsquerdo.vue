@@ -157,4 +157,20 @@ const imagemFundo = computed(() => {
   height: 35px;
   background-color: rgba(255, 255, 255, 0.2);
 }
+
+@media (max-width: 768px) {
+  .banner {
+    width: 100%;
+    height: 420px;
+    flex-shrink: 0;
+  }
+
+  .banner-content {
+    padding: 2.5rem 3.5rem;
+  }
+
+  .logo {
+    height: 50px;
+  }
+}
 </style>

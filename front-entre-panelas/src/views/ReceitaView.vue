@@ -25,7 +25,7 @@
                             <p class="recipe-description">{{ receita.descricao }}</p>
 
                             <div class="author-row">
-                                <div class="author-info-left">
+                                <div class="author-info-left" @click="abrirPerfilAutor">
                                     <div class="avatar">
                                         <UserAvatar 
                                             :fotoUrl="receita.autorFotoUrl" 
@@ -304,12 +304,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
 import ReportModal from '@/components/ReportModal.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 
 const route = useRoute();
+const router = useRouter();
 
 const usuarioAtual = ref({
     id: 101,
@@ -414,6 +415,12 @@ const novoComentarioTexto = ref('');
 const comentarioEditandoId = ref(null);
 const textoEditado = ref('');
 const mostrarPopupSucesso = ref(false);
+
+const abrirPerfilAutor = () => {
+    if (receita.value.autorId) {
+        router.push({ path: '/others-perfil', query: { id: receita.value.autorId } });
+    }
+};
 
 const abrirModalDenuncia = () => { isReportOpen.value = true; };
 const tratarEnvioDenuncia = (dados) => { emit('enviar-denuncia', dados); };
@@ -618,6 +625,7 @@ const getIconFilter = (tipo) => {
     display: flex;
     align-items: center;
     gap: 12px;
+    cursor: pointer;
 }
 
 .author-text {
@@ -1172,5 +1180,18 @@ const getIconFilter = (tipo) => {
 .fade-popup-leave-to {
     opacity: 0;
     transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+    .corpo {
+        flex-direction: column;
+    }
+
+    .coluna {
+        width: 100%;
+        margin-left: 0;
+        flex: 1;
+        min-height: auto;
+    }
 }
 </style>

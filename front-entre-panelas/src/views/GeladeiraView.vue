@@ -2,7 +2,7 @@
     <div class="corpo">
         <BarraNavegacao />
         <div class="coluna">
-            <header class="header-geladeira-fixo">
+            <header class="header-geladeira-fixo none">
                 <RouterLink to="/home">
                     <button class="botao-voltar" aria-label="Voltar">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
@@ -730,5 +730,64 @@ const getIconRefeicaoFilter = (tipo, ativo) => {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
     z-index: 2;
     pointer-events: none;
+}
+
+@media (max-width: 768px) {
+    .corpo {
+        flex-direction: column;
+    }
+
+    .coluna {
+        width: 100%;
+        margin-left: 0;
+        flex: 1;
+        min-height: auto;
+    }
+
+    .header-geladeira-fixo {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .conteudo {
+        padding: 16px 12px;
+    }
+
+    .geladeira-container {
+        gap: 16px;
+    }
+
+    .secao-adicionar-card {
+        padding: 16px;
+    }
+
+    .formulario-ingrediente {
+        gap: 8px;
+    }
+
+    .grupo-input {
+        padding: 10px 12px;
+    }
+
+    .botao-refeicao {
+        font-size: 13px;
+        padding: 8px;
+    }
+
+    .botao-acao-principal {
+        padding: 12px;
+    }
+
+    .aviso-compatibilidade-banner {
+        padding: 12px;
+    }
+
+    .textos-cabecalho h1 {
+        font-size: 16px;
+    }
+
+    .none {
+        display: none;
+    }
 }
 </style>

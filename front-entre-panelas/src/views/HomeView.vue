@@ -2,7 +2,7 @@
     <div class="corpo">
         <BarraNavegacao></BarraNavegacao>
         <div class="coluna">
-            <HeaderAplicacao></HeaderAplicacao>
+            <HeaderAplicacao class="none"></HeaderAplicacao>
             <div class="conteudo">
                 <nav>
                     <RouterLink to="/geladeira" class="fast-navegation">
@@ -31,9 +31,8 @@
 
                 <UserSearchModal :is-open="isModalOpen" :users="listaDeUsuarios" @close="fecharModal" />
 
-                <!-- Se estiver visualizando a listagem de uma categoria específica ("Ver todas") -->
                 <div v-if="categoriaSelecionada" class="container">
-                    <div class="section-title-wrapper" style="margin-bottom: 20px;">
+                    <div class="section-title-wrapper" style="margin-bottom: 25px;">
                         <button class="btn-voltar-cat" @click="categoriaSelecionada = null">← Voltar</button>
                         <h3 class="section-title">{{ categoriaSelecionada }}</h3>
                         <div></div>
@@ -652,9 +651,9 @@ nav {
 
 .section-title-wrapper {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     margin-top: 10px;
+    justify-content: space-between;
 }
 
 .section-title {
@@ -697,5 +696,33 @@ nav {
     color: var(--cinza);
     text-align: center;
     margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+    .corpo {
+        flex-direction: column;
+    }
+
+    .coluna {
+        width: 100%;
+        margin-left: 0;
+        flex: 1;
+        min-height: auto;
+    }
+
+    nav {
+        width: 100%;
+        box-sizing: border-box;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+        .fast-navegation {
+        margin-top: 10px;
+    }
+
+    .none {
+        display: none;
+    }
 }
 </style>

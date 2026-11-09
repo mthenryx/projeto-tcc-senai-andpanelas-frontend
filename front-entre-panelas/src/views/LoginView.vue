@@ -65,7 +65,6 @@ function handleLogin() {
   overflow: hidden;
 }
 
-/* LADO DIREITO (LOGIN) */
 .login-container {
   width: 50%;
   display: flex;
@@ -209,5 +208,26 @@ function handleLogin() {
   color: var(--verde, #72bca5);
   text-decoration: none;
   font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .corpo {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .login-container {
+    width: 100%;
+    flex: 1;
+    min-height: auto;
+    align-items: flex-start;
+    padding: 3rem 2rem;
+  }
+
+  .login-card {
+    max-width: 400px;
+  }
 }
 </style>

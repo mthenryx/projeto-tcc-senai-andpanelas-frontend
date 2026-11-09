@@ -4,7 +4,7 @@
         <BarraNavegacao />
 
         <div class="coluna">
-            <header class="header-topo" v-if="etapaAtual <= 3">
+            <header class="header-topo none" v-if="etapaAtual <= 3">
                 <div class="header-left">
                     <button class="back-btn" @click="voltarEtapa" aria-label="Voltar">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -411,10 +411,8 @@ const adicionarTag = () => {
     let t = novaTagInput.value.trim();
     if (!t) return;
 
-    // Remove todos os espaços internos (ex: "Comida Boa" -> "ComidaBoa")
     t = t.replace(/\s+/g, '');
 
-    // Garante que começa com #
     if (!t.startsWith('#')) {
         t = '#' + t;
     }
@@ -952,5 +950,76 @@ const voltarEtapa = () => {
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .corpo {
+        flex-direction: column;
+    }
+
+    .coluna {
+        width: 100%;
+        margin-left: 0;
+        flex: 1;
+        min-height: auto;
+    }
+
+    .header-topo {
+        padding: 0 16px;
+    }
+
+    .conteudo {
+        padding: 20px 12px 40px 12px;
+    }
+
+    .form-container {
+        padding: 20px;
+        height: fit-content;
+    }
+
+    .row-dupla {
+        gap: 12px;
+    }
+
+    .row-dupla > .input-group {
+        min-width: 0;
+    }
+
+    .dynamic-row {
+        gap: 8px;
+    }
+
+    .dynamic-row input,
+    .dynamic-row select,
+    .dynamic-row textarea {
+        min-width: 0;
+    }
+
+    .upload-box {
+        height: 120px;
+    }
+
+    .section-title {
+        font-size: 18px;
+    }
+
+    .navigation-buttons-row {
+        flex-wrap: wrap;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        flex: 1;
+        padding: 12px 16px;
+        text-align: center;
+    }
+
+    .success-screen-container {
+        padding: 24px;
+    }
+
+    .success-title {
+        font-size: 20px;
+    }
 }
 </style>

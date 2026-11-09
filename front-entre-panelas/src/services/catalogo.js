@@ -1,14 +1,11 @@
 const BASE_URL = "http://localhost:8080/v1/entrepanelas"
 
-// GET /categorias
 export async function getListarCategorias() {
     const response = await fetch(`${BASE_URL}/categorias`)
     if(!response.ok) throw new Error("Erro ao listar as categorias!")
     return response.json()
 }
 
-// GET /tags
-// query: pagina, limite
 export async function getListarTags(params = {}) {
     const query = new URLSearchParams(params).toString()
     const response = await fetch(`${BASE_URL}/tags${query ? `?${query}` : ""}`)
@@ -16,7 +13,6 @@ export async function getListarTags(params = {}) {
     return response.json()
 }
 
-// POST /tags
 export async function postTag(dados, jwt) {
     const options = {
         method: "POST",
@@ -31,14 +27,12 @@ export async function postTag(dados, jwt) {
     return response.json()
 }
 
-// GET /categorias-comunidades
 export async function getListarCategoriasComunidades() {
     const response = await fetch(`${BASE_URL}/categorias-comunidades`)
     if(!response.ok) throw new Error("Erro ao listar as categorias de comunidades!")
     return response.json()
 }
 
-// POST /categorias-comunidades
 export async function postCategoriaComunidade(dados, jwt) {
     const options = {
         method: "POST",

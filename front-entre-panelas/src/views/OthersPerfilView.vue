@@ -162,7 +162,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BarraNavegacao from '@/components/BarraNavegacao.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
@@ -172,22 +172,64 @@ import ReportModal from '@/components/ReportModal.vue'
 const route = useRoute()
 const router = useRouter()
 
-const usuarioId = computed(() => route.params.id)
+const usuarioId = computed(() => route.query.id)
 
 const abaAtiva = ref('receitas')
 const modalDenunciaAberta = ref(false)
+const usuario = ref({})
 
-const usuario = ref({
-    id: usuarioId.value || 1,
-    nome: 'Ana Costa',
-    username: 'anacosta',
-    descricao: 'Chef caseira apaixonada com comida brasileira 🍲 | Receitas saudáveis e afetivas',
-    fotoUrl: '',
-    bannerUrl: '',
-    quantidadeReceitas: 47,
-    quantidadeSeguidores: '1.2k',
-    quantidadeSeguindo: 389,
-    seguindo: false
+const usuariosMock = [
+    {
+        id: 1,
+        nome: 'Ana Costa',
+        username: 'anacosta',
+        descricao: 'Chef caseira apaixonada por comida brasileira 🍲 | Receitas saudáveis e afetivas',
+        fotoUrl: '',
+        bannerUrl: '',
+        quantidadeReceitas: 47,
+        quantidadeSeguidores: '1.2k',
+        quantidadeSeguindo: 389,
+        seguindo: false
+    },
+    {
+        id: 2,
+        nome: 'Pedro Souza',
+        username: 'pedrosouza',
+        descricao: 'Especialista em massas e molhos artesanais 🍝',
+        fotoUrl: '',
+        bannerUrl: '',
+        quantidadeReceitas: 12,
+        quantidadeSeguidores: '540',
+        quantidadeSeguindo: 120,
+        seguindo: true
+    },
+    {
+        id: 3,
+        nome: 'Beatriz Alves',
+        username: 'bialves',
+        descricao: 'Confeitaria descomplicada e sobremesas incríveis 🎂',
+        fotoUrl: '',
+        bannerUrl: '',
+        quantidadeReceitas: 31,
+        quantidadeSeguidores: '2.8k',
+        quantidadeSeguindo: 450,
+        seguindo: false
+    }
+]
+
+const carregarDadosUsuario = (id) => {
+    const usuarioEncontrado = usuariosMock.find(u => Number(u.id) === Number(id))
+    usuario.value = usuarioEncontrado || usuariosMock[0]
+}
+
+onMounted(() => {
+    carregarDadosUsuario(usuarioId.value)
+})
+
+watch(usuarioId, (novoId) => {
+    if (novoId) {
+        carregarDadosUsuario(novoId)
+    }
 })
 
 const toggleSeguir = () => {
@@ -587,5 +629,43 @@ const irParaComunidade = (id) => {
 .comunidade-membros {
     font-size: 13px;
     color: var(--cinza);
+}
+
+@media (max-width: 768px) {
+    .perfil-layout {
+        flex-direction: column;
+    }
+
+    .conteudo-principal {
+        margin-left: 0;
+        padding-bottom: 24px;
+    }
+
+    .perfil-info-container {
+        padding: 0 16px;
+    }
+
+    .estatisticas-e-acoes {
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .acoes-perfil-outro {
+        gap: 20px;
+        width: 100%;
+    }
+
+    .aba-conteudo {
+        padding: 16px;
+    }
+
+    .aba-botao {
+        padding: 12px 8%;
+        font-size: 14px;
+    }
+
+    .estatisticas-usuario {
+        gap: 20px;
+    }
 }
 </style>

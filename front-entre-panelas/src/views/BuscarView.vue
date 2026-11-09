@@ -3,7 +3,7 @@
         <BarraNavegacao />
 
         <div class="coluna">
-            <header class="header-topo">
+            <header class="header-topo none">
                 <button class="back-btn" @click="voltarParaHome" aria-label="Voltar para a página inicial">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -896,5 +896,89 @@ const abrirComunidade = (id) => {
     font-size: 20px;
     color: var(--marrom);
     font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .corpo {
+        flex-direction: column;
+    }
+
+    .coluna {
+        width: 100%;
+        margin-left: 0;
+        flex: 1;
+        min-height: auto;
+    }
+
+    .header-topo {
+        height: auto;
+        min-height: 60px;
+        padding: 12px 16px;
+    }
+
+    .header-titles h2 {
+        font-size: 16px;
+    }
+
+    .conteudo {
+        padding: 30px 12px 32px 12px;
+    }
+
+    .search-container {
+        gap: 20px;
+    }
+
+    .search-input-wrapper input {
+        font-size: 13px;
+        padding: 12px 14px 12px 42px;
+        border-radius: 10px;
+    }
+
+    .tabs-filter {
+        gap: 6px;
+    }
+
+    .tab-pill {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+
+    .section-block {
+        gap: 16px;
+    }
+
+    .section-label-bold {
+        font-size: 16px;
+    }
+
+    .categories-grid {
+        gap: 10px;
+    }
+
+    .category-card {
+        padding: 14px 12px;
+    }
+
+    .cat-nome {
+        font-size: 13px;
+    }
+
+    .community-card {
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .empty-title {
+        font-size: 20px;
+    }
+
+    .banner-geladeira {
+        padding: 14px 16px;
+        gap: 12px;
+    }
+
+    .none {
+        display: none;
+    }
 }
 </style>

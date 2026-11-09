@@ -1,8 +1,6 @@
 const BASE_URL = "http://localhost:8080/v1/entrepanelas"
 const url = `${BASE_URL}/chefinho/conversas`
 
-// GET /chefinho/conversas
-// query: pagina, limite
 export async function getListarConversasChefinho(params = {}, jwt) {
     const query = new URLSearchParams(params).toString()
     const options = {
@@ -16,7 +14,6 @@ export async function getListarConversasChefinho(params = {}, jwt) {
     return response.json()
 }
 
-// GET /chefinho/conversas/{id}
 export async function getBuscarConversaChefinho(id, jwt) {
     const options = {
         method: "GET",
@@ -29,7 +26,6 @@ export async function getBuscarConversaChefinho(id, jwt) {
     return response.json()
 }
 
-// DELETE /chefinho/conversas/{id}
 export async function deleteConversaChefinho(id, jwt) {
     const options = {
         method: "DELETE",
@@ -42,7 +38,6 @@ export async function deleteConversaChefinho(id, jwt) {
     return true
 }
 
-// POST /chefinho/conversas/{id}/mensagens
 export async function postMensagemChefinho(id, dados, jwt) {
     const options = {
         method: "POST",

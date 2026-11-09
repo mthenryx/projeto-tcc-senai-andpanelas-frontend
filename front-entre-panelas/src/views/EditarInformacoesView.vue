@@ -3,7 +3,7 @@
         <BarraNavegacao />
 
         <main class="conteudo-principal">
-            <div class="topo-pagina">
+            <div class="topo-pagina none">
                 <button class="botao-icone-1" @click="voltarPerfil" aria-label="Voltar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -875,5 +875,56 @@ const salvarInformacoes = () => {
 .rodape-aviso-modal {
     font-size: 11px;
     color: var(--cinza);
+}
+
+@media (max-width: 768px) {
+    .perfil-layout {
+        flex-direction: column;
+    }
+
+    .conteudo-principal {
+        margin-left: 0;
+        padding-bottom: 24px;
+    }
+
+    .topo-pagina {
+        padding: 16px;
+    }
+
+    .conteudo-container {
+        padding: 16px;
+        margin-top: 20px;
+    }
+
+    .cartao-secao {
+        padding: 20px 16px;
+    }
+
+    .grid-informacoes-pessoais {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .card-privacidade-info {
+        margin-top: 16px;
+    }
+
+    .modal-card-validacao {
+        padding: 24px 16px;
+    }
+
+    .codigo-inputs-container {
+        gap: 6px;
+    }
+
+    .input-digito-codigo {
+        width: 38px;
+        height: 44px;
+        font-size: 18px;
+    }
+
+    .none {
+        display: none;
+    }
 }
 </style>

@@ -26,17 +26,19 @@
             <div class="users-scroll-list">
                 <div v-for="user in usuariosFiltrados" :key="user.id" class="user-row">
 
-                    <div class="avatar">
-                        <UserAvatar :fotoUrl="user.fotoUrl" :nome="user.nome" :iniciais="user.iniciais" tamanho="50" sombra
-                        :tamanhoFonte="18" :pesoFonte="600" class="user-avatar-custom" />
+                    <div class="user-clickable-area" @click="abrirPerfil(user.id)">
+                        <div class="avatar">
+                            <UserAvatar :fotoUrl="user.fotoUrl" :nome="user.nome" :iniciais="user.iniciais" tamanho="50" sombra
+                            :tamanhoFonte="18" :pesoFonte="600" class="user-avatar-custom" />
+                        </div>
+
+                        <div class="user-info">
+                            <span class="user-name">{{ user.nome }}</span>
+                            <span class="user-username">@{{ user.username }}</span>
+                        </div>
                     </div>
 
-                    <div class="user-info">
-                        <span class="user-name">{{ user.nome }}</span>
-                        <span class="user-username">@{{ user.username }}</span>
-                    </div>
-
-                    <button class="follow-btn" :class="{ 'following': user.seguindo }" @click="toggleSeguir(user)">
+                    <button class="follow-btn" :class="{ 'following': user.seguindo }" @click.stop="toggleSeguir(user)">
                         {{ user.seguindo ? 'Deixar de seguir' : 'Seguir' }}
                     </button>
                 </div>
@@ -52,7 +54,10 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import UserAvatar from '@/components/UserAvatar.vue';
+
+const router = useRouter();
 
 const props = defineProps({
     isOpen: {
@@ -87,6 +92,11 @@ const toggleSeguir = (user) => {
 
 const fecharModal = () => {
     emit('close');
+};
+
+const abrirPerfil = (userId) => {
+    fecharModal();
+    router.push({ path: '/others-perfil', query: { id: userId } });
 };
 </script>
 
@@ -216,12 +226,20 @@ const fecharModal = () => {
 .user-row {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 14px 8px;
     border-bottom: 1px solid #EEDBCE;
 }
 
 .user-row:last-child {
     border-bottom: none;
+}
+
+.user-clickable-area {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    cursor: pointer;
 }
 
 .user-avatar-custom {

@@ -1,8 +1,6 @@
 const BASE_URL = "http://localhost:8080/v1/entrepanelas"
 const url = `${BASE_URL}/usuarios/me/geladeira`
 
-// GET /usuarios/me/geladeira
-// query: pagina, limite
 export async function getListarGeladeira(params = {}, jwt) {
     const query = new URLSearchParams(params).toString()
     const options = {
@@ -16,7 +14,6 @@ export async function getListarGeladeira(params = {}, jwt) {
     return response.json()
 }
 
-// POST /usuarios/me/geladeira
 export async function postIngredienteGeladeira(dados, jwt) {
     const options = {
         method: "POST",
@@ -31,7 +28,6 @@ export async function postIngredienteGeladeira(dados, jwt) {
     return response.json()
 }
 
-// PUT /usuarios/me/geladeira/{id}
 export async function putIngredienteGeladeira(id, dados, jwt) {
     const options = {
         method: "PUT",
@@ -46,7 +42,6 @@ export async function putIngredienteGeladeira(id, dados, jwt) {
     return response.json()
 }
 
-// DELETE /usuarios/me/geladeira/{id}
 export async function deleteIngredienteGeladeira(id, jwt) {
     const options = {
         method: "DELETE",

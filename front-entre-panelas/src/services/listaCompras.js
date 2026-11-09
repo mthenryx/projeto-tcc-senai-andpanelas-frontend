@@ -1,7 +1,6 @@
 const BASE_URL = "http://localhost:8080/v1/entrepanelas"
 const url = `${BASE_URL}/usuarios/me/lista-compras`
 
-// GET /usuarios/me/lista-compras/receitas
 export async function getListaComprasReceitas(jwt) {
     const options = {
         method: "GET",
@@ -14,8 +13,6 @@ export async function getListaComprasReceitas(jwt) {
     return response.json()
 }
 
-// GET /usuarios/me/lista-compras/receita/{id_receita}
-// query: status
 export async function getListaComprasDaReceita(id_receita, params = {}, jwt) {
     const query = new URLSearchParams(params).toString()
     const options = {
@@ -29,7 +26,6 @@ export async function getListaComprasDaReceita(id_receita, params = {}, jwt) {
     return response.json()
 }
 
-// POST /usuarios/me/lista-compras/receita/{id_receita}
 export async function postAdicionarReceitaListaCompras(id_receita, jwt) {
     const options = {
         method: "POST",
@@ -42,7 +38,6 @@ export async function postAdicionarReceitaListaCompras(id_receita, jwt) {
     return response.json()
 }
 
-// PUT /usuarios/me/lista-compras/{id}
 export async function putItemListaCompras(id, dados, jwt) {
     const options = {
         method: "PUT",
@@ -57,7 +52,6 @@ export async function putItemListaCompras(id, dados, jwt) {
     return response.json()
 }
 
-// DELETE /usuarios/me/lista-compras/{id}
 export async function deleteItemListaCompras(id, jwt) {
     const options = {
         method: "DELETE",

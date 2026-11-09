@@ -522,4 +522,32 @@ const irParaComunidade = (id) => {
     font-size: 13px;
     color: var(--cinza);
 }
+
+@media (max-width: 768px) {
+    .perfil-layout {
+        flex-direction: column;
+    }
+
+    .conteudo-principal {
+        margin-left: 0;
+        padding-bottom: 24px;
+    }
+
+    .perfil-info-container {
+        padding: 0 16px;
+    }
+
+    .aba-conteudo {
+        padding: 16px;
+    }
+
+    .aba-botao {
+        padding: 12px 8%;
+        font-size: 14px;
+    }
+
+    .estatisticas-usuario {
+        gap: 20px;
+    }
+}
 </style>

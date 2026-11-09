@@ -77,8 +77,11 @@
             </div>
         </main>
 
-        <aside class="recent-conversations-sidebar">
-            <h3 class="sidebar-title">Conversas recentes</h3>
+        <aside class="recent-conversations-sidebar" :class="{ 'recolhido': !conversasAbertas }">
+            <h3 class="sidebar-title" @click="conversasAbertas = !conversasAbertas">
+                <span>Conversas recentes</span>
+                <span class="sidebar-chevron" :class="{ 'aberta': conversasAbertas }">›</span>
+            </h3>
 
             <div class="conversations-list">
                 <div 
@@ -127,6 +130,8 @@ import ChatMessage from '@/components/ChatMessage.vue';
 
 const statusOnline = ref(false);
 
+const conversasAbertas = ref(false)
+
 const mensagemPadrao = {
     remetente: 'chefinho',
     texto: `Olá! Sou o **Chefinho** 🧑‍🍳✨ Seu assistente culinário pessoal!\n\nPosso te ajudar a:\n• Criar receitas personalizadas\n• Sugerir substituições de ingredientes\n• Explicar técnicas culinárias\n• Adaptar receitas para dietas\n\nO que vamos cozinhar hoje? 😋`
@@ -147,7 +152,52 @@ const conversasRecentes = ref([
     { id: 2, titulo: 'Como fazer um frango...' },
     { id: 3, titulo: 'Como fazer um frango...' },
     { id: 4, titulo: 'Como fazer um frango...' },
-    { id: 5, titulo: 'Como fazer um frango...' }
+    { id: 5, titulo: 'Como fazer um frango...' },
+    { id: 6, titulo: 'Como fazer um frango...' },
+    { id: 7, titulo: 'Como fazer um frango...' },
+    { id: 8, titulo: 'Como fazer um frango...' },
+    { id: 9, titulo: 'Como fazer um frango...' },
+    { id: 10, titulo: 'Como fazer um frango...' },
+    { id: 11, titulo: 'Como fazer um frango...' },
+    { id: 12, titulo: 'Como fazer um frango...' },
+    { id: 13, titulo: 'Como fazer um frango...' },
+    { id: 14, titulo: 'Como fazer um frango...' },
+    { id: 15, titulo: 'Como fazer um frango...' },
+    { id: 16, titulo: 'Como fazer um frango...' },
+    { id: 17, titulo: 'Como fazer um frango...' },
+    { id: 18, titulo: 'Como fazer um frango...' },
+    { id: 19, titulo: 'Como fazer um frango...' },
+    { id: 20, titulo: 'Como fazer um frango...' },
+    { id: 21, titulo: 'Como fazer um frango...' },
+    { id: 22, titulo: 'Como fazer um frango...' },
+    { id: 23, titulo: 'Como fazer um frango...' },
+    { id: 24, titulo: 'Como fazer um frango...' },
+    { id: 25, titulo: 'Como fazer um frango...' },
+    { id: 26, titulo: 'Como fazer um frango...' },
+    { id: 27, titulo: 'Como fazer um frango...' },
+    { id: 28, titulo: 'Como fazer um frango...' },
+    { id: 29, titulo: 'Como fazer um frango...' },
+    { id: 30, titulo: 'Como fazer um frango...' },
+    { id: 31, titulo: 'Como fazer um frango...' },
+    { id: 32, titulo: 'Como fazer um frango...' },
+    { id: 33, titulo: 'Como fazer um frango...' },
+    { id: 34, titulo: 'Como fazer um frango...' },
+    { id: 35, titulo: 'Como fazer um frango...' },
+    { id: 36, titulo: 'Como fazer um frango...' },
+    { id: 37, titulo: 'Como fazer um frango...' },
+    { id: 38, titulo: 'Como fazer um frango...' },
+    { id: 39, titulo: 'Como fazer um frango...' },
+    { id: 40, titulo: 'Como fazer um frango...' },
+    { id: 41, titulo: 'Como fazer um frango...' },
+    { id: 42, titulo: 'Como fazer um frango...' },
+    { id: 43, titulo: 'Como fazer um frango...' },
+    { id: 44, titulo: 'Como fazer um frango...' },
+    { id: 45, titulo: 'Como fazer um frango...' },
+    { id: 46, titulo: 'Como fazer um frango...' },
+    { id: 47, titulo: 'Como fazer um frango...' },
+    { id: 48, titulo: 'Como fazer um frango...' },
+    { id: 49, titulo: 'Como fazer um frango...' },
+    { id: 50, titulo: 'Como fazer um frango...' }
 ]);
 
 const menuAbertoId = ref(null);
@@ -534,5 +584,117 @@ const voltar = () => {
     color: #a89f91;
     text-align: center;
     padding-top: 20px;
+}
+
+.sidebar-chevron {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .sidebar-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 10px;
+    }
+
+    .sidebar-chevron {
+        display: inline-block;
+        font-size: 20px;
+        font-weight: 400;
+        color: #6b4c3b;
+        transition: transform 0.3s ease;
+        transform: rotate(0deg);
+    }
+
+    .sidebar-chevron.aberta {
+        transform: rotate(90deg);
+    }
+
+    .recent-conversations-sidebar.recolhido .conversations-list {
+        display: none;
+    }
+
+    .chefe-view-layout {
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    .chat-main-area {
+        margin-left: 0;
+        margin-right: 0;
+        flex: 1;
+        min-height: 0;
+        height: auto;
+        background-color: #8b7e74;
+    }
+
+    .chat-header {
+        display: none;
+    }
+
+    .messages-scroll-area {
+        padding: 16px 12px;
+    }
+
+    .chat-input-section {
+        padding: 12px;
+    }
+
+    .recent-conversations-sidebar {
+        position: relative;
+        right: auto;
+        top: auto;
+        width: 100%;
+        height: auto;
+        flex-shrink: 0;
+        border-left: none;
+        border-bottom: 1px solid var(--bege, #f3efea);
+        padding: 12px 16px;
+    }
+
+    .sidebar-title {
+        margin-bottom: 0;
+        cursor: pointer;
+    }
+
+    .conversations-list {
+        max-height: 260px;
+    }
+
+    .recent-conversations-sidebar {
+        order: 1;
+        padding: 12px 16px 16px 16px;
+    }
+
+    .chat-main-area {
+        order: 2;
+    }
+
+    .sidebar-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #3b2219;
+    }
+
+    .recent-conversations-sidebar {
+        position: relative;
+        z-index: 20;
+    }
+
+    .recent-conversations-sidebar:not(.recolhido) .conversations-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 21;
+        max-height: 260px;
+        overflow-y: auto;
+        padding: 0 16px;
+        background-color: #ffffff;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        border-bottom-left-radius: 15px;
+        border-bottom-right-radius: 15px;
+    }
 }
 </style>

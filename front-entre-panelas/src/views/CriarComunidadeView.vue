@@ -3,7 +3,7 @@
         <BarraNavegacao />
 
         <div class="coluna">
-            <header class="header-topo">
+            <header class="header-topo none">
                 <div class="header-left">
                     <button class="back-btn" @click="voltarParaComunidades" aria-label="Voltar">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -809,5 +809,57 @@ const voltarParaComunidades = () => {
     width: 100%;
     gap: 12px;
     margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+    .corpo {
+        flex-direction: column;
+    }
+
+    .coluna {
+        width: 100%;
+        margin-left: 0;
+        flex: 1;
+        min-height: auto;
+    }
+
+    .header-topo {
+        padding: 0 16px;
+    }
+
+    .conteudo {
+        padding: 20px 12px 40px 12px;
+    }
+
+    .form-container {
+        padding: 20px;
+    }
+
+    .upload-capa-box {
+        height: 130px;
+    }
+
+    .navigation-buttons-row {
+        flex-wrap: wrap;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        flex: 1;
+        padding: 12px 16px;
+        text-align: center;
+    }
+
+    .success-title {
+        font-size: 20px;
+    }
+
+    .success-screen-container {
+        padding: 24px;
+    }
+
+    .none {
+        display: none;
+    }
 }
 </style>

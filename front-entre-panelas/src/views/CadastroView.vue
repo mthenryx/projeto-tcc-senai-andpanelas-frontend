@@ -485,4 +485,57 @@ const handleSubmit = () => {
 .link-entrar:hover {
   text-decoration: underline;
 }
+
+@media (max-width: 768px) {
+  .corpo {
+    position: relative;
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  :deep(.banner) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+  }
+
+  :deep(.overlay) {
+    background-color: rgba(0, 0, 0, 0.45);
+  }
+
+  :deep(.banner-content) {
+    display: none;
+  }
+
+  .container-formulario {
+    position: relative;
+    z-index: 4;
+    flex: 1;
+    background-color: transparent;
+    overflow-y: visible;
+    padding: 50px 20px;
+  }
+
+  .cabecalho h2 {
+    color: var(--amarelo, #f1ae2b);
+  }
+
+  .cabecalho p,
+  .campo-grupo label,
+  .texto-instrucao,
+  .campo-termos,
+  .rodape-login {
+    color: #ffffff;
+  }
+
+  .link-entrar {
+    color: var(--verde, #72bca5);
+  }
+}
 </style>

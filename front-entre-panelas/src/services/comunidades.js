@@ -1,8 +1,6 @@
 const BASE_URL = "http://localhost:8080/v1/entrepanelas"
 const url = `${BASE_URL}/comunidades`
 
-// GET /comunidades
-// query: pagina, limite, busca, id_categoria_principal
 export async function getListarComunidades(params = {}) {
     const query = new URLSearchParams(params).toString()
     const response = await fetch(`${url}${query ? `?${query}` : ""}`)
@@ -10,7 +8,6 @@ export async function getListarComunidades(params = {}) {
     return response.json()
 }
 
-// POST /comunidades
 export async function postComunidade(dados, jwt) {
     const options = {
         method: "POST",
@@ -25,14 +22,12 @@ export async function postComunidade(dados, jwt) {
     return response.json()
 }
 
-// GET /comunidades/{id}
 export async function getBuscarComunidade(id) {
     const response = await fetch(`${url}/${id}`)
     if(!response.ok) throw new Error(`Erro ao buscar a comunidade: ${id}`)
     return response.json()
 }
 
-// PUT /comunidades/{id}
 export async function putComunidade(id, dados, jwt) {
     const options = {
         method: "PUT",
@@ -47,7 +42,6 @@ export async function putComunidade(id, dados, jwt) {
     return response.json()
 }
 
-// DELETE /comunidades/{id}
 export async function deleteComunidade(id, jwt) {
     const options = {
         method: "DELETE",
@@ -60,7 +54,6 @@ export async function deleteComunidade(id, jwt) {
     return true
 }
 
-// POST /comunidades/{id}/entrar
 export async function postEntrarComunidade(id, jwt) {
     const options = {
         method: "POST",
@@ -73,7 +66,6 @@ export async function postEntrarComunidade(id, jwt) {
     return response.json()
 }
 
-// DELETE /comunidades/{id}/sair
 export async function deleteSairComunidade(id, jwt) {
     const options = {
         method: "DELETE",
@@ -86,8 +78,6 @@ export async function deleteSairComunidade(id, jwt) {
     return true
 }
 
-// GET /comunidades/{id}/receitas
-// query: pagina, limite
 export async function getReceitasDaComunidade(id, params = {}) {
     const query = new URLSearchParams(params).toString()
     const response = await fetch(`${url}/${id}/receitas${query ? `?${query}` : ""}`)

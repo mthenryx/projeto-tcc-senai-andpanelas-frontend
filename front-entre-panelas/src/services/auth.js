@@ -14,7 +14,6 @@ export async function postRegistro(dados) {
     return response.json()
 }
 
-// POST /auth/verificar-email
 export async function postVerificarEmail(dados) {
     const options = {
         method: "POST",
@@ -28,7 +27,6 @@ export async function postVerificarEmail(dados) {
     return response.json()
 }
 
-// POST /auth/login
 export async function postLogin(dados) {
     const options = {
         method: "POST",
@@ -42,7 +40,6 @@ export async function postLogin(dados) {
     return response.json()
 }
 
-// POST /auth/recuperar-senha
 export async function postRecuperarSenha(dados) {
     const options = {
         method: "POST",
@@ -56,7 +53,6 @@ export async function postRecuperarSenha(dados) {
     return response.json()
 }
 
-// POST /auth/verificar-codigo-reset
 export async function postVerificarCodigoReset(dados) {
     const options = {
         method: "POST",
@@ -70,7 +66,6 @@ export async function postVerificarCodigoReset(dados) {
     return response.json()
 }
 
-// POST /auth/redefinir-senha
 export async function postRedefinirSenha(dados) {
     const options = {
         method: "POST",

@@ -1,8 +1,6 @@
 const BASE_URL = "http://localhost:8080/v1/entrepanelas"
 const url = `${BASE_URL}/receitas`
 
-// GET /receitas
-// query: pagina, limite, busca, id_categoria, id_dificuldade, id_custo, tempo_max, id_comunidade, ordenar_por
 export async function getListarReceitas(params = {}) {
     const query = new URLSearchParams(params).toString()
     const response = await fetch(`${url}${query ? `?${query}` : ""}`)
@@ -10,7 +8,6 @@ export async function getListarReceitas(params = {}) {
     return response.json()
 }
 
-// POST /receitas
 export async function postReceita(dados, jwt) {
     const options = {
         method: "POST",
@@ -25,15 +22,12 @@ export async function postReceita(dados, jwt) {
     return response.json()
 }
 
-// GET /receitas/semana
 export async function getReceitasDaSemana() {
     const response = await fetch(`${url}/semana`)
     if(!response.ok) throw new Error("Erro ao listar as receitas da semana!")
     return response.json()
 }
 
-// GET /receitas/busca/categoria
-// query: id_categoria, pagina, limite
 export async function getBuscarReceitasPorCategoria(params = {}) {
     const query = new URLSearchParams(params).toString()
     const response = await fetch(`${url}/busca/categoria${query ? `?${query}` : ""}`)
@@ -41,8 +35,6 @@ export async function getBuscarReceitasPorCategoria(params = {}) {
     return response.json()
 }
 
-// GET /receitas/busca/nome
-// query: nome, pagina, limite
 export async function getBuscarReceitasPorNome(params = {}) {
     const query = new URLSearchParams(params).toString()
     const response = await fetch(`${url}/busca/nome${query ? `?${query}` : ""}`)
@@ -50,7 +42,6 @@ export async function getBuscarReceitasPorNome(params = {}) {
     return response.json()
 }
 
-// POST /receitas/busca/ingredientes
 export async function postBuscarReceitasPorIngredientes(dados) {
     const options = {
         method: "POST",
@@ -64,14 +55,12 @@ export async function postBuscarReceitasPorIngredientes(dados) {
     return response.json()
 }
 
-// GET /receitas/{id}
 export async function getBuscarReceita(id) {
     const response = await fetch(`${url}/${id}`)
     if(!response.ok) throw new Error(`Erro ao buscar a receita: ${id}`)
     return response.json()
 }
 
-// PUT /receitas/{id}
 export async function putReceita(id, dados, jwt) {
     const options = {
         method: "PUT",
@@ -86,7 +75,6 @@ export async function putReceita(id, dados, jwt) {
     return response.json()
 }
 
-// DELETE /receitas/{id}
 export async function deleteReceita(id, jwt) {
     const options = {
         method: "DELETE",
@@ -99,7 +87,6 @@ export async function deleteReceita(id, jwt) {
     return true
 }
 
-// POST /receitas/{id}/curtir
 export async function postCurtirReceita(id, jwt) {
     const options = {
         method: "POST",
@@ -112,7 +99,6 @@ export async function postCurtirReceita(id, jwt) {
     return response.json()
 }
 
-// DELETE /receitas/{id}/curtir
 export async function deleteCurtirReceita(id, jwt) {
     const options = {
         method: "DELETE",
@@ -125,7 +111,6 @@ export async function deleteCurtirReceita(id, jwt) {
     return true
 }
 
-// POST /receitas/{id}/salvar
 export async function postSalvarReceita(id, jwt) {
     const options = {
         method: "POST",
@@ -138,7 +123,6 @@ export async function postSalvarReceita(id, jwt) {
     return response.json()
 }
 
-// DELETE /receitas/{id}/salvar
 export async function deleteSalvarReceita(id, jwt) {
     const options = {
         method: "DELETE",
@@ -151,8 +135,6 @@ export async function deleteSalvarReceita(id, jwt) {
     return true
 }
 
-// GET /receitas/{id}/comentarios
-// query: pagina, limite
 export async function getComentariosReceita(id, params = {}) {
     const query = new URLSearchParams(params).toString()
     const response = await fetch(`${url}/${id}/comentarios${query ? `?${query}` : ""}`)
@@ -160,7 +142,6 @@ export async function getComentariosReceita(id, params = {}) {
     return response.json()
 }
 
-// POST /receitas/{id}/comentarios
 export async function postComentarioReceita(id, dados, jwt) {
     const options = {
         method: "POST",
@@ -175,7 +156,6 @@ export async function postComentarioReceita(id, dados, jwt) {
     return response.json()
 }
 
-// POST /receitas/compatibilidade
 export async function postCompatibilidadeReceitas(dados, jwt) {
     const options = {
         method: "POST",
@@ -190,7 +170,6 @@ export async function postCompatibilidadeReceitas(dados, jwt) {
     return response.json()
 }
 
-// GET /em-alta
 export async function getBuscasEmAlta() {
     const response = await fetch(`${BASE_URL}/em-alta`)
     if(!response.ok) throw new Error("Erro ao obter as buscas em alta!")
