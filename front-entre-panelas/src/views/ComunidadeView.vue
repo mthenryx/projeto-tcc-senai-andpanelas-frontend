@@ -174,7 +174,7 @@ const alternarParticipacao = (com) => {
 };
 
 const irParaDetalhes = (id) => {
-    router.push({ name: 'ComunidadeDetalhes', params: { id } });
+    router.push({ name: 'comunidade-detalhes', params: { id } });
 };
 
 const minhasComunidades = computed(() => {
@@ -574,6 +574,90 @@ const arrastar = (e) => {
 
     .search-input {
         margin-top: -10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-topo {
+        display: flex;
+        background-color: #ffffff;
+        border-bottom: 1px solid var(--bege);
+        margin-bottom: 10px;
+    }
+
+    .conteudo-comunidades {
+        padding: 16px 16px 80px 16px;
+        gap: 16px;
+    }
+
+    .banner-destaque {
+        height: 180px;
+        border-radius: 16px;
+    }
+
+    .banner-overlay {
+        padding: 16px;
+    }
+
+    .banner-info h2 {
+        font-size: 20px;
+    }
+
+    .banner-status-participando {
+        bottom: 16px;
+        right: 16px;
+        padding: 6px 14px;
+        font-size: 11px;
+    }
+
+    .comunidade-card-item {
+        padding: 12px;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .comunidade-card-left {
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .comunidade-item-foto {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        flex-shrink: 0;
+    }
+
+    .comunidade-item-detalhes {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .comunidade-item-detalhes h4 {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .comunidade-item-detalhes p {
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .comunidade-item-stats {
+        font-size: 11px;
+        gap: 10px;
+    }
+
+    .btn-participar {
+        padding: 6px 14px;
+        font-size: 12px;
+        border-radius: 16px;
+        flex-shrink: 0;
     }
 }
 </style>

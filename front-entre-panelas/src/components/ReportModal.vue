@@ -506,4 +506,108 @@ textarea:focus {
 .btn-entendi:hover {
     opacity: 0.9;
 }
+
+@media (max-width: 480px) {
+    .modal-card {
+        max-width: 100%;
+        margin: 0 12px;
+        border-radius: 24px;
+    }
+
+    .report-container {
+        grid-template-columns: 1fr;
+    }
+
+    .left-col {
+        padding: 20px 20px 0 20px;
+        border-right: none;
+        gap: 16px;
+    }
+
+    .icon-circle,
+    .header-text p {
+        display: none;
+    }
+
+    .header-text h2 {
+        font-size: 20px;
+        color: #4a2512;
+    }
+
+    .motivos-list {
+        gap: 12px;
+    }
+
+    .motivo-item {
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 12px;
+        padding: 0;
+        border: none;
+        background: transparent !important;
+    }
+
+    .motivo-item input[type="radio"]:checked + .custom-radio {
+        border-color: #72bca5;
+        background-color: #72bca5;
+    }
+
+    .custom-radio {
+        width: 20px;
+        height: 20px;
+        border-color: #dcd4c8;
+    }
+
+    .right-col {
+        padding: 16px 20px 20px 20px;
+        background-color: transparent;
+        gap: 16px;
+    }
+
+    textarea {
+        height: 90px;
+        background-color: #fcfaf6;
+        border-radius: 14px;
+        border: 1px solid #efeae1;
+    }
+
+    .info-box {
+        background: none;
+        border: none;
+        padding: 0;
+    }
+
+    .info-box svg {
+        display: none;
+    }
+
+    .info-box p {
+        font-size: 12px;
+        color: #8c827a;
+        line-height: 1.45;
+    }
+
+    .actions-footer {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 8px;
+    }
+
+    .btn-cancelar {
+        background: #ffffff;
+        border: 1px solid #efeae1;
+        border-radius: 12px;
+        padding: 12px;
+        color: #4a2512;
+        text-align: center;
+    }
+
+    .btn-enviar {
+        background-color: #d31826;
+        border-radius: 12px;
+        padding: 12px;
+        width: 100%;
+    }
+}
 </style>

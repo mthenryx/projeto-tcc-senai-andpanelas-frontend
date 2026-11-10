@@ -862,4 +862,153 @@ const voltarParaComunidades = () => {
         display: none;
     }
 }
+
+@media (max-width: 480px) {
+    .header-topo.none {
+        display: flex !important;
+        background-color: #ffffff;
+        border-bottom: 1px solid #efeae1;
+        height: auto;
+        padding: 14px 16px;
+    }
+
+    .header-titles h2 {
+        font-size: 18px;
+    }
+
+    .header-titles p {
+        font-size: 11px;
+    }
+
+    .conteudo {
+        padding: 12px 16px 80px 16px;
+        background-color: #fcfaf6;
+    }
+
+    .form-container {
+        padding: 0;
+        background-color: transparent;
+        border: none;
+        box-shadow: none;
+        gap: 20px;
+    }
+
+    .secao-form-bloco {
+        border-bottom: 1px solid #efeae1;
+        padding-bottom: 20px;
+    }
+
+    .identidade-visual-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 0;
+    }
+
+    .upload-capa-box {
+        height: 120px;
+        border-radius: 16px;
+        border: 1.5px dashed #dcd4c8;
+        background-color: #ffffff;
+    }
+
+    .upload-placeholder-capa {
+        gap: 4px;
+    }
+
+    .upload-title-text {
+        font-size: 12px;
+        color: #4a2512;
+    }
+
+    .upload-sub-text,
+    .btn-escolher-img {
+        display: none;
+    }
+
+    .avatar-floating-box {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        width: 64px;
+        height: 64px;
+        float: left;
+        margin-right: 12px;
+        border-radius: 14px;
+        border: 1.5px dashed #dcd4c8;
+        box-shadow: none;
+        background-color: #ffffff;
+    }
+
+    .avatar-floating {
+        border: none;
+        background: transparent;
+        width: 100%;
+        height: 100%;
+    }
+
+    .avatar-label-container {
+        margin-top: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 64px;
+    }
+
+    .avatar-label-container strong {
+        font-size: 13px;
+        color: #4a2512;
+    }
+
+    .avatar-label-container p {
+        font-size: 11px;
+        color: #8c827a;
+    }
+
+    .text-input,
+    .textarea-input {
+        background-color: #ffffff;
+        border-radius: 14px;
+        border: 1px solid #efeae1;
+    }
+
+    .outra-categoria-row {
+        width: 100%;
+    }
+
+    .privacy-box {
+        background-color: #e3f4ed;
+        border: 1px solid #72bca5;
+        border-radius: 16px;
+        padding: 14px;
+    }
+
+    .privacy-text strong {
+        color: #2e6f59;
+    }
+
+    .privacy-text p {
+        color: #6e655f;
+    }
+
+    .navigation-buttons-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .btn-secondary {
+        border-radius: 14px;
+        padding: 12px;
+        text-align: center;
+    }
+
+    .btn-primary {
+        background-color: #72bca5;
+        border-radius: 14px;
+        padding: 12px;
+        text-align: center;
+    }
+}
 </style>

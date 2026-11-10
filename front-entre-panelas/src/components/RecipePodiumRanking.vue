@@ -403,4 +403,58 @@ defineEmits(['ver-receita']);
   background-color: #F7F4EC;
   color: #2D241E;
 }
+
+@media (max-width: 480px) {
+  .ranking-section {
+    gap: 16px;
+  }
+
+  .podium-gold {
+    grid-template-columns: 1fr;
+  }
+
+  .gold-image-side {
+    min-height: 220px;
+    height: 220px;
+    padding: 14px;
+  }
+
+  .gold-badge {
+    top: 14px;
+    left: 14px;
+    padding: 6px 12px;
+    font-size: 10px;
+  }
+
+  .gold-content-side {
+    padding: 20px 16px;
+  }
+
+  .gold-title {
+    font-size: 20px;
+  }
+
+  .gold-desc {
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .podium-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .card-img-wrapper {
+    height: 180px;
+    padding: 12px;
+  }
+
+  .card-body {
+    padding: 16px;
+  }
+
+  .card-title {
+    font-size: 18px;
+  }
+}
 </style>

@@ -4,6 +4,7 @@
 
     <div class="login-container">
       <div class="login-card">
+        <img src="../../public/Logo_Panelas_em_marrom.png" alt="Logo do Entre Panelas"/>
         <h1 class="title">Bem-vindo de volta!</h1>
         <p class="subtitle">Entre na sua conta para continuar</p>
 
@@ -88,6 +89,10 @@ function handleLogin() {
   max-width: 380px;
   display: flex;
   flex-direction: column;
+}
+
+.login-card img {
+  display: none;
 }
 
 .title {
@@ -216,6 +221,10 @@ function handleLogin() {
   color: var(--verde, #72bca5);
   text-decoration: none;
   font-weight: 500;
+
+  .none {
+    display: none;
+  }
 }
 
 @media (max-width: 768px) {
@@ -236,6 +245,92 @@ function handleLogin() {
 
   .login-card {
     max-width: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .corpo > :first-child {
+    display: none;
+  }
+
+  .login-card img {
+    display: block;
+    height: auto;
+    width: 150px;
+    margin-bottom: 20px;
+  }
+
+  .login-container {
+    padding: 3.5rem 1.5rem 2.5rem;
+    background-color: #fcfaf6;
+  }
+
+  .login-card {
+    max-width: 100%;
+  }
+
+  .title {
+    font-size: 1.45rem;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 2rem;
+  }
+
+  .input-group {
+    margin-bottom: 1.15rem;
+  }
+
+  .input-group label {
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .input-group input {
+    padding: 0.95rem 1rem;
+    font-size: 0.9rem;
+    border-color: #ece8dc;
+    border-radius: 14px;
+    min-height: 52px;
+  }
+
+  .password-wrapper input {
+    padding-right: 5rem;
+  }
+
+  .toggle-password {
+    right: 1rem;
+    font-size: 0.85rem;
+  }
+
+  .forgot-password {
+    align-self: flex-end;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-submit {
+    padding: 1.05rem;
+    font-size: 0.95rem;
+    border-radius: 14px;
+    min-height: 56px;
+  }
+
+  .divider {
+    margin: 2rem 0 1.5rem;
+  }
+
+  .divider span {
+    font-size: 0.7rem;
+  }
+
+  .signup-footer {
+    font-size: 0.9rem;
+  }
+
+  .signup-footer a {
+    font-size: 0.95rem;
   }
 }
 </style>

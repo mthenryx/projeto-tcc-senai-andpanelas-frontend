@@ -18,7 +18,7 @@
         <div class="rodape-menu">
             <RouterLink to="/criar-receita" class="botao-nova-receita">
                 <span class="mais">+</span>
-                <span>Nova Receita</span>
+                <span class="texto-btn-receita">Nova Receita</span>
             </RouterLink>
         </div>
     </aside>
@@ -37,43 +37,43 @@ const itensMenu = [
         id: 'inicio',
         nome: 'Início',
         rota: '/home',
-        iconeUrl: '../../public/iconPaginas/home_icon_cinza.png'
+        iconeUrl: '/iconPaginas/home_icon_cinza.png'
     },
     {
         id: 'buscar-receitas',
         nome: 'Buscar Receitas',
         rota: '/buscar-receita',
-        iconeUrl: '../../public/iconPaginas/lupa_icon_cinza.png'
+        iconeUrl: '/iconPaginas/lupa_icon_cinza.png'
     },
     {
         id: 'comunidades',
         nome: 'Comunidades',
         rota: '/comunidade',
-        iconeUrl: '../../public/iconPaginas/comunidade_icon_cinza.png'
+        iconeUrl: '/iconPaginas/comunidade_icon_cinza.png'
     },
     {
         id: 'minha-geladeira',
         nome: 'Minha Geladeira',
         rota: '/geladeira',
-        iconeUrl: '../../public/iconPaginas/geladeira_icon_cinza.png'
+        iconeUrl: '/iconPaginas/geladeira_icon_cinza.png'
     },
     {
         id: 'chefinho',
         nome: 'Chefinho IA',
         rota: '/chefinho',
-        iconeUrl: '../../public/iconPaginas/chefe_icon_cinza.png'
+        iconeUrl: '/iconPaginas/chefe_icon_cinza.png'
     },
     {
         id: 'lista-compras',
         nome: 'Lista de Compras',
         rota: '/lista-compra',
-        iconeUrl: '../../public/iconPaginas/lista_icon_cinza.png'
+        iconeUrl: '/iconPaginas/lista_icon_cinza.png'
     },
     {
         id: 'meu-perfil',
         nome: 'Meu Perfil',
         rota: '/perfil',
-        iconeUrl: '../../public/iconPaginas/perfil_icon_cinza.png'
+        iconeUrl: '/iconPaginas/perfil_icon_cinza.png'
     }
 ]
 </script>
@@ -92,6 +92,7 @@ const itensMenu = [
     border-right: 1px solid var(--bege);
     overflow: hidden;
     box-sizing: border-box;
+    z-index: 99;
 }
 
 .cabecalho-menu {
@@ -130,10 +131,7 @@ const itensMenu = [
     font-size: 14px;
     font-weight: 400;
     white-space: nowrap;
-    transition:
-        background-color 0.25s ease,
-        color 0.25s ease,
-        transform 0.18s ease;
+    transition: background-color 0.25s ease, color 0.25s ease, transform 0.18s ease;
 }
 
 .icone-menu {
@@ -157,18 +155,7 @@ const itensMenu = [
 }
 
 .item-menu.ativo .icone-menu {
-    filter:
-        brightness(0) saturate(100%) invert(58%) sepia(20%) saturate(700%) hue-rotate(110deg);
-}
-
-.item-menu:active {
-    transform: scale(0.97);
-}
-
-.item-menu:focus-visible,
-.botao-nova-receita:focus-visible {
-    outline: 2px solid var(--verde-escuro);
-    outline-offset: 2px;
+    filter: brightness(0) saturate(100%) invert(58%) sepia(20%) saturate(700%) hue-rotate(110deg);
 }
 
 .rodape-menu {
@@ -190,17 +177,11 @@ const itensMenu = [
     text-decoration: none;
     font-size: 16px;
     font-weight: 500;
-    transition:
-        background-color 0.25s ease,
-        transform 0.18s ease;
+    transition: background-color 0.25s ease, transform 0.18s ease;
 }
 
 .botao-nova-receita:hover {
     background-color: var(--verde-escuro);
-}
-
-.botao-nova-receita:active {
-    transform: scale(0.97);
 }
 
 .mais {
@@ -256,6 +237,54 @@ const itensMenu = [
         box-sizing: border-box;
     }
 
+    .item-menu {
+        width: auto;
+        flex-shrink: 0;
+        padding: 12px 18px;
+        font-size: 13px;
+        border-radius: 25px;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu-lateral {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        height: 60px;
+        background-color: #fcfaf6;
+        border-top: 1px solid #efeae1;
+        border-bottom: none;
+        display: flex;
+        align-items: center;
+        padding: 0;
+        box-sizing: border-box;
+        z-index: 1000;
+        overflow: visible;
+    }
+
+    .cabecalho-menu {
+        display: none;
+    }
+
+    .navegacao {
+        border-top: none;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 28px;
+        padding: 0 24px;
+        margin: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
     .navegacao::-webkit-scrollbar {
         display: none;
     }
@@ -263,9 +292,51 @@ const itensMenu = [
     .item-menu {
         width: auto;
         flex-shrink: 0;
-        padding: 12px 18px;
-        font-size: 13px;
-        border-radius: 25px;
+        padding: 8px;
+        border-radius: 50%;
+        background-color: transparent !important;
+    }
+
+    .texto-item {
+        display: none;
+    }
+
+    .icone-menu {
+        width: 22px;
+        height: 22px;
+        filter: grayscale(100%) opacity(0.5);
+    }
+
+    .clicou .icone-menu {
+        filter: brightness(0) saturate(100%) invert(60%) sepia(21%) saturate(915%) hue-rotate(119deg) brightness(93%) contrast(89%);
+    }
+
+    .rodape-menu {
+        position: absolute;
+        top: -24px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 0;
+        border: none;
+        z-index: 1001;
+        pointer-events: auto;
+    }
+
+    .botao-nova-receita {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: #72bca5;
+        box-shadow: 0 4px 12px rgba(114, 188, 165, 0.4);
+        padding: 0;
+    }
+
+    .texto-btn-receita {
+        display: none;
+    }
+
+    .mais {
+        font-size: 26px;
     }
 }
 </style>

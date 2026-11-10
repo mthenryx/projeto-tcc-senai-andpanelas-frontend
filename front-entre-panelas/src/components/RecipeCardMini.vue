@@ -131,4 +131,35 @@ const dificuldadeClass = computed(() => {
 .meta-item svg {
     color: var(--marrom);
 }
+
+@media (max-width: 480px) {
+  .recipe-card-mini {
+    max-width: 100%;
+    border-radius: 16px;
+  }
+
+  .recipe-image-container {
+    height: 140px;
+    padding: 8px;
+  }
+
+  .difficulty-badge {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  .recipe-content {
+    padding: 12px;
+  }
+
+  .recipe-title {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .recipe-metadata {
+    gap: 10px;
+    font-size: 11px;
+  }
+}
 </style>

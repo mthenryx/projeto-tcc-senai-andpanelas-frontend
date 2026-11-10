@@ -981,4 +981,10 @@ const abrirComunidade = (id) => {
         display: none;
     }
 }
+
+@media (max-width: 480px) {
+    .header-topo {
+        display: flex;
+    }
+}
 </style>

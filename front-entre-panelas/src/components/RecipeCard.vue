@@ -305,4 +305,39 @@ const custoClass = computed(() => {
 .save-btn.saved {
     color: var(--vermelho);
 }
+
+@media (max-width: 480px) {
+  .recipe-card {
+    margin: 12px 0;
+    border-radius: 16px;
+  }
+
+  .recipe-image-container {
+    height: 180px;
+    padding: 12px;
+  }
+
+  .recipe-content {
+    padding: 16px;
+  }
+
+  .recipe-title {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .recipe-metadata {
+    gap: 12px;
+    font-size: 12px;
+    margin-bottom: 14px;
+  }
+
+  .social-stats {
+    gap: 14px;
+  }
+
+  .stat-indicator {
+    font-size: 13px;
+  }
+}
 </style>

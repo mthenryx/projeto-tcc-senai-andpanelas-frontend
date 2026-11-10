@@ -668,4 +668,120 @@ const compartilhar = () => {
         display: none;
     }
 }
+
+@media (max-width: 480px) {
+    .corpo {
+        background-color: #fcfaf6;
+    }
+
+    .coluna {
+        width: 100%;
+        margin-left: 0;
+        background-color: #fcfaf6;
+    }
+
+    .banner-capa-header {
+        height: 200px;
+    }
+
+    .banner-overlay {
+        padding: 14px 16px;
+    }
+
+    .back-btn-circle {
+        width: 34px;
+        height: 34px;
+    }
+
+    .comunidade-titulo {
+        font-size: 22px;
+        margin-bottom: 4px;
+    }
+
+    .comunidade-stats {
+        font-size: 11px;
+        gap: 12px;
+    }
+
+    .conteudo-principal {
+        padding: 16px 16px 80px 16px;
+    }
+
+    .comunidade-descricao {
+        font-size: 13px;
+        margin-bottom: 14px;
+    }
+
+    .membros-avatares-row {
+        margin-bottom: 16px;
+    }
+
+    .membros-restantes-text {
+        font-size: 11px;
+    }
+
+    .acoes-comunidade-row {
+        margin-bottom: 12px;
+        gap: 10px;
+    }
+
+    .btn-acao-participacao {
+        border-radius: 14px;
+        padding: 12px;
+        font-size: 13px;
+        background-color: #72bca5;
+    }
+
+    .btn-share-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        border: 1px solid #efeae1;
+    }
+
+    .btn-editar-wrapper {
+        margin-bottom: 16px;
+    }
+
+    .btn-editar-comunidade {
+        width: fit-content;
+        border-radius: 20px;
+        border: 1px solid #efeae1;
+        padding: 8px 18px;
+        font-size: 12px;
+        color: #4a2512;
+    }
+
+    .abas-container {
+        border-bottom: 1px solid #efeae1;
+        padding-bottom: 0;
+        gap: 24px;
+        background: transparent;
+        margin-bottom: 16px;
+    }
+
+    .aba-btn {
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 2px solid transparent !important;
+        border-radius: 0 !important;
+        color: #8c827a !important;
+        padding: 8px 4px !important;
+        font-size: 14px !important;
+        flex: none !important;
+    }
+
+    .aba-btn.active {
+        color: #4a2512 !important;
+        border-bottom-color: #4a2512 !important;
+    }
+
+    .icone-aba {
+        display: none;
+    }
+
+    .lista-receitas-grid {
+        gap: 12px;
+    }
+}
 </style>

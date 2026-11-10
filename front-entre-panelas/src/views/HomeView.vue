@@ -2,7 +2,7 @@
     <div class="corpo">
         <BarraNavegacao></BarraNavegacao>
         <div class="coluna">
-            <HeaderAplicacao class="none"></HeaderAplicacao>
+            <HeaderAplicacao class="hearder-aplication none"></HeaderAplicacao>
             <div class="conteudo">
                 <nav>
                     <RouterLink to="/geladeira" class="fast-navegation">
@@ -723,6 +723,58 @@ nav {
 
     .none {
         display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .hearder-aplication {
+        display: flex;
+    }
+
+    .corpo {
+        background-color: #fcfaf6;
+    }
+
+    .coluna {
+        width: 100%;
+        margin-left: 0;
+        background-color: #fcfaf6;
+    }
+
+    .conteudo {
+        background-color: #fcfaf6;
+        padding-bottom: 80px;
+    }
+
+    nav {
+        display: none;
+    }
+
+    .tabs-container {
+        padding: 8px 16px;
+        gap: 8px;
+    }
+
+    .tab-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 20px;
+        background-color: #ffffff;
+        border: 1px solid #efeae1;
+    }
+
+    .tab-btn.active {
+        background-color: #72bca5;
+        border-color: #72bca5;
+    }
+
+    .container {
+        padding: 12px 16px 80px 16px;
+    }
+
+    .grid-mini {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
 }
 </style>

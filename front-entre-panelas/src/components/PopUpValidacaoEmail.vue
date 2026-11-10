@@ -1,7 +1,6 @@
 <template>
   <div class="popup-card">
 
-    <!-- O botão de voltar interno só aparece se a prop for verdadeira -->
     <button v-if="mostrarBotaoVoltar" class="btn-voltar" @click="$emit('voltar')" aria-label="Voltar">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -30,7 +29,6 @@
       <input type="text" maxlength="1" class="input-digito" />
     </div>
 
-    <!-- Botão de Verificar que avança para a próxima etapa -->
     <button class="btn-verificar" @click="$emit('avancar')">
       Verificar código
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -257,5 +255,61 @@ onUnmounted(() => {
 .tempo {
   color: var(--cinza);
   font-weight: 400;
+}
+
+@media (max-width: 480px) {
+  .popup-card {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .badge-seguranca {
+    display: none;
+  }
+
+  .popup-card h2 {
+    font-size: 1.6rem;
+    color: #2b1c19;
+    margin-bottom: 8px;
+  }
+
+  .codigo-inputs {
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+
+  .input-digito {
+    width: 44px;
+    height: 52px;
+    border-radius: 12px;
+    border: 1px solid #efeae1;
+    background-color: #fcfaf6;
+    font-size: 20px;
+  }
+
+  .input-digito:focus {
+    border-color: #72bca5;
+    box-shadow: 0 0 0 2px rgba(114, 188, 165, 0.2);
+  }
+
+  .btn-verificar {
+    min-height: 52px;
+    border-radius: 12px;
+    background-color: #72bca5;
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+
+  .popup-rodape {
+    color: #8c857b;
+    font-size: 0.85rem;
+  }
+
+  .link-reenviar {
+    color: #72bca5;
+  }
 }
 </style>

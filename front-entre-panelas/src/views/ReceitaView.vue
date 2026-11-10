@@ -322,7 +322,7 @@ import UserAvatar from '@/components/UserAvatar.vue';
 const route = useRoute();
 const router = useRouter();
 
-const CHEFINHO_ID = 1;
+const CHEFINHO_ID = 999;
 
 const usuarioAtual = ref({
     id: 101,
@@ -384,7 +384,7 @@ onMounted(() => {
         dificuldade: 'Fácil',
         custo: 'Moderado',
         porcoes: '4 porções',
-        autorId: 202, 
+        autorId: 1, 
         autorNome: 'Ana Costa',
         autorUsername: 'anacosta',
         authorIniciais: 'AC',
@@ -421,12 +421,10 @@ const ehUsuarioAtual = computed(() => {
     return receita.value.autorId === usuarioAtual.value.id;
 });
 
-// Checa direto se o ID do autor da receita é o ID do Chefinho
 const ehChefinho = computed(() => {
     return receita.value.autorId === CHEFINHO_ID;
 });
 
-// Valida dinamicamente se a URL é YouTube, vídeo direto ou se está vazia
 const dadosVideo = computed(() => {
     const url = receita.value.videoUrl;
     if (!url || typeof url !== 'string' || !url.trim()) return null;
@@ -456,7 +454,6 @@ const mostrarPopupSucesso = ref(false);
 
 const abrirPerfilAutor = () => {
     if (ehChefinho.value) {
-        // Redireciona para o assistente IA se for o Chefinho
         router.push('/chefinho');
     } else if (receita.value.autorId) {
         router.push({ path: '/others-perfil', query: { id: receita.value.autorId } });
@@ -1211,5 +1208,143 @@ const getIconFilter = (tipo) => {
     .video-element {
         height: 220px;
     }
+}
+
+@media (max-width: 480px) {
+  .corpo {
+    background-color: #fcfaf6;
+  }
+
+  .coluna {
+    width: 100%;
+    margin-left: 0;
+    background-color: #fcfaf6;
+  }
+
+  .conteudo {
+    background-color: #fcfaf6;
+    padding-bottom: 80px;
+  }
+
+  .recipe-banner-edge {
+    height: 220px;
+  }
+
+  .back-btn {
+    top: 14px;
+    left: 14px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .category-badge {
+    bottom: 14px;
+    left: 14px;
+    padding: 4px 10px;
+    font-size: 10px;
+  }
+
+  .recipe-content-inner {
+    padding: 16px 16px 80px 16px;
+    gap: 16px;
+  }
+
+  .recipe-title {
+    font-size: 22px;
+  }
+
+  .recipe-description {
+    font-size: 13px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .metric-card {
+    padding: 10px 4px;
+    border-radius: 12px;
+  }
+
+  .metric-icon-img-box {
+    width: 28px;
+    height: 28px;
+  }
+
+  .metric-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .metric-val {
+    font-size: 11px;
+  }
+
+  .metric-lbl {
+    font-size: 8px;
+  }
+
+  .tags-row {
+    gap: 6px;
+  }
+
+  .recipe-tag {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  .action-buttons-row {
+    gap: 8px;
+  }
+
+  .interact-btn {
+    padding: 8px 6px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+
+  .carrinho {
+    width: 20px;
+  }
+
+  .video-element {
+    height: 200px;
+    border-radius: 12px;
+  }
+
+  .tabs-switch-container {
+    border-radius: 12px;
+  }
+
+  .switch-tab-btn {
+    padding: 10px 6px;
+    font-size: 12px;
+  }
+
+  .section-content-box {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .ingredient-row {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .ing-measure {
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+
+  .add-all-list-btn {
+    padding: 10px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .comment-item {
+    padding: 12px;
+  }
 }
 </style>
