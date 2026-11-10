@@ -156,7 +156,7 @@ const route = useRoute();
 const abaAtiva = ref('membros');
 const modalDenunciaAberto = ref(false);
 
-const usuarioAtualId = ref(1);
+const usuarioAtualId = ref(2);
 
 const comunidade = ref({
     id: route.params.id || 1,
@@ -628,47 +628,6 @@ const compartilhar = () => {
     border-radius: 15px;
 }
 
-@media (max-width: 768px) {
-    .corpo {
-        flex-direction: column;
-    }
-
-    .coluna {
-        width: 100%;
-        margin-left: 0;
-        flex: 1;
-        min-height: auto;
-    }
-
-    .banner-capa-header {
-        height: 180px;
-    }
-
-    .banner-overlay {
-        padding: 16px;
-    }
-
-    .comunidade-titulo {
-        font-size: 22px;
-    }
-
-    .conteudo-principal {
-        padding: 16px 12px 40px 12px;
-    }
-
-    .acoes-comunidade-row {
-        gap: 8px;
-    }
-
-    .membro-card-item {
-        padding: 12px 14px;
-    }
-
-    .none {
-        display: none;
-    }
-}
-
 @media (max-width: 480px) {
     .corpo {
         background-color: #fcfaf6;
@@ -681,11 +640,12 @@ const compartilhar = () => {
     }
 
     .banner-capa-header {
-        height: 200px;
+        height: 190px;
     }
 
     .banner-overlay {
         padding: 14px 16px;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.75) 100%);
     }
 
     .back-btn-circle {
@@ -693,14 +653,22 @@ const compartilhar = () => {
         height: 34px;
     }
 
+    .criador-badge-info {
+        font-size: 12px;
+    }
+
     .comunidade-titulo {
-        font-size: 22px;
+        font-family: "Playfair Display", serif;
+        font-size: 24px;
+        font-weight: 700;
+        color: #ffffff;
         margin-bottom: 4px;
     }
 
     .comunidade-stats {
-        font-size: 11px;
+        font-size: 12px;
         gap: 12px;
+        color: #efeae1;
     }
 
     .conteudo-principal {
@@ -709,27 +677,65 @@ const compartilhar = () => {
 
     .comunidade-descricao {
         font-size: 13px;
-        margin-bottom: 14px;
-    }
-
-    .membros-avatares-row {
+        color: #6e655f;
+        line-height: 1.45;
         margin-bottom: 16px;
     }
 
+    .membros-avatares-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        margin-bottom: 16px;
+    }
+
+    .avatares-stack {
+        display: flex;
+        align-items: center;
+    }
+
+    .avatar-circle-wrapper {
+        margin-left: -6px;
+    }
+
+    .avatar-circle-wrapper:first-child {
+        margin-left: 0;
+    }
+
+    .avatar-circle,
+    .avatar-img-stack {
+        width: 28px;
+        height: 28px;
+        font-size: 10px;
+        border-width: 1.5px;
+    }
+
     .membros-restantes-text {
-        font-size: 11px;
+        font-size: 12px;
+        color: #8c827a;
+    }
+
+    .denunciar-row {
+        display: none;
     }
 
     .acoes-comunidade-row {
-        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
         gap: 10px;
+        margin-bottom: 12px;
     }
 
     .btn-acao-participacao {
+        flex: 1;
+        background-color: #72bca5;
+        color: #ffffff;
         border-radius: 14px;
         padding: 12px;
-        font-size: 13px;
-        background-color: #72bca5;
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
     }
 
     .btn-share-icon {
@@ -737,42 +743,49 @@ const compartilhar = () => {
         height: 44px;
         border-radius: 14px;
         border: 1px solid #efeae1;
-    }
-
-    .btn-editar-wrapper {
-        margin-bottom: 16px;
-    }
-
-    .btn-editar-comunidade {
-        width: fit-content;
-        border-radius: 20px;
-        border: 1px solid #efeae1;
-        padding: 8px 18px;
-        font-size: 12px;
+        background-color: #ffffff;
         color: #4a2512;
     }
 
+    .btn-editar-wrapper {
+        margin-bottom: 20px;
+    }
+
+    .btn-editar-comunidade {
+        background-color: #ffffff;
+        border: 1px solid #dcd4c8;
+        color: #4a2512;
+        border-radius: 20px;
+        padding: 8px 18px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
     .abas-container {
-        border-bottom: 1px solid #efeae1;
+        display: flex;
+        gap: 32px;
+        border-bottom: 1.5px solid #efeae1;
         padding-bottom: 0;
-        gap: 24px;
         background: transparent;
         margin-bottom: 16px;
+        justify-content: center;
     }
 
     .aba-btn {
         background: transparent !important;
         border: none !important;
-        border-bottom: 2px solid transparent !important;
+        border-bottom: 3px solid transparent !important;
         border-radius: 0 !important;
         color: #8c827a !important;
-        padding: 8px 4px !important;
-        font-size: 14px !important;
+        padding: 5px 30px 8px 30px !important;
+        font-size: 15px !important;
+        font-weight: 500 !important;
         flex: none !important;
     }
 
     .aba-btn.active {
         color: #4a2512 !important;
+        font-weight: 700 !important;
         border-bottom-color: #4a2512 !important;
     }
 
@@ -781,7 +794,7 @@ const compartilhar = () => {
     }
 
     .lista-receitas-grid {
-        gap: 12px;
+        gap: 14px;
     }
 }
 </style>

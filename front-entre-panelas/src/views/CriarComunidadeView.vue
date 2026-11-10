@@ -880,6 +880,10 @@ const voltarParaComunidades = () => {
         font-size: 11px;
     }
 
+    .section-title-sm {
+        font-family: "Inter", sans-serif;
+    }
+
     .conteudo {
         padding: 12px 16px 80px 16px;
         background-color: #fcfaf6;
@@ -901,24 +905,33 @@ const voltarParaComunidades = () => {
     .identidade-visual-wrapper {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
         margin-bottom: 0;
     }
 
     .upload-capa-box {
-        height: 120px;
+        height: 110px;
         border-radius: 16px;
-        border: 1.5px dashed #dcd4c8;
+        border: 2px dashed #EADFC8;
         background-color: #ffffff;
     }
 
     .upload-placeholder-capa {
-        gap: 4px;
+        gap: 6px;
+        padding: 10px;
+    }
+
+    .icon-upload-img-png {
+        width: 28px;
+        height: 28px;
+        border: none;
+        filter: brightness(0) saturate(100%) invert(58%) sepia(11%) saturate(768%) hue-rotate(345deg) brightness(92%) contrast(85%);
     }
 
     .upload-title-text {
         font-size: 12px;
         color: #4a2512;
+        font-weight: 500;
     }
 
     .upload-sub-text,
@@ -932,12 +945,11 @@ const voltarParaComunidades = () => {
         left: auto;
         width: 64px;
         height: 64px;
-        float: left;
-        margin-right: 12px;
         border-radius: 14px;
-        border: 1.5px dashed #dcd4c8;
+        border: 2px dashed #EADFC8;
         box-shadow: none;
         background-color: #ffffff;
+        z-index: 1;
     }
 
     .avatar-floating {
@@ -947,23 +959,37 @@ const voltarParaComunidades = () => {
         height: 100%;
     }
 
+    .camera-icon-img {
+        width: 20px;
+        height: 20px;
+        filter: brightness(0) saturate(100%) invert(58%) sepia(11%) saturate(768%) hue-rotate(345deg) brightness(92%) contrast(85%);
+    }
+
+    .plus-badge {
+        display: none;
+    }
+
     .avatar-label-container {
-        margin-top: 0;
-        overflow: hidden;
+        margin-top: -80px;
+        margin-left: 78px;
+        height: 64px;
+        padding-left: 0;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        min-height: 64px;
+        gap: 2px;
     }
 
     .avatar-label-container strong {
         font-size: 13px;
         color: #4a2512;
+        font-weight: 700;
     }
 
     .avatar-label-container p {
         font-size: 11px;
         color: #8c827a;
+        margin: 0;
     }
 
     .text-input,
