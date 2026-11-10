@@ -46,14 +46,22 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import BannerEsquerdo from '@/components/BannerEsquerdo.vue'
+import { authService } from '@/services/authService'
 
+const router = useRouter()
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
 
 function handleLogin() {
-  alert(`Tentando logar com e-mail: ${email.value}`)
+  try {
+    authService.login(email.value, password.value)
+    router.push({ name: 'home' }) 
+  } catch (error) {
+    alert(error.message)
+  }
 }
 </script>
 

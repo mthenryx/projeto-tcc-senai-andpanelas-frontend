@@ -104,6 +104,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BarraNavegacao from '@/components/BarraNavegacao.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
+import { authService } from '@/services/authService'
 
 const router = useRouter()
 
@@ -177,6 +178,7 @@ const voltarPerfil = () => {
 }
 
 const sairDaConta = () => {
+    authService.logout()
     router.push('/')
 }
 

@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { authService } from '@/services/authService'
+
 import LoginView from '../views/LoginView.vue'
 import CadastroView from '@/views/CadastroView.vue'
 import RecuperarSenha from '@/views/RecuperarSenha.vue'
@@ -16,7 +18,6 @@ import TesteView from '@/views/TesteView.vue'
 import CriarComunidadeView from '@/views/CriarComunidadeView.vue'
 import ComunidadeDetalhesView from '@/views/ComunidadeDetalhesView.vue'
 import PerfilView from '@/views/PerfilView.vue'
-import UserPerfilView from '@/views/OthersPerfilView.vue'
 import OthersPerfilView from '@/views/OthersPerfilView.vue'
 
 const router = createRouter({
@@ -25,95 +26,124 @@ const router = createRouter({
     {
       path: '/',
       name: 'login',
-      component: LoginView
+      component: LoginView,
+      meta: { requiresAuth: false }
     },
     {
       path: '/cadastro',
       name: 'cadastro',
-      component: CadastroView
+      component: CadastroView,
+      meta: { requiresAuth: false }
     },
     {
       path: '/recuperar-senha',
       name: 'recuperar-senha',
-      component: RecuperarSenha
+      component: RecuperarSenha,
+      meta: { requiresAuth: false }
     },
     {
       path: '/home',
       name: 'home',
-      component: HomeView
+      component: HomeView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/chefinho',
       name: 'chefinho',
-      component: ChefeView
+      component: ChefeView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/comunidade',
       name: 'comunidade',
-      component: ComunidadeView
+      component: ComunidadeView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/criar-comunidade',
-      name: '/comunidade',
-      component: CriarComunidadeView
+      name: 'criar-comunidade',
+      component: CriarComunidadeView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/comunidade/:id',
-      name: 'ComunidadeDetalhes',
-      component: ComunidadeDetalhesView
+      name: 'comunidade-detalhes',
+      component: ComunidadeDetalhesView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/criar-receita',
       name: 'criar-receita',
-      component: CriarReceitaView
+      component: CriarReceitaView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/editar-informacoes',
       name: 'editar-informacoes',
-      component: EditarInformacoesView
+      component: EditarInformacoesView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/editar-perfil',
       name: 'editar-perfil',
-      component: EditarPerfilView
+      component: EditarPerfilView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/geladeira',
       name: 'geladeira',
-      component: GeladeiraView
+      component: GeladeiraView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/lista-compra',
       name: 'lista-compra',
-      component: ListaView
+      component: ListaView,
+      meta: { requiresAuth: true }
     },
-    
     {
       path: '/receita/:id',
       name: 'receita',
-      component: ReceitaView
+      component: ReceitaView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/buscar-receita',
       name: 'buscar-receita',
-      component: BuscarView
+      component: BuscarView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/perfil',
       name: 'perfil',
-      component: PerfilView
+      component: PerfilView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/others-perfil',
       name: 'others-perfil',
-      component: OthersPerfilView
+      component: OthersPerfilView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/teste',
       name: 'teste',
-      component: TesteView
+      component: TesteView,
+      meta: { requiresAuth: true }
     }
   ]
+})
+
+router.beforeEach((to, from, next) => {
+  const isLogged = authService.isAuthenticated()
+
+  if (to.meta.requiresAuth && !isLogged) {
+    next({ name: 'login' })
+  } else if (to.name === 'login' && isLogged) {
+    next({ name: 'home' })
+  } else {
+    next()
+  }
 })
 
 export default router

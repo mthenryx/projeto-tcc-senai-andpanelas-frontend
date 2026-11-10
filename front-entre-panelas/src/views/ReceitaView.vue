@@ -42,7 +42,8 @@
                                     </div>
                                 </div>
 
-                                <button v-if="!ehUsuarioAtual" class="follow-btn"
+                                <!-- Botão de seguir só exibe se NÃO for o usuário logado E NÃO for o Chefinho -->
+                                <button v-if="!ehUsuarioAtual && !ehChefinho" class="follow-btn"
                                     :class="{ 'following': receita.seguindo }" @click="toggleSeguir">
                                     {{ receita.seguindo ? 'Seguindo' : 'Seguir' }}
                                 </button>
@@ -128,18 +129,27 @@
                             </button>
                         </div>
 
-                        <div class="video-container" v-if="receita.videoUrl">
-                            <div class="video-wrapper" :style="{ backgroundImage: `url(${receita.imagemUrl})` }">
-                                <div class="play-overlay">
-                                    <div class="play-icon-circle">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round">
-                                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- O container de vídeo só aparece se existir vídeo -->
+                        <div class="video-container" v-if="dadosVideo">
+                            <iframe 
+                                v-if="dadosVideo.tipo === 'youtube'"
+                                class="video-element"
+                                :src="dadosVideo.embedUrl"
+                                title="Vídeo da receita"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                            ></iframe>
+
+                            <video 
+                                v-else-if="dadosVideo.tipo === 'direto'"
+                                class="video-element"
+                                controls
+                                :poster="receita.imagemUrl"
+                            >
+                                <source :src="dadosVideo.url" type="video/mp4" />
+                                Seu navegador não suporta a exibição deste vídeo.
+                            </video>
                         </div>
 
                         <div class="tabs-switch-container">
@@ -170,7 +180,7 @@
                         </div>
 
                         <div v-if="abaAtivaSecao === 'ingredientes'" class="section-content-box">
-                            <div class="section-subtitle-bar">PARA {{ receita.porcoes.toUpperCase() }}</div>
+                            <div class="section-subtitle-bar">PARA {{ (receita.porcoes || '').toUpperCase() }}</div>
 
                             <div class="ingredients-list">
                                 <div v-for="(ingrediente, index) in receita.ingredientes" :key="index"
@@ -312,6 +322,8 @@ import UserAvatar from '@/components/UserAvatar.vue';
 const route = useRoute();
 const router = useRouter();
 
+const CHEFINHO_ID = 1;
+
 const usuarioAtual = ref({
     id: 101,
     nome: 'Ana Costa',
@@ -326,11 +338,12 @@ const receita = ref({
     descricao: '',
     categoria: '',
     imagemUrl: '',
+    videoUrl: '',
     tempo: '',
     dificuldade: '',
     custo: '',
     porcoes: '',
-    autorId: 202,
+    autorId: null,
     autorNome: '',
     autorUsername: '',
     authorIniciais: '',
@@ -359,7 +372,6 @@ const comentarios = ref([
 
 onMounted(() => {
     const idReceitaRecebido = route.params.id;
-    console.log("Buscando dados para a receita ID:", idReceitaRecebido);
 
     receita.value = {
         id: idReceitaRecebido,
@@ -367,12 +379,12 @@ onMounted(() => {
         descricao: 'Uma receita deliciosa e perfumada de frango marinado em suco de limão siciliano com ervas frescas.',
         categoria: 'Almoço',
         imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
-        videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 
         tempo: '40min',
         dificuldade: 'Fácil',
         custo: 'Moderado',
         porcoes: '4 porções',
-        autorId: 202,
+        autorId: 202, 
         autorNome: 'Ana Costa',
         autorUsername: 'anacosta',
         authorIniciais: 'AC',
@@ -409,6 +421,32 @@ const ehUsuarioAtual = computed(() => {
     return receita.value.autorId === usuarioAtual.value.id;
 });
 
+// Checa direto se o ID do autor da receita é o ID do Chefinho
+const ehChefinho = computed(() => {
+    return receita.value.autorId === CHEFINHO_ID;
+});
+
+// Valida dinamicamente se a URL é YouTube, vídeo direto ou se está vazia
+const dadosVideo = computed(() => {
+    const url = receita.value.videoUrl;
+    if (!url || typeof url !== 'string' || !url.trim()) return null;
+
+    const regExpYoutube = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExpYoutube);
+
+    if (match && match[2].length === 11) {
+        return {
+            tipo: 'youtube',
+            embedUrl: `https://www.youtube.com/embed/${match[2]}`
+        };
+    }
+
+    return {
+        tipo: 'direto',
+        url: url
+    };
+});
+
 const abaAtivaSecao = ref('ingredientes');
 const isReportOpen = ref(false);
 const novoComentarioTexto = ref('');
@@ -417,7 +455,10 @@ const textoEditado = ref('');
 const mostrarPopupSucesso = ref(false);
 
 const abrirPerfilAutor = () => {
-    if (receita.value.autorId) {
+    if (ehChefinho.value) {
+        // Redireciona para o assistente IA se for o Chefinho
+        router.push('/chefinho');
+    } else if (receita.value.autorId) {
         router.push({ path: '/others-perfil', query: { id: receita.value.autorId } });
     }
 };
@@ -426,7 +467,11 @@ const abrirModalDenuncia = () => { isReportOpen.value = true; };
 const tratarEnvioDenuncia = (dados) => { emit('enviar-denuncia', dados); };
 const toggleCurtir = () => { receita.value.curtido = !receita.value.curtido; };
 const toggleSalvar = () => { receita.value.salvo = !receita.value.salvo; };
-const toggleSeguir = () => { receita.value.seguindo = !receita.value.seguindo; };
+const toggleSeguir = () => { 
+    if (!ehChefinho.value) {
+        receita.value.seguindo = !receita.value.seguindo; 
+    }
+};
 
 const ingredientesAdicionadosNaLista = ref(false);
 
@@ -802,44 +847,13 @@ const getIconFilter = (tipo) => {
     width: 100%;
 }
 
-.video-wrapper {
+.video-element {
     width: 100%;
-    height: 340px;
-    background-size: cover;
-    background-position: center;
+    height: 380px;
     border-radius: 16px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-.play-overlay {
-    background-color: rgba(0, 0, 0, 0.35);
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
-
-.play-icon-circle {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #2D241E;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    transition: transform 0.2s;
-}
-
-.play-icon-circle:hover {
-    transform: scale(1.08);
+    border: none;
+    object-fit: cover;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
 }
 
 .tabs-switch-container {
@@ -1192,6 +1206,10 @@ const getIconFilter = (tipo) => {
         margin-left: 0;
         flex: 1;
         min-height: auto;
+    }
+
+    .video-element {
+        height: 220px;
     }
 }
 </style>
