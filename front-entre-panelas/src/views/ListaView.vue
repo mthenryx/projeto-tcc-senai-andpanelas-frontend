@@ -975,4 +975,239 @@ header.header-normal {
         display: none;
     }
 }
+
+@media (max-width: 480px) {
+    .corpo,
+    .coluna,
+    .conteudo {
+        background-color: #fcfaf6;
+    }
+
+    header.header-normal {
+        padding: 14px 16px 8px 16px;
+        background-color: #ffffff;
+        border-bottom: 1px solid #efeae1;
+    }
+
+    .header-topo-lista.none {
+        display: flex !important;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .cart-emoji {
+        display: none;
+    }
+
+    .header-titles h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #4a2512;
+    }
+
+    .header-titles p {
+        font-size: 11px;
+        color: #8c827a;
+    }
+
+    .header-actions {
+        gap: 8px;
+    }
+
+    .icon-action-btn.copie {
+        background-color: #ffffff;
+        border: 1px solid #efeae1;
+        color: #4a2512;
+        width: 36px;
+        height: 36px;
+    }
+
+    .icon-action-btn.delete {
+        background-color: #dc2626;
+        border: none;
+        color: #ffffff;
+        width: 36px;
+        height: 36px;
+    }
+
+    .progress-bar-container {
+        margin-top: 12px;
+        height: 6px;
+        background-color: #fce8c7;
+        border-radius: 4px;
+    }
+
+    .progress-bar-fill {
+        background-color: #72bca5;
+        border-radius: 4px;
+    }
+
+    .lista-container {
+        padding: 14px 16px 80px 16px;
+        gap: 14px;
+        background-color: #fcfaf6;
+    }
+
+    .chips-receitas-row {
+        gap: 8px;
+    }
+
+    .exibir-tudo-btn {
+        display: none;
+    }
+
+    .recipe-chip-item {
+        background-color: #ffffff;
+        border: 1px solid #f5cda7;
+        border-radius: 20px;
+        padding: 4px 12px 4px 4px;
+    }
+
+    .add-recipe-chip-btn {
+        border: 1.5px dashed #a3dac9;
+        background-color: #f0f9f6;
+        color: #52ab8b;
+        border-radius: 20px;
+        padding: 6px 14px;
+    }
+
+    .tabs-filter-row {
+        gap: 8px;
+    }
+
+    .tab-pill {
+        background-color: #ffffff;
+        border: 1px solid #efeae1;
+        color: #6e655f;
+        padding: 6px 14px;
+        font-size: 12px;
+        border-radius: 20px;
+    }
+
+    .tab-pill.active {
+        background-color: #4a2512;
+        color: #ffffff;
+        border-color: #4a2512;
+    }
+
+    .add-manual-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+    }
+
+    .add-manual-row input[type="text"] {
+        grid-column: 1 / -1;
+        background-color: #ffffff;
+        border: 1px solid #efeae1;
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 13px;
+    }
+
+    .select-wrapper {
+        grid-column: 1 / -1;
+        background-color: #ffffff;
+        border: 1px solid #efeae1;
+        border-radius: 12px;
+    }
+
+    .select-field {
+        padding: 12px 36px 12px 14px;
+        font-size: 13px;
+        color: #4a2512;
+    }
+
+    .add-manual-row input[type="number"] {
+        grid-column: 1;
+        background-color: #ffffff;
+        border: 1px solid #efeae1;
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 13px;
+    }
+
+    .add-manual-btn {
+        grid-column: 2;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background-color: #72bca5;
+    }
+
+    .categorias-container {
+        gap: 16px;
+    }
+
+    .categoria-header {
+        font-size: 11px;
+        color: #8c827a;
+    }
+
+    .cat-titulo {
+        font-weight: 700;
+        color: #6e655f;
+    }
+
+    .cat-count {
+        color: #a89f91;
+    }
+
+    .item-card {
+        background-color: #ffffff;
+        border: 1px solid #efeae1;
+        border-radius: 14px;
+        padding: 10px 14px;
+    }
+
+    .item-card.comprado {
+        background-color: #ffffff;
+        opacity: 0.6;
+    }
+
+    .checkbox-custom {
+        width: 20px;
+        height: 20px;
+        border: 1.5px solid #dcd4c8;
+    }
+
+    .checkbox-custom.checked {
+        background-color: #72bca5;
+        border-color: #72bca5;
+    }
+
+    .item-nome {
+        font-size: 13px;
+        color: #4a2512;
+    }
+
+    .item-quantidade {
+        font-size: 11px;
+        background-color: #e3f4ed;
+        color: #2e6f59;
+        padding: 4px 8px;
+        border-radius: 8px;
+    }
+
+    .remove-item-btn {
+        color: #a89f91;
+    }
+
+    .banner-chefinho {
+        background-color: #fcecdb;
+        border-radius: 16px;
+        padding: 12px 16px;
+        margin-top: 10px;
+    }
+
+    .chefinho-text h5 {
+        font-size: 12px;
+        color: #4a2512;
+    }
+
+    .chefinho-text p {
+        font-size: 10px;
+        color: #6e655f;
+    }
+}
 </style>

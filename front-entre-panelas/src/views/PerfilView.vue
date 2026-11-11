@@ -2,6 +2,15 @@
     <div class="perfil-layout">
         <BarraNavegacao />
 
+        <header class="header-perfil-mobile">
+            <h2>Meu Perfil</h2>
+            <button class="botao-icone-engrenagem" @click="irParaEditarInformacoes" aria-label="Configurações">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </header>
         <main class="conteudo-principal">
             <div 
                 class="banner-perfil" 
@@ -523,6 +532,10 @@ const irParaComunidade = (id) => {
     color: var(--cinza);
 }
 
+.header-perfil-mobile {
+    display: none;
+}
+
 @media (max-width: 768px) {
     .perfil-layout {
         flex-direction: column;
@@ -548,6 +561,169 @@ const irParaComunidade = (id) => {
 
     .estatisticas-usuario {
         gap: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .perfil-layout,
+    .conteudo-principal,
+    .perfil-info-container,
+    .aba-conteudo {
+        background-color: #fcfaf6;
+    }
+
+    .conteudo-principal {
+        margin-left: 0;
+        padding-bottom: 80px;
+    }
+
+    .header-perfil-mobile {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        background-color: #ffffff;
+        border-bottom: 1px solid #efeae1;
+    }
+
+    .header-perfil-mobile h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #3b2219;
+        margin: 0;
+    }
+
+    .botao-icone-engrenagem {
+        background: none;
+        border: none;
+        color: #4a2512;
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .banner-perfil {
+        height: 110px;
+        padding: 0;
+    }
+
+    .banner-acoes-topo {
+        display: none;
+    }
+
+    .perfil-info-container {
+        padding: 0 16px;
+    }
+
+    .perfil-cabecalho-linha {
+        margin-top: -90px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .avatar-wrapper {
+        width: 80px;
+        height: 80px;
+        border: 3px solid #72bca5;
+        border-radius: 50%;
+        box-shadow: none;
+    }
+
+    .botao-editar-perfil {
+        margin-top: 0;
+        background-color: #ffffff;
+        border: 1px solid #efeae1;
+        color: #4a2512;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .detalhes-usuario {
+        gap: 4px;
+        margin-bottom: 16px;
+    }
+
+    .nome-usuario {
+        font-size: 22px;
+        color: #3b2219;
+    }
+
+    .username {
+        font-size: 13px;
+        color: #8c827a;
+    }
+
+    .descricao-usuario {
+        font-size: 13px;
+        color: #5a4a42;
+        margin-top: 4px;
+        line-height: 1.4;
+    }
+
+    .estatisticas-usuario {
+        gap: 16px;
+        margin-top: 14px;
+    }
+
+    .estatistica-item {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 4px;
+    }
+
+    .estatistica-valor {
+        font-size: 15px;
+        font-weight: 700;
+        color: #3b2219;
+        font-family: "Inter", sans-serif;
+    }
+
+    .estatistica-label {
+        font-size: 13px;
+        color: #8c827a;
+    }
+
+    .abas-navegacao {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+        gap: 4px;
+        border-bottom: 1px solid #efeae1;
+        padding-bottom: 0px;
+        margin-top: 16px;
+        overflow: visible;
+    }
+
+    .aba-botao {
+        flex: 1;
+        padding: 8px 4px;
+        font-size: 12px;
+        font-weight: 600;
+        justify-content: center;
+        background-color: transparent;
+        color: #6e655f;
+    }
+
+    .aba-botao.ativa {
+        background-color: #3b2219;
+        color: #ffffff;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+    }
+
+    .aba-conteudo {
+        padding: 16px;
+    }
+
+    .lista-grid {
+        gap: 16px;
     }
 }
 </style>

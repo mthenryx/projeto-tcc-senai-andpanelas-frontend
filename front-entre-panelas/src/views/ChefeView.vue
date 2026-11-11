@@ -697,4 +697,125 @@ const voltar = () => {
         border-bottom-right-radius: 15px;
     }
 }
+
+@media (max-width: 480px) {
+    .chefe-view-layout {
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+        background-color: #fcfaf6;
+    }
+
+    .chat-main-area {
+        display: contents;
+    }
+
+    .chat-header {
+        order: 1;
+        display: flex !important;
+        background-color: #3b2219;
+        padding: 10px 16px;
+        height: auto;
+    }
+
+    .back-btn {
+        display: none;
+    }
+
+    .chefe-title-header {
+        font-size: 15px;
+    }
+
+    .chefe-subtitle {
+        margin-top: 2px;
+        font-size: 11px;
+        justify-content: flex-start;
+    }
+
+    .chefe-subtitle img {
+        display: none;
+    }
+
+    .status-indicator-badge {
+        background-color: rgba(255, 255, 255, 0.15);
+        border: none;
+        color: #ffffff;
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+
+    .recent-conversations-sidebar {
+        order: 2;
+        position: relative;
+        right: auto;
+        top: auto;
+        width: 100%;
+        height: auto;
+        flex-shrink: 0;
+        background-color: #ffffff;
+        border-left: none;
+        border-bottom: 1px solid #efeae1;
+        padding: 10px 16px;
+        z-index: 10;
+    }
+
+    .sidebar-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #4a2512;
+        margin-bottom: 0;
+    }
+
+    .messages-scroll-area {
+        order: 3;
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        background-color: #fcfaf6;
+        padding: 16px;
+    }
+
+    .chat-input-section {
+        order: 4;
+        background-color: #fcfaf6;
+        border-top: none;
+        padding: 8px 16px 80px 16px;
+        gap: 8px;
+    }
+
+    .suggestions-chips {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        overflow: visible;
+    }
+
+    .chip-btn {
+        background-color: #ffffff;
+        border: 1px solid #efeae1;
+        color: #4a2512;
+        font-size: 12px;
+        padding: 8px 14px;
+        border-radius: 20px;
+        width: fit-content;
+    }
+
+    .input-wrapper {
+        background-color: #ffffff;
+        border: 1px solid #efeae1;
+        border-radius: 24px;
+        padding: 4px 6px 4px 16px;
+    }
+
+    .chat-input {
+        font-size: 13px;
+    }
+
+    .send-btn {
+        width: 34px;
+        height: 34px;
+        background-color: #72bca5;
+    }
+}
 </style>

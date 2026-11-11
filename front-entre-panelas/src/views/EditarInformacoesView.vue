@@ -5,12 +5,16 @@
         <main class="conteudo-principal">
             <div class="topo-pagina none">
                 <button class="botao-icone-1" @click="voltarPerfil" aria-label="Voltar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
                         <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
                 </button>
+                <div class="header-titles">
+                    <h2>Editar informações</h2>
+                    <p>Altere seus dados de acesso e informações pessoais</p>
+                </div>
             </div>
 
             <div class="conteudo-container">
@@ -87,13 +91,14 @@
                             </div>
                             <span v-if="erroIdadeInvalida" class="texto-erro-input">A idade deve estar entre 10 e 140 anos.</span>
                         </div>
-
                         <div class="card-privacidade-info">
                             <div class="privacidade-icone-titulo">
                                 <img src="../../public/icon_escudo.png" alt="Escudo" class="icone-escudo" />
                                 <span>Privacidade</span>
                             </div>
-                            <p class="privacidade-texto">Sua data de nascimento não aparece no perfil.</p>
+                            <p class="privacidade-texto">
+                                Sua data de nascimento não aparece no seu perfil público. Usamos apenas para privacidade e verificação da conta.
+                            </p>
                         </div>
                     </div>
 
@@ -927,6 +932,147 @@ const salvarInformacoes = () => {
 
     .none {
         display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .perfil-layout,
+    .conteudo-principal,
+    .conteudo-container {
+        background-color: #fcfaf6;
+    }
+
+    .conteudo-principal {
+        margin-left: 0;
+        padding-bottom: 80px;
+    }
+
+    .topo-pagina.none {
+        display: flex !important;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        background-color: #ffffff;
+        border-bottom: 1px solid var(--bege);
+        justify-content: start;
+        margin-bottom: 15px;
+    }
+
+    .botao-icone-1 {
+        background: transparent;
+        box-shadow: none;
+        width: 32px;
+        height: 32px;
+        color: #4a2512;
+    }
+
+    .header-titles h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #3b2219;
+        margin: 0;
+    }
+
+    .header-titles p {
+        font-size: 11px;
+        color: #8c827a;
+        margin: 1px 0 0 0;
+    }
+
+    .cabecalho-sair {
+        display: none;
+    }
+
+    .conteudo-container {
+        padding: 16px 16px 40px 16px;
+        margin-top: 0;
+    }
+
+    .cartao-secao {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin-bottom: 24px;
+        gap: 16px;
+    }
+
+    .titulo-secao {
+        font-size: 15px;
+        font-weight: 700;
+        color: #3b2219;
+    }
+
+    .grupo-campo-info {
+        gap: 6px;
+    }
+
+    .label-info {
+        font-size: 13px;
+        color: #4a2512;
+    }
+
+    .icone-input-esquerdo {
+        display: none;
+    }
+
+    .input-personalizado {
+        padding: 12px 70px 12px 14px;
+        background-color: #ffffff;
+        border: 1px solid #efeae1;
+        border-radius: 12px;
+        font-size: 13px;
+        color: #4a2512;
+    }
+
+    .botao-alterar-item {
+        right: 14px;
+        color: #72bca5;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .grid-informacoes-pessoais {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .card-privacidade-info {
+        background-color: #f7f3ed;
+        border: 1px solid #efeae1;
+        border-radius: 14px;
+        padding: 14px;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        margin-top: 0;
+    }
+
+    .privacidade-icone-titulo {
+        display: flex;
+        align-items: center;
+    }
+
+    .privacidade-icone-titulo span {
+        display: none;
+    }
+
+    .icone-escudo {
+        width: 20px;
+        height: 20px;
+    }
+
+    .privacidade-texto {
+        font-size: 12px;
+        color: #6e655f;
+        line-height: 1.4;
+    }
+
+    .aviso-rodape-info {
+        font-size: 11px;
+        color: #8c827a;
+        line-height: 1.4;
+        margin-top: 12px;
     }
 }
 </style>

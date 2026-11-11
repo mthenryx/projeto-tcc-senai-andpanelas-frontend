@@ -1022,4 +1022,223 @@ const voltarEtapa = () => {
         font-size: 20px;
     }
 }
+
+@media (max-width: 480px) {
+    .header-topo.none {
+        display: flex !important;
+        background-color: #ffffff;
+        border-bottom: 1px solid #efeae1;
+        height: auto;
+        padding: 14px 16px;
+    }
+
+    .header-titles h2 {
+        font-size: 18px;
+    }
+
+    .header-titles p {
+        font-size: 11px;
+    }
+
+    .conteudo {
+        padding: 12px 16px 80px 16px;
+        background-color: #fcfaf6;
+    }
+
+    .form-container {
+        padding: 0;
+        background-color: transparent;
+        border: none;
+        box-shadow: none;
+        gap: 20px;
+    }
+
+    .progress-bar-container {
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+
+    .progress-segment {
+        height: 6px;
+        background-color: #fce8c7;
+        border-radius: 4px;
+    }
+
+    .progress-segment.active {
+        background-color: #72bca5;
+    }
+
+    .section-title {
+        font-family: "Playfair Display", serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: #4a2512;
+    }
+
+    .etapa-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px 12px;
+    }
+
+    .section-title,
+    .input-group,
+    .row-dupla,
+    .dynamic-list-container,
+    .btn-dashed-add,
+    .navigation-buttons-row,
+    .btn-primary-ingrediente {
+        grid-column: 1 / -1;
+    }
+
+    .upload-box {
+        height: 110px;
+        border-radius: 16px;
+        border: 1.5px dashed #dcd4c8;
+        background-color: #ffffff;
+        padding: 8px;
+    }
+
+    .upload-placeholder {
+        gap: 6px;
+        padding: 4px;
+    }
+
+    .upload-icon-img {
+        width: 34px;
+        height: 28px;
+        filter: brightness(0) saturate(100%) invert(58%) sepia(11%) saturate(768%) hue-rotate(345deg) brightness(92%) contrast(85%);
+    }
+
+    .upload-title-text {
+        font-size: 11px;
+        color: #4a2512;
+        font-weight: 600;
+    }
+
+    .upload-sub-text {
+        display: none;
+    }
+
+    .text-input,
+    .textarea-input,
+    .select-input {
+        background-color: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #efeae1;
+        font-size: 13px;
+        color: #4a2512;
+    }
+
+    .cat-chip {
+        padding: 6px 14px;
+        font-size: 12px;
+    }
+
+    .cat-chip.active {
+        background-color: #f5b041;
+        color: #ffffff;
+        border-color: #f5b041;
+    }
+
+    .row-dupla {
+        display: flex;
+        gap: 10px;
+    }
+
+    .dynamic-row {
+        gap: 6px;
+    }
+
+    .dynamic-row .text-input,
+    .dynamic-row .select-input {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    .step-badge-num {
+        width: 24px;
+        height: 24px;
+        background-color: #72bca5;
+        color: #ffffff;
+        font-size: 12px;
+    }
+
+    .btn-dashed-add {
+        border: 1.5px dashed #a3dac9;
+        background-color: #f0f9f6;
+        color: #52ab8b;
+        border-radius: 14px;
+        padding: 12px;
+        margin-top: 0;
+    }
+
+    .tag-input-row .btn-add-tag {
+        background-color: #4a2512;
+        border-radius: 12px;
+    }
+
+    .navigation-buttons-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 8px;
+    }
+
+    .btn-secondary {
+        width: 100%;
+        border-radius: 14px;
+        padding: 12px;
+        text-align: center;
+        border: 1px solid #8C7B73;
+        background-color: #ffffff;
+        color: #4a2512;
+    }
+
+    .btn-primary {
+        width: 100%;
+        border-radius: 14px;
+        padding: 12px;
+        text-align: center;
+        background-color: #72bca5;
+        color: #ffffff;
+    }
+
+    .btn-danger-primary {
+        width: 100%;
+        border-radius: 14px;
+        padding: 12px;
+        text-align: center;
+        background-color: #bc0b27;
+        color: #ffffff;
+    }
+
+    .btn-primary-ingrediente {
+        width: 100%;
+        border-radius: 14px;
+        padding: 14px;
+        background-color: #72bca5;
+        color: #ffffff;
+    }
+
+    .success-screen-container {
+        padding: 40px 16px;
+        margin: 0 auto;
+    }
+
+    .success-title {
+        font-family: "Playfair Display", serif;
+        font-size: 24px;
+        color: #4a2512;
+    }
+
+    .link-feed-btn {
+        color: #8c827a;
+        text-decoration: underline;
+    }
+
+    .etapa-content {
+        margin-bottom: 20px;
+    }
+}
 </style>

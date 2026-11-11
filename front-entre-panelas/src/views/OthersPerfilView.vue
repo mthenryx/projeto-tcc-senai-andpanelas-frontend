@@ -2,6 +2,9 @@
     <div class="perfil-layout">
         <BarraNavegacao />
 
+        <header class="header-perfil-mobile">
+            <h2>Entre Panelas</h2>
+        </header>
         <main class="conteudo-principal">
             <div 
                 class="banner-perfil" 
@@ -396,6 +399,10 @@ const irParaComunidade = (id) => {
     z-index: 2;
 }
 
+.header-perfil-mobile {
+    display: none;
+}
+
 .perfil-cabecalho-linha {
     display: flex;
     justify-content: space-between;
@@ -666,6 +673,187 @@ const irParaComunidade = (id) => {
 
     .estatisticas-usuario {
         gap: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .perfil-layout,
+    .conteudo-principal,
+    .perfil-info-container,
+    .aba-conteudo {
+        background-color: #fcfaf6;
+    }
+
+    .conteudo-principal {
+        margin-left: 0;
+        padding-bottom: 80px;
+    }
+
+    .header-perfil-mobile {
+        display: flex;
+        align-items: center;
+        padding: 14px 16px;
+        background-color: #ffffff;
+        border-bottom: 1px solid #efeae1;
+    }
+
+    .header-perfil-mobile h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #3b2219;
+        margin: 0;
+    }
+
+    .banner-perfil {
+        height: 110px;
+        padding: 0;
+    }
+
+    .banner-acoes-topo {
+        display: none;
+    }
+
+    .perfil-info-container {
+        padding: 0 16px;
+    }
+
+    .perfil-cabecalho-linha {
+        margin-top: -90px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .avatar-wrapper {
+        width: 80px;
+        height: 80px;
+        border: 3px solid #72bca5;
+        border-radius: 50%;
+        box-shadow: none;
+    }
+
+    .detalhes-usuario {
+        gap: 4px;
+        margin-bottom: 16px;
+    }
+
+    .nome-usuario {
+        font-size: 22px;
+        color: #3b2219;
+    }
+
+    .username {
+        font-size: 13px;
+        color: #8c827a;
+    }
+
+    .descricao-usuario {
+        font-size: 13px;
+        color: #5a4a42;
+        margin-top: 4px;
+        line-height: 1.4;
+    }
+
+    .estatisticas-e-acoes {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        margin-top: 14px;
+    }
+
+    .estatisticas-usuario {
+        gap: 16px;
+    }
+
+    .estatistica-item {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 4px;
+    }
+
+    .estatistica-valor {
+        font-size: 15px;
+        font-weight: 700;
+        color: #3b2219;
+        font-family: "Inter", sans-serif;
+    }
+
+    .estatistica-label {
+        font-size: 13px;
+        color: #8c827a;
+    }
+
+    .acoes-perfil-outro {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin-top: 4px;
+    }
+
+    .botao-seguir {
+        padding: 0;
+        border: none;
+        background: none;
+        color: #72bca5;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .botao-seguir::before {
+        content: "+ ";
+    }
+
+    .botao-seguir.seguindo {
+        background: none;
+        color: #52ab8b;
+    }
+
+    .botao-seguir.seguindo::before {
+        content: "";
+    }
+
+    .botao-denunciar {
+        font-size: 13px;
+        color: #6e655f;
+        padding: 0;
+    }
+
+    .abas-navegacao {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+        gap: 4px;
+        border-bottom: 1px solid #efeae1;
+        padding-bottom: 0px;
+        margin-top: 16px;
+        overflow: visible;
+    }
+
+    .aba-botao {
+        flex: 1;
+        padding: 8px 4px;
+        font-size: 12px;
+        font-weight: 600;
+        justify-content: center;
+        background-color: transparent;
+        color: #6e655f;
+    }
+
+    .aba-botao.ativa {
+        background-color: #3b2219;
+        color: #ffffff;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+    }
+
+    .aba-conteudo {
+        padding: 16px;
+    }
+
+    .lista-grid {
+        gap: 16px;
     }
 }
 </style>

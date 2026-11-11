@@ -325,7 +325,6 @@ const getIconRefeicaoFilter = (tipo, ativo) => {
 
 .header-geladeira-fixo {
     padding-left: 25px;
-    position: sticky;
     top: 0;
     z-index: 10;
     background-color: #FFFFFF;
@@ -413,7 +412,7 @@ const getIconRefeicaoFilter = (tipo, ativo) => {
 
 .secao-adicionar-card {
     border-radius: 16px;
-    padding: 24px;
+    padding: 0px 24px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -711,6 +710,7 @@ const getIconRefeicaoFilter = (tipo, ativo) => {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    margin-bottom: 50px;
 }
 
 .card-wrapper-com-compatibilidade {
@@ -788,6 +788,28 @@ const getIconRefeicaoFilter = (tipo, ativo) => {
 
     .none {
         display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-geladeira-fixo {
+        display: flex;
+    }
+
+    .icone-cubo-gelo {
+        display: none;
+    }
+
+    .secao-adicionar-card {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .lista-ativos-container {
+        order: -1;
+        border-top: none;
+        padding-top: 0;
+        margin-bottom: 8px;
     }
 }
 </style>

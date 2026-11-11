@@ -5,12 +5,16 @@
         <main class="conteudo-principal">
             <div class="topo-pagina none">
                 <button class="botao-icone-1" @click="voltarPerfil" aria-label="Voltar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
                         <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
                 </button>
+                <div class="header-titles">
+                    <h2>Editar perfil</h2>
+                    <p>Atualize as informações que aparecem no seu perfil</p>
+                </div>
             </div>
 
             <div class="conteudo-container">
@@ -501,6 +505,190 @@ const salvarPerfil = () => {
 
     .none {
         display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .perfil-layout,
+    .conteudo-principal,
+    .conteudo-container {
+        background-color: #fcfaf6;
+    }
+
+    .conteudo-principal {
+        margin-left: 0;
+        padding-bottom: 80px;
+    }
+
+    .topo-pagina.none {
+        display: flex !important;
+        align-items: center;
+        justify-content: start;
+        gap: 12px;
+        padding: 14px 16px;
+        background-color: #ffffff;
+        border-bottom: 1px solid #efeae1;
+    }
+
+    .botao-icone-1 {
+        background: transparent;
+        box-shadow: none;
+        width: 32px;
+        height: 32px;
+        color: #4a2512;
+    }
+
+    .header-titles h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #3b2219;
+        margin: 0;
+    }
+
+    .header-titles p {
+        font-size: 11px;
+        color: #8c827a;
+        margin: 1px 0 0 0;
+    }
+
+    .cabecalho-sair {
+        display: none;
+    }
+
+    .conteudo-container {
+        padding: 16px 16px 40px 16px;
+        margin-top: 0;
+    }
+
+    .card-formulario {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin-top: 0;
+        gap: 20px;
+    }
+
+    .secao-capa-grupo {
+        position: relative;
+        margin-bottom: 40px;
+    }
+
+    .banner-edicao {
+        height: 120px;
+        border: 1.5px dashed #dcd4c8;
+        background-color: #ffffff;
+        border-radius: 16px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 16px;
+    }
+
+    .banner-edicao::before {
+        content: "";
+        width: 24px;
+        height: 24px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a2512' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E");
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+
+    .botao-alterar-capa {
+        background-color: #f7f3ed;
+        border: 1px solid #efeae1;
+        color: #4a2512;
+        padding: 6px 14px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        box-shadow: none;
+    }
+
+    .icone-img-capa {
+        display: none;
+    }
+
+    .avatar-edicao-wrapper {
+        position: absolute;
+        bottom: -95px;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 0;
+        width: 80px;
+        height: 80px;
+        border: 3px solid #72bca5;
+        border-radius: 50%;
+        box-shadow: none;
+    }
+
+    .icone-camera-overlay {
+        width: 26px;
+        height: 26px;
+        background-color: #4a2512;
+        border: 2px solid #ffffff;
+        bottom: 0;
+        right: 0;
+    }
+
+    .icone-camera-overlay svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .campos-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-top: 50px;
+    }
+
+    .campo-grupo label {
+        font-size: 13px;
+        color: #4a2512;
+    }
+
+    .campo-grupo input,
+    .campo-grupo textarea {
+        background-color: #ffffff;
+        border: 1px solid #efeae1;
+        border-radius: 12px;
+        font-size: 13px;
+        padding: 12px 14px;
+        color: #4a2512;
+    }
+
+    .bio-helper {
+        font-size: 11px;
+        color: #8c827a;
+    }
+
+    .acoes-formulario {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        border-top: none;
+        padding-top: 8px;
+    }
+
+    .btn-cancelar {
+        background-color: #ffffff;
+        border: 1px solid #efeae1;
+        color: #6e655f;
+        border-radius: 14px;
+        padding: 12px;
+        font-size: 13px;
+        text-align: center;
+    }
+
+    .btn-salvar {
+        background-color: #72bca5;
+        border: none;
+        color: #ffffff;
+        border-radius: 14px;
+        padding: 12px;
+        font-size: 13px;
+        text-align: center;
     }
 }
 </style>
