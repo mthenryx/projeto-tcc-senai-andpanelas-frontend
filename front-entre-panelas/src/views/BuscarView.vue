@@ -986,5 +986,9 @@ const abrirComunidade = (id) => {
     .header-topo {
         display: flex;
     }
+
+    .search-container {
+        margin-bottom: 50px;
+    }
 }
 </style>
