@@ -475,6 +475,10 @@ const salvarInformacoes = () => {
     cursor: pointer;
 }
 
+.header-titles {
+    display: none;
+}
+
 .icone-sair {
     width: 35px;
     height: auto;
@@ -1066,6 +1070,10 @@ const salvarInformacoes = () => {
         font-size: 12px;
         color: #6e655f;
         line-height: 1.4;
+    }
+
+    .header-titles {
+        display: block;
     }
 
     .aviso-rodape-info {

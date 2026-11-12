@@ -456,6 +456,10 @@ const salvarPerfil = () => {
     background-color: var(--verde-escuro);
 }
 
+.header-titles {
+    display: none;
+}
+
 @media (max-width: 768px) {
     .perfil-layout {
         flex-direction: column;
@@ -513,6 +517,10 @@ const salvarPerfil = () => {
     .conteudo-principal,
     .conteudo-container {
         background-color: #fcfaf6;
+    }
+
+    .header-titles {
+        display: block;
     }
 
     .conteudo-principal {
