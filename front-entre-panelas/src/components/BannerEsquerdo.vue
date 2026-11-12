@@ -2,7 +2,16 @@
   <div class="banner">
     <div class="overlay"></div>
 
-    <img :src="imagemFundo" alt="Imagem de fundo do banner" class="fundo" id="leftBanner" />
+    <video
+      :key="videoFundo"
+      :src="videoFundo"
+      autoplay
+      loop
+      muted
+      playsinline
+      class="fundo"
+      id="leftBanner"
+    ></video>
 
     <section class="banner-content">
       <img src="/Logo_Panelas_em_branco.png" alt="Logo do Entre Panelas" class="logo" />
@@ -51,11 +60,11 @@ const props = defineProps({
   }
 })
 
-const imagemFundo = computed(() => {
+const videoFundo = computed(() => {
   if (props.tipo === 2) {
-    return '../../public/left-pane-woman.png'
+    return '/video_cozinha.mp4'
   }
-  return '../../public/left-pane.png'
+  return '/video_salada.mp4'
 })
 </script>
 
@@ -75,6 +84,8 @@ const imagemFundo = computed(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
+  filter: contrast(1.05) brightness(0.9);
   z-index: 1;
 }
 
@@ -84,6 +95,12 @@ const imagemFundo = computed(() => {
   left: 0;
   width: 100%;
   height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.45) 0%,
+    rgba(0, 0, 0, 0.15) 45%,
+    rgba(0, 0, 0, 0.75) 100%
+  );
   z-index: 2;
 }
 
