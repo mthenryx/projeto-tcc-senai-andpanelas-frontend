@@ -322,7 +322,7 @@ import UserAvatar from '@/components/UserAvatar.vue';
 const route = useRoute();
 const router = useRouter();
 
-const CHEFINHO_ID = 999;
+const CHEFINHO_ID = 1;
 
 const usuarioAtual = ref({
     id: 101,
