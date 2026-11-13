@@ -3,7 +3,6 @@
 
     <header class="topo-cabecalho">
       <div class="nav-esquerda">
-
         <button class="btn-voltar" @click="voltarEtapa" aria-label="Voltar">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -37,7 +36,6 @@
     </header>
 
     <main class="conteudo-principal" id="conteudo-principal">
-
       <div class="card-recuperacao" v-if="etapaAtual === 1">
         <div class="badge-recuperacao">
           <span>Recuperação de Acesso</span>
@@ -58,14 +56,16 @@
             <label>E-mail cadastrado</label>
             <div class="input-wrapper-email">
               <span class="icone-input">✉</span>
-              <input type="email" v-model="email" placeholder="seu@email.com" required />
+              <input type="email" v-model="email" placeholder="seu@email.com" maxlength="256" required />
             </div>
           </div>
 
-          <button type="submit" class="btn-enviar">
-            Enviar código
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+          <p v-if="erroEtapa" class="mensagem-erro">{{ erroEtapa }}</p>
+
+          <button type="submit" class="btn-enviar" :disabled="carregando">
+            {{ carregando ? 'Enviando...' : 'Enviar código' }}
+            <svg v-if="!carregando" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
               style="margin-left: 6px;">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
@@ -79,8 +79,17 @@
         </div>
       </div>
 
-      <PopUpValidacaoEmail v-else-if="etapaAtual === 2" :email="email" :mostrarBotaoVoltar="false"
-        @voltar="etapaAtual = 1" @avancar="etapaAtual = 3" />
+      <PopUpValidacaoEmail
+        v-else-if="etapaAtual === 2"
+        :email="email"
+        :mostrarBotaoVoltar="false"
+        :carregando="carregando"
+        :erro="erroEtapa"
+        :sucesso="sucessoReenvio"
+        @voltar="etapaAtual = 1"
+        @verificar="validarCodigoReset"
+        @reenviar="reenviarCodigoReset"
+      />
 
       <div class="card-recuperacao" v-else-if="etapaAtual === 3">
         <h1>Crie uma nova senha!</h1>
@@ -89,19 +98,33 @@
           <div class="campo-grupo">
             <label>Nova Senha</label>
             <div class="input-wrapper">
-              <input type="password" v-model="novaSenha" placeholder="Digite sua nova senha" required />
+              <input
+                type="password"
+                v-model="novaSenha"
+                placeholder="Digite sua nova senha"
+                maxlength="15"
+                required
+              />
             </div>
           </div>
 
           <div class="campo-grupo">
             <label>Repita Nova Senha</label>
             <div class="input-wrapper">
-              <input type="password" v-model="confirmaSenha" placeholder="Confirme sua nova senha" required />
+              <input
+                type="password"
+                v-model="confirmaSenha"
+                placeholder="Confirme sua nova senha"
+                maxlength="15"
+                required
+              />
             </div>
           </div>
 
-          <button type="submit" class="btn-enviar">
-            Salvar Nova Senha
+          <p v-if="erroEtapa" class="mensagem-erro">{{ erroEtapa }}</p>
+
+          <button type="submit" class="btn-enviar" :disabled="carregando">
+            {{ carregando ? 'Salvando...' : 'Salvar Nova Senha' }}
           </button>
         </form>
       </div>
@@ -128,19 +151,72 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import PopUpValidacaoEmail from '../components/PopUpValidacaoEmail.vue'
+import {
+  postRecuperarSenha,
+  postVerificarCodigoReset,
+  postRedefinirSenha
+} from '@/services/auth'
 
 const router = useRouter()
 const email = ref('')
+const codigoVerificado = ref('')
 const novaSenha = ref('')
 const confirmaSenha = ref('')
 const etapaAtual = ref(1)
 
-const enviarCodigo = () => {
+const carregando = ref(false)
+const erroEtapa = ref('')
+const sucessoReenvio = ref('')
+
+const enviarCodigo = async () => {
   if (!email.value) return
-  etapaAtual.value = 2
+  erroEtapa.value = ''
+  carregando.value = true
+
+  try {
+    await postRecuperarSenha({ email: email.value.trim() })
+    etapaAtual.value = 2
+  } catch (error) {
+    erroEtapa.value = error.message || 'Erro ao enviar código de recuperação.'
+  } finally {
+    carregando.value = false
+  }
+}
+
+const reenviarCodigoReset = async () => {
+  erroEtapa.value = ''
+  sucessoReenvio.value = ''
+
+  try {
+    await postRecuperarSenha({ email: email.value.trim() })
+    sucessoReenvio.value = 'Um novo código foi enviado para o seu e-mail.'
+  } catch (error) {
+    erroEtapa.value = error.message || 'Não foi possível reenviar o código.'
+  }
+}
+
+const validarCodigoReset = async (codigoDigitado) => {
+  erroEtapa.value = ''
+  sucessoReenvio.value = ''
+  carregando.value = true
+
+  try {
+    await postVerificarCodigoReset({
+      email: email.value.trim(),
+      codigo: codigoDigitado
+    })
+    codigoVerificado.value = codigoDigitado
+    etapaAtual.value = 3
+  } catch (error) {
+    erroEtapa.value = error.message || 'Código inválido ou expirado.'
+  } finally {
+    carregando.value = false
+  }
 }
 
 const voltarEtapa = () => {
+  erroEtapa.value = ''
+  sucessoReenvio.value = ''
   if (etapaAtual.value > 1) {
     etapaAtual.value--
   } else {
@@ -148,16 +224,51 @@ const voltarEtapa = () => {
   }
 }
 
-const salvarNovaSenha = () => {
+const salvarNovaSenha = async () => {
+  erroEtapa.value = ''
+
   if (novaSenha.value !== confirmaSenha.value) {
-    alert('As senhas não coincidem!')
+    erroEtapa.value = 'As senhas não coincidem!'
     return
   }
 
+  carregando.value = true
+
+  try {
+    await postRedefinirSenha({
+      email: email.value.trim(),
+      codigo: codigoVerificado.value,
+      nova_senha: novaSenha.value,
+      confirmar_senha: confirmaSenha.value
+    })
+    router.push({ name: 'login' })
+  } catch (error) {
+    erroEtapa.value = error.message || 'Erro ao redefinir a senha.'
+  } finally {
+    carregando.value = false
+  }
 }
 </script>
 
 <style scoped>
+.mensagem-erro {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #fdecea;
+  color: #b71c1c;
+  border: 1px solid #f5c6cb;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.btn-enviar:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .pagina-recuperacao {
   background-color: var(--cinza-claro);
   width: 100vw;

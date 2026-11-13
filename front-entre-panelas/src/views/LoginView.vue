@@ -4,21 +4,34 @@
 
     <div class="login-container">
       <div class="login-card">
-        <img src="../../public/Logo_Panelas_em_marrom.png" alt="Logo do Entre Panelas"/>
+        <img src="../../public/Logo_Panelas_em_marrom.png" alt="Logo do Entre Panelas" />
         <h1 class="title">Bem-vindo de volta!</h1>
         <p class="subtitle">Entre na sua conta para continuar</p>
 
         <form @submit.prevent="handleLogin" class="login-form">
           <div class="input-group">
             <label for="email">E-mail</label>
-            <input id="email" v-model="email" type="email" placeholder="seu@email.com" maxlength="256" required />
+            <input
+              id="email"
+              v-model="email"
+              type="email"
+              placeholder="seu@email.com"
+              maxlength="256"
+              required
+            />
           </div>
 
           <div class="input-group">
             <label for="password">Senha</label>
             <div class="password-wrapper">
-              <input id="password" v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••"
-                maxlength="15" required />
+              <input
+                id="password"
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="••••••••"
+                required
+                maxlength="15"
+              />
               <button type="button" class="toggle-password" @click="showPassword = !showPassword">
                 {{ showPassword ? 'Ocultar' : 'Mostrar' }}
               </button>
@@ -27,8 +40,10 @@
 
           <router-link to="/recuperar-senha" class="forgot-password">Esqueci a senha</router-link>
 
-          <button type="submit" class="btn-submit">
-            Entrar
+          <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+
+          <button type="submit" class="btn-submit" :disabled="isLoading">
+            {{ isLoading ? 'Entrando...' : 'Entrar' }}
           </button>
         </form>
 
@@ -55,18 +70,40 @@ const router = useRouter()
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
+const isLoading = ref(false)
+const errorMessage = ref('')
 
-function handleLogin() {
+async function handleLogin() {
+  errorMessage.value = ''
+  isLoading.value = true
+
   try {
-    authService.login(email.value, password.value)
-    router.push({ name: 'home' }) 
+    await authService.login(email.value.trim(), password.value)
+    router.push({ name: 'home' })
   } catch (error) {
-    alert(error.message)
+    errorMessage.value = error.message || 'Erro ao tentar fazer login.'
+  } finally {
+    isLoading.value = false
   }
 }
 </script>
 
 <style scoped>
+.error-message {
+  background-color: #fdecea;
+  color: #b71c1c;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.btn-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .corpo {
   display: flex;
   height: 100vh;

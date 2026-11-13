@@ -1,44 +1,50 @@
-import 'dotenv/config'
-const url = `${process.env.VITE_API_URL}/denuncias`
+import { authService } from './authService'
+
+const url = `${import.meta.env.VITE_API_URL}/denuncias`
+
+async function request(endpoint, { method = 'POST', dados, jwt, fallbackError } = {}) {
+  const token = jwt || authService.getToken()
+  const headers = {
+    'Content-Type': 'application/json'
+  }
+
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const response = await fetch(`${url}${endpoint}`, {
+    method,
+    headers,
+    body: JSON.stringify(dados)
+  })
+
+  const data = await response.json().catch(() => null)
+
+  if (!response.ok || (data && data.status === false)) {
+    throw new Error(data?.message || fallbackError)
+  }
+
+  return data
+}
 
 export async function postDenunciaUsuario(dados, jwt) {
-    const options = {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${jwt}`
-        },
-        body: JSON.stringify(dados)
-    }
-    const response = await fetch(`${url}/usuario`, options)
-    if(!response.ok) throw new Error("Erro ao criar a denúncia do usuário!")
-    return response.json()
+  return request('/usuario', {
+    dados,
+    jwt,
+    fallbackError: 'Erro ao criar a denúncia do usuário!'
+  })
 }
 
 export async function postDenunciaComunidade(dados, jwt) {
-    const options = {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${jwt}`
-        },
-        body: JSON.stringify(dados)
-    }
-    const response = await fetch(`${url}/comunidade`, options)
-    if(!response.ok) throw new Error("Erro ao criar a denúncia da comunidade!")
-    return response.json()
+  return request('/comunidade', {
+    dados,
+    jwt,
+    fallbackError: 'Erro ao criar a denúncia da comunidade!'
+  })
 }
 
 export async function postDenunciaReceita(dados, jwt) {
-    const options = {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${jwt}`
-        },
-        body: JSON.stringify(dados)
-    }
-    const response = await fetch(`${url}/receita`, options)
-    if(!response.ok) throw new Error("Erro ao criar a denúncia da receita!")
-    return response.json()
+  return request('/receita', {
+    dados,
+    jwt,
+    fallbackError: 'Erro ao criar a denúncia da receita!'
+  })
 }

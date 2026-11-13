@@ -22,7 +22,7 @@
               </div>
               <div class="upload-info">
                 <span class="texto-instrucao">
-                  {{ form.fotoPerfilUrl ? 'Foto carregada com sucesso!' : 'Adicione sua melhor foto de cozinheiro(a)' }}
+                  {{ carregandoFoto ? 'Enviando foto...' : (form.fotoPerfilUrl ? 'Foto carregada com sucesso!' : 'Adicione sua melhor foto de cozinheiro(a)') }}
                 </span>
                 <span class="link-carregar">{{ form.fotoPerfilUrl ? 'Trocar foto' : 'Carregar foto' }}</span>
               </div>
@@ -93,7 +93,11 @@
             </label>
           </div>
 
-          <button type="submit" class="btn-criar">Criar conta</button>
+          <p v-if="erroFormulario" class="mensagem-erro">{{ erroFormulario }}</p>
+
+          <button type="submit" class="btn-criar" :disabled="enviandoCadastro || carregandoFoto">
+            {{ enviandoCadastro ? 'Criando conta...' : 'Criar conta' }}
+          </button>
 
           <div class="rodape-login">
             <span>Já tem uma conta? </span>
@@ -124,22 +128,31 @@
           Enviamos um código de 6 dígitos para <strong>{{ form.email }}</strong>. Insira-o abaixo para continuar:
         </p>
 
-        <div class="codigo-inputs">
+        <div class="codigo-inputs" @paste.prevent="handlePasteCodigo">
           <input
             v-for="(digito, index) in codigo"
             :key="index"
             ref="codigoInputRefs"
             type="text"
+            inputmode="numeric"
             maxlength="1"
             v-model="codigo[index]"
             @input="handleInputCodigo(index, $event)"
-            @keydown.delete="handleDeleteCodigo(index, $event)"
+            @keydown.delete="handleDeleteCodigo(index)"
           />
         </div>
 
-        <button type="button" class="btn-verificar" @click="verificarCodigo">
-          Verificar código
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <p v-if="erroModal" class="mensagem-erro">{{ erroModal }}</p>
+        <p v-if="sucessoModal" class="mensagem-sucesso">{{ sucessoModal }}</p>
+
+        <button
+          type="button"
+          class="btn-verificar"
+          :disabled="verificandoCodigo || codigo.join('').length < 6"
+          @click="verificarCodigo"
+        >
+          {{ verificandoCodigo ? 'Verificando...' : 'Verificar código' }}
+          <svg v-if="!verificandoCodigo" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"></line>
             <polyline points="12 5 19 12 12 19"></polyline>
           </svg>
@@ -147,9 +160,9 @@
 
         <div class="rodape-modal">
           <span>Não recebeu?</span>
-          <button 
-            type="button" 
-            class="btn-reenviar" 
+          <button
+            type="button"
+            class="btn-reenviar"
             :disabled="tempoRestante > 0"
             @click="reenviarCodigo"
           >
@@ -164,7 +177,12 @@
 
 <script setup>
 import { reactive, ref, computed, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import BannerEsquerdo from '@/components/BannerEsquerdo.vue'
+import { postRegistro, postVerificarEmail } from '@/services/auth'
+import { authService } from '@/services/authService'
+
+const router = useRouter()
 
 const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const uploadPreset = import.meta.env.VITE_CLOUDINARY_PRESET
@@ -178,6 +196,12 @@ const carregandoFoto = ref(false)
 const fotoPreview = ref('')
 const erroSenha = ref(false)
 const erroFoto = ref(false)
+const erroFormulario = ref('')
+
+const enviandoCadastro = ref(false)
+const verificandoCodigo = ref(false)
+const erroModal = ref('')
+const sucessoModal = ref('')
 
 const exibirModal = ref(false)
 const codigo = reactive(['', '', '', '', '', ''])
@@ -210,6 +234,15 @@ const tempoFormatado = computed(() => {
   return `${minutos}:${segundos}`
 })
 
+const montarPayloadRegistro = () => ({
+  nome: form.nomeCompleto.trim(),
+  username: form.nomeUsuario.trim().replace(/^@/, ''),
+  email: form.email.trim(),
+  senha: form.senha,
+  data_nascimento: form.dataNascimento,
+  foto_perfil: form.fotoPerfilUrl
+})
+
 const dispararInputFoto = () => {
   inputFotoRef.value.click()
 }
@@ -220,10 +253,12 @@ const handleFileChange = async (event) => {
 
   const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png']
   if (!tiposPermitidos.includes(file.type)) {
+    erroFormulario.value = 'Envie uma imagem JPG ou PNG.'
     return
   }
 
   erroFoto.value = false
+  erroFormulario.value = ''
   fotoPreview.value = URL.createObjectURL(file)
   const formData = new FormData()
   formData.append('file', file)
@@ -247,6 +282,7 @@ const handleFileChange = async (event) => {
     }
   } catch (error) {
     console.error('Erro no upload:', error)
+    erroFormulario.value = 'Não foi possível enviar a foto. Tente novamente.'
   } finally {
     carregandoFoto.value = false
   }
@@ -262,8 +298,8 @@ const limparErroSenha = () => {
   erroSenha.value = false
 }
 
-const iniciarTimer = () => {
-  tempoRestante.value = 45
+const iniciarTimer = (segundos = 45) => {
+  tempoRestante.value = segundos
   if (timerInterval) clearInterval(timerInterval)
   timerInterval = setInterval(() => {
     if (tempoRestante.value > 0) {
@@ -274,7 +310,8 @@ const iniciarTimer = () => {
   }, 1000)
 }
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
+  erroFormulario.value = ''
   let valido = true
 
   if (!form.fotoPerfilUrl) {
@@ -293,8 +330,19 @@ const handleSubmit = () => {
 
   if (!valido) return
 
-  exibirModal.value = true
-  iniciarTimer()
+  enviandoCadastro.value = true
+
+  try {
+    await postRegistro(montarPayloadRegistro())
+    erroModal.value = ''
+    sucessoModal.value = ''
+    exibirModal.value = true
+    iniciarTimer(45)
+  } catch (error) {
+    erroFormulario.value = error.message || 'Erro ao realizar o cadastro.'
+  } finally {
+    enviandoCadastro.value = false
+  }
 }
 
 const fecharModal = () => {
@@ -303,27 +351,70 @@ const fecharModal = () => {
 }
 
 const handleInputCodigo = (index, event) => {
-  const val = event.target.value
-  if (val && index < 5 && codigoInputRefs.value[index + 1]) {
+  const apenasNumero = event.target.value.replace(/\D/g, '')
+  codigo[index] = apenasNumero.slice(-1)
+
+  if (codigo[index] && index < 5 && codigoInputRefs.value[index + 1]) {
     codigoInputRefs.value[index + 1].focus()
   }
 }
 
-const handleDeleteCodigo = (index, event) => {
+const handleDeleteCodigo = (index) => {
   if (!codigo[index] && index > 0 && codigoInputRefs.value[index - 1]) {
     codigoInputRefs.value[index - 1].focus()
   }
 }
 
-const verificarCodigo = () => {
-  const codigoCompleto = codigo.join('')
-  console.log('Código para verificação:', codigoCompleto)
+const handlePasteCodigo = (event) => {
+  const textoColado = (event.clipboardData?.getData('text') || '').replace(/\D/g, '').slice(0, 6)
+  if (!textoColado) return
+
+  textoColado.split('').forEach((char, idx) => {
+    codigo[idx] = char
+  })
+
+  const proximoIndice = Math.min(textoColado.length, 5)
+  if (codigoInputRefs.value[proximoIndice]) {
+    codigoInputRefs.value[proximoIndice].focus()
+  }
 }
 
-const reenviarCodigo = () => {
-  if (tempoRestante.value === 0) {
-    console.log('Reenviando código para:', form.email)
-    iniciarTimer()
+const verificarCodigo = async () => {
+  const codigoCompleto = codigo.join('')
+  if (codigoCompleto.length < 6) return
+
+  erroModal.value = ''
+  sucessoModal.value = ''
+  verificandoCodigo.value = true
+
+  try {
+    await postVerificarEmail({
+      email: form.email.trim(),
+      codigo: codigoCompleto
+    })
+
+    await authService.login(form.email.trim(), form.senha)
+    fecharModal()
+    router.push({ name: 'home' })
+  } catch (error) {
+    erroModal.value = error.message || 'Código inválido ou expirado.'
+  } finally {
+    verificandoCodigo.value = false
+  }
+}
+
+const reenviarCodigo = async () => {
+  if (tempoRestante.value > 0) return
+
+  erroModal.value = ''
+  sucessoModal.value = ''
+
+  try {
+    await postRegistro(montarPayloadRegistro())
+    sucessoModal.value = 'Novo código enviado para o seu e-mail!'
+    iniciarTimer(60)
+  } catch (error) {
+    erroModal.value = error.message || 'Não foi possível reenviar o código.'
   }
 }
 
@@ -333,6 +424,34 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.mensagem-erro {
+  background-color: #fdecea;
+  color: #b71c1c;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.mensagem-sucesso {
+  background-color: #eaf4f0;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.btn-criar:disabled,
+.btn-verificar:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .corpo {
   display: flex;
   height: 100vh;

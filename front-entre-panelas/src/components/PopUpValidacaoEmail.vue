@@ -1,7 +1,6 @@
 <template>
   <div class="popup-card">
-
-    <button v-if="mostrarBotaoVoltar" class="btn-voltar" @click="$emit('voltar')" aria-label="Voltar">
+    <button v-if="mostrarBotaoVoltar" type="button" class="btn-voltar" @click="$emit('voltar')" aria-label="Voltar">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -20,18 +19,32 @@
       continuar:
     </p>
 
-    <div class="codigo-inputs">
-      <input type="text" maxlength="1" class="input-digito" />
-      <input type="text" maxlength="1" class="input-digito" />
-      <input type="text" maxlength="1" class="input-digito" />
-      <input type="text" maxlength="1" class="input-digito" />
-      <input type="text" maxlength="1" class="input-digito" />
-      <input type="text" maxlength="1" class="input-digito" />
+    <div class="codigo-inputs" @paste.prevent="handlePaste">
+      <input
+        v-for="(digito, index) in codigo"
+        :key="index"
+        ref="inputRefs"
+        type="text"
+        inputmode="numeric"
+        maxlength="1"
+        class="input-digito"
+        v-model="codigo[index]"
+        @input="handleInput(index, $event)"
+        @keydown.delete="handleDelete(index)"
+      />
     </div>
 
-    <button class="btn-verificar" @click="$emit('avancar')">
-      Verificar código
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+    <p v-if="erro" class="mensagem-erro">{{ erro }}</p>
+    <p v-if="sucesso" class="mensagem-sucesso">{{ sucesso }}</p>
+
+    <button
+      type="button"
+      class="btn-verificar"
+      :disabled="carregando || codigoCompleto.length < 6"
+      @click="confirmarCodigo"
+    >
+      {{ carregando ? 'Verificando...' : 'Verificar código' }}
+      <svg v-if="!carregando" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
         style="margin-left: 6px;">
         <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -50,9 +63,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { reactive, ref, computed, onMounted, onUnmounted } from 'vue'
 
-defineProps({
+const props = defineProps({
   email: {
     type: String,
     default: 'seu@email.com'
@@ -60,13 +73,29 @@ defineProps({
   mostrarBotaoVoltar: {
     type: Boolean,
     default: true
+  },
+  carregando: {
+    type: Boolean,
+    default: false
+  },
+  erro: {
+    type: String,
+    default: ''
+  },
+  sucesso: {
+    type: String,
+    default: ''
   }
 })
 
-defineEmits(['voltar', 'avancar'])
+const emit = defineEmits(['voltar', 'verificar', 'reenviar'])
 
+const codigo = reactive(['', '', '', '', '', ''])
+const inputRefs = ref([])
 const tempoRestante = ref(45)
 let intervalo = null
+
+const codigoCompleto = computed(() => codigo.join(''))
 
 const formatarTempo = computed(() => {
   const minutos = Math.floor(tempoRestante.value / 60)
@@ -74,8 +103,9 @@ const formatarTempo = computed(() => {
   return `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`
 })
 
-const iniciarTimer = () => {
+const iniciarTimer = (segundos = 45) => {
   clearInterval(intervalo)
+  tempoRestante.value = segundos
   intervalo = setInterval(() => {
     if (tempoRestante.value > 0) {
       tempoRestante.value--
@@ -85,14 +115,49 @@ const iniciarTimer = () => {
   }, 1000)
 }
 
+const handleInput = (index, event) => {
+  const apenasNumero = event.target.value.replace(/\D/g, '')
+  codigo[index] = apenasNumero.slice(-1)
+
+  if (codigo[index] && index < 5 && inputRefs.value[index + 1]) {
+    inputRefs.value[index + 1].focus()
+  }
+}
+
+const handleDelete = (index) => {
+  if (!codigo[index] && index > 0 && inputRefs.value[index - 1]) {
+    inputRefs.value[index - 1].focus()
+  }
+}
+
+const handlePaste = (event) => {
+  const textoColado = (event.clipboardData?.getData('text') || '').replace(/\D/g, '').slice(0, 6)
+  if (!textoColado) return
+
+  textoColado.split('').forEach((char, idx) => {
+    codigo[idx] = char
+  })
+
+  const proximoIndice = Math.min(textoColado.length, 5)
+  if (inputRefs.value[proximoIndice]) {
+    inputRefs.value[proximoIndice].focus()
+  }
+}
+
+const confirmarCodigo = () => {
+  if (codigoCompleto.value.length === 6) {
+    emit('verificar', codigoCompleto.value)
+  }
+}
+
 const reenviarCodigo = () => {
   if (tempoRestante.value > 0) return
-  tempoRestante.value = 60
-  iniciarTimer()
+  iniciarTimer(60)
+  emit('reenviar')
 }
 
 onMounted(() => {
-  iniciarTimer()
+  iniciarTimer(45)
 })
 
 onUnmounted(() => {
@@ -101,6 +166,33 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.mensagem-erro {
+  background-color: #fdecea;
+  color: #b71c1c;
+  border: 1px solid #f5c6cb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.mensagem-sucesso {
+  background-color: #eaf4f0;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.btn-verificar:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .popup-card {
   background-color: var(--cinza-claro);
   width: 100%;

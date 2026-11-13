@@ -1,65 +1,63 @@
-import 'dotenv/config'
-const url = `${process.env.VITE_API_URL}/usuarios/me/lista-compras`
+import { authService } from './authService'
+
+const url = `${import.meta.env.VITE_API_URL}/usuarios/me/lista-compras`
+
+async function request(endpoint, { method = 'GET', dados, jwt, fallbackError } = {}) {
+  const token = jwt || authService.getToken()
+  const headers = {}
+
+  if (dados !== undefined) headers['Content-Type'] = 'application/json'
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const options = { method, headers }
+  if (dados !== undefined) options.body = JSON.stringify(dados)
+
+  const response = await fetch(`${url}${endpoint}`, options)
+  const data = await response.json().catch(() => null)
+
+  if (!response.ok || (data && data.status === false)) {
+    throw new Error(data?.message || fallbackError)
+  }
+
+  return data ?? true
+}
 
 export async function getListaComprasReceitas(jwt) {
-    const options = {
-        method: "GET",
-        headers: {
-            "Authorization": `Bearer ${jwt}`
-        }
-    }
-    const response = await fetch(`${url}/receitas`, options)
-    if(!response.ok) throw new Error("Erro ao listar as receitas da lista de compras!")
-    return response.json()
+  return request('/receitas', {
+    jwt,
+    fallbackError: 'Erro ao listar as receitas da lista de compras!'
+  })
 }
 
 export async function getListaComprasDaReceita(id_receita, params = {}, jwt) {
-    const query = new URLSearchParams(params).toString()
-    const options = {
-        method: "GET",
-        headers: {
-            "Authorization": `Bearer ${jwt}`
-        }
-    }
-    const response = await fetch(`${url}/receita/${id_receita}${query ? `?${query}` : ""}`, options)
-    if(!response.ok) throw new Error(`Erro ao listar a lista de compras da receita: ${id_receita}`)
-    return response.json()
+  const query = new URLSearchParams(params).toString()
+  return request(`/receita/${id_receita}${query ? `?${query}` : ''}`, {
+    jwt,
+    fallbackError: `Erro ao listar a lista de compras da receita: ${id_receita}`
+  })
 }
 
 export async function postAdicionarReceitaListaCompras(id_receita, jwt) {
-    const options = {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${jwt}`
-        }
-    }
-    const response = await fetch(`${url}/receita/${id_receita}`, options)
-    if(!response.ok) throw new Error(`Erro ao adicionar a receita à lista de compras: ${id_receita}`)
-    return response.json()
+  return request(`/receita/${id_receita}`, {
+    method: 'POST',
+    jwt,
+    fallbackError: `Erro ao adicionar a receita à lista de compras: ${id_receita}`
+  })
 }
 
 export async function putItemListaCompras(id, dados, jwt) {
-    const options = {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${jwt}`
-        },
-        body: JSON.stringify(dados)
-    }
-    const response = await fetch(`${url}/${id}`, options)
-    if(!response.ok) throw new Error("Erro ao atualizar o item da lista de compras!")
-    return response.json()
+  return request(`/${id}`, {
+    method: 'PUT',
+    dados,
+    jwt,
+    fallbackError: 'Erro ao atualizar o item da lista de compras!'
+  })
 }
 
 export async function deleteItemListaCompras(id, jwt) {
-    const options = {
-        method: "DELETE",
-        headers: {
-            "Authorization": `Bearer ${jwt}`
-        }
-    }
-    const response = await fetch(`${url}/${id}`, options)
-    if(!response.ok) throw new Error("Erro ao deletar o item da lista de compras!")
-    return true
+  return request(`/${id}`, {
+    method: 'DELETE',
+    jwt,
+    fallbackError: 'Erro ao deletar o item da lista de compras!'
+  })
 }
