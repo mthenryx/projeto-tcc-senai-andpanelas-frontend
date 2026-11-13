@@ -1,5 +1,4 @@
-import 'dotenv/config'
-const url = `${process.env.VITE_API_URL}/chefinho/conversas`
+const url = "http://localhost:8080/v1/chefinho/conversas"
 
 export async function getListarConversasChefinho(params = {}, jwt) {
     const query = new URLSearchParams(params).toString()
