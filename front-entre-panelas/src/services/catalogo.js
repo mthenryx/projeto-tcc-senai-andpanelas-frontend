@@ -1,4 +1,5 @@
-const BASE_URL = "http://localhost:8080/v1/entrepanelas"
+import 'dotenv/config'
+const BASE_URL = `${process.env.VITE_API_URL}`
 
 export async function getListarCategorias() {
     const response = await fetch(`${BASE_URL}/categorias`)

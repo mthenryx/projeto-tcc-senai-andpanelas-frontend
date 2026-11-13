@@ -1,5 +1,5 @@
-const BASE_URL = "http://localhost:8080/v1/entrepanelas"
-const url = `${BASE_URL}/comentarios`
+import 'dotenv/config'
+const url = `${process.env.VITE_API_URL}/comentarios`
 
 export async function putComentario(id, dados, jwt) {
     const options = {

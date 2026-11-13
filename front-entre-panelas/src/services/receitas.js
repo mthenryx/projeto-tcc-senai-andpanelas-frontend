@@ -1,5 +1,5 @@
-const BASE_URL = "http://localhost:8080/v1/entrepanelas"
-const url = `${BASE_URL}/receitas`
+import 'dotenv/config'
+const url = `${process.env.VITE_API_URL}/receitas`
 
 export async function getListarReceitas(params = {}) {
     const query = new URLSearchParams(params).toString()

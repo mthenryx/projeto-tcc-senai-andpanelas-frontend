@@ -1,5 +1,5 @@
-const BASE_URL = "http://localhost:8080/v1/entrepanelas"
-const url = `${BASE_URL}/usuarios/me/geladeira`
+import 'dotenv/config'
+const url = `${process.env.VITE_API_URL}/usuarios/me/geladeira`
 
 export async function getListarGeladeira(params = {}, jwt) {
     const query = new URLSearchParams(params).toString()

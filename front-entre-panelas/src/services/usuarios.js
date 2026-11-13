@@ -1,5 +1,5 @@
-const BASE_URL = "http://localhost:8080/v1/entrepanelas"
-const url = `${BASE_URL}/usuarios`
+import 'dotenv/config'
+const url = `${process.env.VITE_API_URL}/usuarios`
 
 export async function getListarUsuarios(params = {}) {
     const query = new URLSearchParams(params).toString()

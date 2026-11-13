@@ -1,5 +1,5 @@
-const BASE_URL = "http://localhost:8080/v1/entrepanelas"
-const url = `${BASE_URL}/chefinho/conversas`
+import 'dotenv/config'
+const url = `${process.env.VITE_API_URL}/chefinho/conversas`
 
 export async function getListarConversasChefinho(params = {}, jwt) {
     const query = new URLSearchParams(params).toString()
@@ -11,6 +11,20 @@ export async function getListarConversasChefinho(params = {}, jwt) {
     }
     const response = await fetch(`${url}${query ? `?${query}` : ""}`, options)
     if(!response.ok) throw new Error("Erro ao listar as conversas do Chefinho!")
+    return response.json()
+}
+
+export async function postCriarConversasChefinho(id, dados, jwt) {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${jwt}`
+        },
+        body: JSON.stringify(dados)
+    }
+    const response = await fetch(`${url}`, options)
+    if(!response.ok) throw new Error("Erro ao enviar a mensagem para o Chefinho!")
     return response.json()
 }
 
