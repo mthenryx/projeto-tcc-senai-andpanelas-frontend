@@ -65,7 +65,7 @@
 <script setup>
 import { reactive, ref, computed, onMounted, onUnmounted } from 'vue'
 
-const props = defineProps({
+defineProps({
   email: {
     type: String,
     default: 'seu@email.com'

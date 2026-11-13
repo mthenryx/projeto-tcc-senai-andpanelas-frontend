@@ -2,7 +2,7 @@ import { authService } from './authService'
 
 const url = `${import.meta.env.VITE_API_URL}/denuncias`
 
-async function request(endpoint, { method = 'POST', dados, jwt, fallbackError } = {}) {
+async function request(endpoint, { dados, jwt, fallbackError } = {}) {
   const token = jwt || authService.getToken()
   const headers = {
     'Content-Type': 'application/json'
@@ -10,12 +10,16 @@ async function request(endpoint, { method = 'POST', dados, jwt, fallbackError } 
 
   if (token) headers['Authorization'] = `Bearer ${token}`
 
-  const response = await fetch(`${url}${endpoint}`, {
-    method,
-    headers,
-    body: JSON.stringify(dados)
-  })
+  const options = {
+    method: 'POST',
+    headers
+  }
 
+  if (dados !== undefined) {
+    options.body = JSON.stringify(dados)
+  }
+
+  const response = await fetch(`${url}${endpoint}`, options)
   const data = await response.json().catch(() => null)
 
   if (!response.ok || (data && data.status === false)) {

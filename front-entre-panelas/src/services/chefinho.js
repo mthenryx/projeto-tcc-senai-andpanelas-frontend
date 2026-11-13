@@ -30,7 +30,7 @@ export async function getListarConversasChefinho(params = {}, jwt) {
   })
 }
 
-export async function postCriarConversaChefinho(id, dados, jwt) {
+export async function postCriarConversaChefinho(dados, jwt) {
   return request('', {
     method: 'POST',
     dados,

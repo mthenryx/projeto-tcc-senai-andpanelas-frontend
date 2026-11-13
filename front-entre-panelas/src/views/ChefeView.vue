@@ -31,22 +31,30 @@
             </header>
 
             <div class="messages-scroll-area" ref="scrollContainer">
-                <ChatMessage 
-                    v-for="(msg, index) in mensagensAtuais" 
-                    :key="index"
-                    :texto="msg.texto"
-                    :remetente="msg.remetente"
-                    :digitando="msg.digitando"
-                />
+                <div v-if="carregandoMensagens" class="loading-messages">
+                    Carregando conversa...
+                </div>
+
+                <template v-else>
+                    <ChatMessage 
+                        v-for="(msg, index) in mensagensAtuais" 
+                        :key="index"
+                        :texto="msg.texto"
+                        :remetente="msg.remetente"
+                        :digitando="msg.digitando"
+                    />
+                </template>
             </div>
 
             <div class="chat-input-section">
+                <p v-if="erroApi" class="chat-error-banner">{{ erroApi }}</p>
 
                 <div class="suggestions-chips">
                     <button 
                         v-for="(sugestao, index) in sugestoesPreProntas" 
                         :key="index"
                         class="chip-btn"
+                        :disabled="enviandoMensagem"
                         @click="enviarMensagem(sugestao)"
                     >
                         {{ sugestao }}
@@ -61,10 +69,12 @@
                         placeholder="Pergunte ao Chefinho..." 
                         class="chat-input"
                         maxlength="3000"
+                        :disabled="enviandoMensagem"
                     />
                     <button 
                         class="send-btn" 
                         @click="enviarMensagem(novaMensagemTexto)"
+                        :disabled="enviandoMensagem || !novaMensagemTexto.trim()"
                         aria-label="Enviar mensagem"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -84,59 +94,76 @@
             </h3>
 
             <div class="conversations-list">
-                <div 
-                    v-for="conversa in conversasRecentes" 
-                    :key="conversa.id" 
-                    class="conversation-item"
-                    @click="carregarConversa(conversa.id)"
-                >
-                    <span class="conversation-text">{{ conversa.titulo }}</span>
-                   
-                    <div class="dropdown-container" @click.stop>
-                        <button class="options-btn" @click="toggleMenu(conversa.id)" aria-label="Opções da conversa">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="1"></circle>
-                                <circle cx="12" cy="5" r="1"></circle>
-                                <circle cx="12" cy="19" r="1"></circle>
-                            </svg>
-                        </button>
+                <div v-if="carregandoConversas" class="empty-conversations">
+                    Carregando conversas...
+                </div>
 
-                        <div v-if="menuAbertoId === conversa.id" class="dropdown-menu">
-                            <button class="delete-option" @click="excluirConversa(conversa.id)">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                <template v-else>
+                    <div 
+                        v-for="conversa in conversasRecentes" 
+                        :key="conversa.id" 
+                        class="conversation-item"
+                        :class="{ 'ativa': conversa.id === conversaAtualId }"
+                        @click="carregarConversa(conversa.id)"
+                    >
+                        <span class="conversation-text">{{ conversa.titulo }}</span>
+                       
+                        <div class="dropdown-container" @click.stop>
+                            <button class="options-btn" @click="toggleMenu(conversa.id)" aria-label="Opções da conversa">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <circle cx="12" cy="12" r="1"></circle>
+                                    <circle cx="12" cy="5" r="1"></circle>
+                                    <circle cx="12" cy="19" r="1"></circle>
                                 </svg>
-                                Excluir conversa
                             </button>
+
+                            <div v-if="menuAbertoId === conversa.id" class="dropdown-menu">
+                                <button class="delete-option" @click="excluirConversa(conversa.id)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                    Excluir conversa
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div v-if="conversasRecentes.length === 0" class="empty-conversations">
-                    Nenhuma conversa recente.
-                </div>
+                    <div v-if="conversasRecentes.length === 0" class="empty-conversations">
+                        Nenhuma conversa recente.
+                    </div>
+                </template>
             </div>
         </aside>
     </div>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, onMounted, onUnmounted } from 'vue';
 import MenuLateral from '@/components/BarraNavegacao.vue';
 import ChatMessage from '@/components/ChatMessage.vue';
+import authService from '@/services/authService';
+import { getUsuarioLogado } from '@/services/usuarios';
+import {
+    getListarConversasChefinho,
+    postCriarConversaChefinho,
+    getBuscarConversaChefinho,
+    deleteConversaChefinho,
+    postMensagemChefinho
+} from '@/services/chefinho';
 
 const statusOnline = ref(false);
-
-const conversasAbertas = ref(false)
+const conversasAbertas = ref(false);
 
 const mensagemPadrao = {
     remetente: 'chefinho',
+    padrao: true,
     texto: `Olá! Sou o **Chefinho** 🧑‍🍳✨ Seu assistente culinário pessoal!\n\nPosso te ajudar a:\n• Criar receitas personalizadas\n• Sugerir substituições de ingredientes\n• Explicar técnicas culinárias\n• Adaptar receitas para dietas\n\nO que vamos cozinhar hoje? 😋`
 };
 
+const conversaAtualId = ref(null);
 const mensagensAtuais = ref([mensagemPadrao]);
 const novaMensagemTexto = ref('');
 const scrollContainer = ref(null);
@@ -147,63 +174,88 @@ const sugestoesPreProntas = [
     'Receita vegana para jantar rápido'
 ];
 
-const conversasRecentes = ref([
-    { id: 1, titulo: 'Como fazer um frango...' },
-    { id: 2, titulo: 'Como fazer um frango...' },
-    { id: 3, titulo: 'Como fazer um frango...' },
-    { id: 4, titulo: 'Como fazer um frango...' },
-    { id: 5, titulo: 'Como fazer um frango...' },
-    { id: 6, titulo: 'Como fazer um frango...' },
-    { id: 7, titulo: 'Como fazer um frango...' },
-    { id: 8, titulo: 'Como fazer um frango...' },
-    { id: 9, titulo: 'Como fazer um frango...' },
-    { id: 10, titulo: 'Como fazer um frango...' },
-    { id: 11, titulo: 'Como fazer um frango...' },
-    { id: 12, titulo: 'Como fazer um frango...' },
-    { id: 13, titulo: 'Como fazer um frango...' },
-    { id: 14, titulo: 'Como fazer um frango...' },
-    { id: 15, titulo: 'Como fazer um frango...' },
-    { id: 16, titulo: 'Como fazer um frango...' },
-    { id: 17, titulo: 'Como fazer um frango...' },
-    { id: 18, titulo: 'Como fazer um frango...' },
-    { id: 19, titulo: 'Como fazer um frango...' },
-    { id: 20, titulo: 'Como fazer um frango...' },
-    { id: 21, titulo: 'Como fazer um frango...' },
-    { id: 22, titulo: 'Como fazer um frango...' },
-    { id: 23, titulo: 'Como fazer um frango...' },
-    { id: 24, titulo: 'Como fazer um frango...' },
-    { id: 25, titulo: 'Como fazer um frango...' },
-    { id: 26, titulo: 'Como fazer um frango...' },
-    { id: 27, titulo: 'Como fazer um frango...' },
-    { id: 28, titulo: 'Como fazer um frango...' },
-    { id: 29, titulo: 'Como fazer um frango...' },
-    { id: 30, titulo: 'Como fazer um frango...' },
-    { id: 31, titulo: 'Como fazer um frango...' },
-    { id: 32, titulo: 'Como fazer um frango...' },
-    { id: 33, titulo: 'Como fazer um frango...' },
-    { id: 34, titulo: 'Como fazer um frango...' },
-    { id: 35, titulo: 'Como fazer um frango...' },
-    { id: 36, titulo: 'Como fazer um frango...' },
-    { id: 37, titulo: 'Como fazer um frango...' },
-    { id: 38, titulo: 'Como fazer um frango...' },
-    { id: 39, titulo: 'Como fazer um frango...' },
-    { id: 40, titulo: 'Como fazer um frango...' },
-    { id: 41, titulo: 'Como fazer um frango...' },
-    { id: 42, titulo: 'Como fazer um frango...' },
-    { id: 43, titulo: 'Como fazer um frango...' },
-    { id: 44, titulo: 'Como fazer um frango...' },
-    { id: 45, titulo: 'Como fazer um frango...' },
-    { id: 46, titulo: 'Como fazer um frango...' },
-    { id: 47, titulo: 'Como fazer um frango...' },
-    { id: 48, titulo: 'Como fazer um frango...' },
-    { id: 49, titulo: 'Como fazer um frango...' },
-    { id: 50, titulo: 'Como fazer um frango...' }
-]);
-
+const conversasRecentes = ref([]);
+const carregandoConversas = ref(false);
+const carregandoMensagens = ref(false);
+const enviandoMensagem = ref(false);
+const erroApi = ref('');
 const menuAbertoId = ref(null);
+
+const extrairIdDoToken = (token) => {
+    try {
+        if (!token) return null;
+        const payloadBase64 = token.split('.')[1];
+        if (!payloadBase64) return null;
+        const payload = JSON.parse(atob(payloadBase64));
+        return payload?.id || payload?.id_usuario || payload?.sub || null;
+    } catch {
+        return null;
+    }
+};
+
+const obterIdUsuarioLogado = async () => {
+    const usuarioSalvo = authService.getUser();
+    if (usuarioSalvo?.id) {
+        localStorage.setItem('id_usuario', String(usuarioSalvo.id));
+        return Number(usuarioSalvo.id);
+    }
+
+    const idDiretoStorage = localStorage.getItem('id_usuario');
+    if (idDiretoStorage) {
+        return Number(idDiretoStorage);
+    }
+
+    try {
+        const res = await getUsuarioLogado();
+        const dadosUsuario = res?.response?.dados || res?.dados || res;
+
+        if (dadosUsuario?.id) {
+            authService.setUser({ ...(usuarioSalvo || {}), ...dadosUsuario });
+            localStorage.setItem('id_usuario', String(dadosUsuario.id));
+            return Number(dadosUsuario.id);
+        }
+    } catch {
+        const idToken = extrairIdDoToken(authService.getToken());
+        if (idToken) {
+            authService.setUser({ ...(usuarioSalvo || {}), id: Number(idToken) });
+            localStorage.setItem('id_usuario', String(idToken));
+            return Number(idToken);
+        }
+    }
+
+    return null;
+};
+
+const verificarStatusChefinho = async () => {
+    try {
+        const chefinhoBaseUrl = import.meta.env.VITE_CHEFINHO_API_URL || 'http://localhost:3001/v1/chefinho';
+        const response = await fetch(`${chefinhoBaseUrl}/status`);
+        const data = await response.json().catch(() => null);
+        statusOnline.value = response.status === 200 && Boolean(data?.success);
+    } catch {
+        statusOnline.value = false;
+    }
+};
+
+const carregarListaConversas = async () => {
+    carregandoConversas.value = true;
+    try {
+        const res = await getListarConversasChefinho();
+        const lista = res?.response?.dados || res?.dados || [];
+        conversasRecentes.value = Array.isArray(lista) ? lista : [];
+    } catch (error) {
+        erroApi.value = error.message || 'Não foi possível carregar as conversas recentes.';
+    } finally {
+        carregandoConversas.value = false;
+    }
+};
 
 const toggleMenu = (id) => {
     menuAbertoId.value = menuAbertoId.value === id ? null : id;
+};
+
+const fecharMenuExterno = () => {
+    menuAbertoId.value = null;
 };
 
 const rolarParaBaixo = async () => {
@@ -213,12 +265,28 @@ const rolarParaBaixo = async () => {
     }
 };
 
+const montarHistoricoCronologico = () => {
+    return mensagensAtuais.value
+        .filter((msg) => !msg.padrao && !msg.digitando && msg.texto)
+        .slice(-10)
+        .map((msg) => ({
+            papel: msg.remetente === 'user' ? 'user' : 'agente',
+            mensagem: msg.texto.slice(0, 3000)
+        }));
+};
+
 const enviarMensagem = async (textoParaEnviar) => {
-    if (!textoParaEnviar || !textoParaEnviar.trim()) return;
+    const textoLimpo = textoParaEnviar?.trim();
+    if (!textoLimpo || enviandoMensagem.value) return;
+
+    erroApi.value = '';
+    enviandoMensagem.value = true;
+
+    const historicoConversa = montarHistoricoCronologico();
 
     mensagensAtuais.value.push({
         remetente: 'user',
-        texto: textoParaEnviar.trim()
+        texto: textoLimpo
     });
 
     novaMensagemTexto.value = '';
@@ -231,33 +299,119 @@ const enviarMensagem = async (textoParaEnviar) => {
     });
     await rolarParaBaixo();
 
-    setTimeout(async () => {
+    try {
+        if (!conversaAtualId.value) {
+            const idUsuario = await obterIdUsuarioLogado();
+
+            if (!idUsuario) {
+                throw new Error('Não foi possível identificar o usuário logado para criar a conversa.');
+            }
+
+            const resNovaConversa = await postCriarConversaChefinho({
+                titulo: textoLimpo.slice(0, 100),
+                id_usuario: idUsuario
+            });
+
+            const idConversaCriada =
+                resNovaConversa?.response?.dados?.id ||
+                resNovaConversa?.response?.conversa?.id ||
+                resNovaConversa?.response?.id ||
+                resNovaConversa?.dados?.id ||
+                resNovaConversa?.id;
+
+            if (!idConversaCriada) {
+                throw new Error('A API não retornou o ID da conversa criada.');
+            }
+
+            conversaAtualId.value = idConversaCriada;
+            await carregarListaConversas();
+        }
+
+        const resMensagem = await postMensagemChefinho(conversaAtualId.value, {
+            historico_conversa: historicoConversa,
+            pergunta_atual: textoLimpo
+        });
+
+        const textoResposta =
+            resMensagem?.response?.resposta_chefinho?.conteudo ||
+            resMensagem?.resposta_chefinho?.conteudo ||
+            'Não recebi uma resposta do Chefinho no momento.';
+
         mensagensAtuais.value.pop();
         mensagensAtuais.value.push({
             remetente: 'chefinho',
-            texto: `Ótima escolha! "${textoParaEnviar}" é excelente. Em breve traremos mais dicas personalizadas para você!`
+            texto: textoResposta
         });
+    } catch (error) {
+        mensagensAtuais.value.pop();
+        erroApi.value = error.message || 'Erro ao enviar mensagem para o Chefinho.';
+        await verificarStatusChefinho();
+    } finally {
+        enviandoMensagem.value = false;
         await rolarParaBaixo();
-    }, 1500);
+    }
 };
 
-const carregarConversa = (id) => {
-    mensagensAtuais.value = [
-        mensagemPadrao,
-        { remetente: 'user', texto: `Continuando a conversa antiga #${id}` },
-        { remetente: 'chefinho', texto: 'Claro! Como posso te ajudar a retomar essa receita?' }
-    ];
-    rolarParaBaixo();
-};
+const carregarConversa = async (id) => {
+    if (carregandoMensagens.value || enviandoMensagem.value) return;
 
-const excluirConversa = (id) => {
-    conversasRecentes.value = conversasRecentes.value.filter(c => c.id !== id);
+    erroApi.value = '';
+    carregandoMensagens.value = true;
+    conversaAtualId.value = id;
     menuAbertoId.value = null;
+    conversasAbertas.value = false;
+
+    try {
+        const res = await getBuscarConversaChefinho(id);
+        const mensagensApi = res?.response?.mensagens || res?.mensagens || [];
+
+        if (Array.isArray(mensagensApi) && mensagensApi.length > 0) {
+            mensagensAtuais.value = mensagensApi.map((msg) => ({
+                remetente: msg.tipo_remetente === 'usuario' ? 'user' : 'chefinho',
+                texto: msg.conteudo
+            }));
+        } else {
+            mensagensAtuais.value = [mensagemPadrao];
+        }
+    } catch (error) {
+        erroApi.value = error.message || 'Erro ao carregar os detalhes da conversa.';
+    } finally {
+        carregandoMensagens.value = false;
+        await rolarParaBaixo();
+    }
+};
+
+const excluirConversa = async (id) => {
+    erroApi.value = '';
+    menuAbertoId.value = null;
+
+    try {
+        await deleteConversaChefinho(id);
+        conversasRecentes.value = conversasRecentes.value.filter((c) => c.id !== id);
+
+        if (conversaAtualId.value === id) {
+            conversaAtualId.value = null;
+            mensagensAtuais.value = [mensagemPadrao];
+        }
+    } catch (error) {
+        erroApi.value = error.message || 'Não foi possível excluir a conversa.';
+    }
 };
 
 const voltar = () => {
     history.back();
 };
+
+onMounted(() => {
+    document.addEventListener('click', fecharMenuExterno);
+    obterIdUsuarioLogado();
+    verificarStatusChefinho();
+    carregarListaConversas();
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', fecharMenuExterno);
+});
 </script>
 
 <style scoped>
@@ -389,6 +543,23 @@ const voltar = () => {
     gap: 16px;
 }
 
+.loading-messages {
+    text-align: center;
+    font-size: 13px;
+    color: #a89f91;
+    padding: 24px 0;
+}
+
+.chat-error-banner {
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background-color: #fdecea;
+    border: 1px solid #f5c2c0;
+    color: #b71c1c;
+    font-size: 12px;
+}
+
 .chat-input-section {
     padding: 16px 24px;
     background-color: #ffffff;
@@ -428,10 +599,15 @@ const voltar = () => {
     flex-shrink: 0; 
 }
 
-.chip-btn:hover {
+.chip-btn:hover:not(:disabled) {
     background-color: #f7f3ed;
     border-color: #72bca5;
     color: #3b2219;
+}
+
+.chip-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .input-wrapper {
@@ -472,8 +648,13 @@ const voltar = () => {
     transition: background-color 0.2s;
 }
 
-.send-btn:hover {
+.send-btn:hover:not(:disabled) {
     background-color: #52ab8b;
+}
+
+.send-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .recent-conversations-sidebar {
@@ -519,7 +700,8 @@ const voltar = () => {
     transition: background-color 0.2s;
 }
 
-.conversation-item:hover {
+.conversation-item:hover,
+.conversation-item.ativa {
     background-color: #f7f3ed;
     color: #3b2219;
 }

@@ -429,7 +429,7 @@ const dadosVideo = computed(() => {
     const url = receita.value.videoUrl;
     if (!url || typeof url !== 'string' || !url.trim()) return null;
 
-    const regExpYoutube = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const regExpYoutube = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExpYoutube);
 
     if (match && match[2].length === 11) {

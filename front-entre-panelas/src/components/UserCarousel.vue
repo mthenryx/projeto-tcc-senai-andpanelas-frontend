@@ -39,7 +39,7 @@ import UserAvatar from '@/components/UserAvatar.vue';
 
 const router = useRouter();
 
-const props = defineProps({
+defineProps({
     users: {
         type: Array,
         required: true,
