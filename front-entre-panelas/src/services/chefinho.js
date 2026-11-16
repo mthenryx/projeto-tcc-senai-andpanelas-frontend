@@ -1,6 +1,8 @@
 import { authService } from './authService'
 
-const url = "http://localhost:8080/v1/chefinho/conversas"
+const url = `${import.meta.env.VITE_API_URL}/conversas`
+
+const urlSugestao = `${import.meta.env.VITE_API_URL}/receita/busca/sugestao`
 
 async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackError } = {}) {
   const token = jwt || authService.getToken()

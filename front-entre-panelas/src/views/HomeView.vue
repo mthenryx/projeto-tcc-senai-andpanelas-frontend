@@ -4,60 +4,39 @@
         <div class="coluna">
             <HeaderAplicacao class="hearder-aplication none"></HeaderAplicacao>
             <div class="conteudo">
-                <nav>
-                    <RouterLink to="/geladeira" class="fast-navegation">
-                        <img src="../../public/floco_neve_icon.jpg" alt="Icon de um floco de neve">
-                        <span>Geladeira</span>
-                    </RouterLink>
-
-                    <RouterLink to="/chefinho" class="fast-navegation">
-                        <img src="../../public/iconPaginas/chefe_icon_cinza.png" alt="Icon do chefinho">
-                        <span>Chefia</span>
-                    </RouterLink>
-
-                    <RouterLink to="/lista-compra" class="fast-navegation">
-                        <img src="../../public/iconPaginas/lista_icon_cinza.png" alt="Icon de uma lista" class="lista">
-                        <span>Lista</span>
-                    </RouterLink>
-
-                    <RouterLink to="/comunidade" class="fast-navegation">
-                        <img src="../../public/iconPaginas/comunidade_icon_cinza.png"
-                            alt="Icon que representa uma comunidade" id="comunidade">
-                        <span>Comunidade</span>
-                    </RouterLink>
-                </nav>
-
-                <UserCarousel :users="usuariosSeguidos" @search-click="abrirModal" />
 
                 <UserSearchModal :is-open="isModalOpen" :users="listaDeUsuarios" @close="fecharModal" />
 
                 <div v-if="categoriaSelecionada" class="container">
                     <div class="section-title-wrapper" style="margin-bottom: 25px;">
-                        <button class="btn-voltar-cat" @click="categoriaSelecionada = null">← Voltar</button>
-                        <h3 class="section-title">{{ categoriaSelecionada }}</h3>
+                        <button class="btn-voltar-cat" @click="fecharCategoria">← Voltar</button>
+                        <h3 class="section-title">{{ categoriaSelecionada.titulo }}</h3>
                         <div></div>
                     </div>
 
-                    <div class="grid-mini">
-                        <RecipeCardMini 
-                            v-for="receita in receitasFiltradasPorCategoria"
-                            :key="receita.id"
-                            :id="receita.id"
-                            :imagemUrl="receita.imagemUrl"
-                            :titulo="receita.titulo"
-                            :tempo="receita.tempo"
-                            :porcoes="receita.porcoes"
-                            :dificuldade="receita.dificuldade"
-                            @click="abrirDetalhes(receita.id)"
-                            style="cursor: pointer;"
-                        />
-                    </div>
-                    <p v-if="receitasFiltradasPorCategoria.length === 0" class="sem-receitas">
-                        Nenhuma receita encontrada para esta categoria.
-                    </p>
+                    <LoadingSpinner v-if="carregandoCategoria" />
+
+                    <template v-else>
+                        <div class="grid-mini">
+                            <RecipeCardMini 
+                                v-for="receita in receitasCategoriaExpandida"
+                                :key="receita.id"
+                                :id="receita.id"
+                                :imagemUrl="receita.imagemUrl"
+                                :titulo="receita.titulo"
+                                :tempo="receita.tempo"
+                                :porcoes="receita.porcoes"
+                                :dificuldade="receita.dificuldade"
+                                @click="abrirDetalhes(receita.id)"
+                                style="cursor: pointer;"
+                            />
+                        </div>
+                        <p v-if="receitasCategoriaExpandida.length === 0" class="sem-receitas">
+                            Nenhuma receita encontrada para esta categoria.
+                        </p>
+                    </template>
                 </div>
 
-                <!-- Conteúdo normal da Home -->
                 <template v-else>
                     <div class="tabs-container">
                         <button v-for="tab in tabs" :key="tab.id" class="tab-btn" :class="{ 'active': abaAtiva === tab.id }"
@@ -67,115 +46,124 @@
                     </div>
 
                     <div class="container">
-                        <div v-if="abaAtiva === 'para-voce'" class="tab-pane">
-                            <RecipeBannerCard 
-                                :id="destaqueParaVoce.id"
-                                :imagemUrl="destaqueParaVoce.imagemUrl"
-                                :titulo="destaqueParaVoce.titulo"
-                                :tempo="destaqueParaVoce.tempo"
-                                :porcoes="destaqueParaVoce.porcoes"
-                                :custo="destaqueParaVoce.custo"
-                                :autorNome="destaqueParaVoce.autorNome"
-                                :authorIniciais="destaqueParaVoce.authorIniciais"
-                                :dificuldade="destaqueParaVoce.dificuldade"
-                                :badgeTexto="destaqueParaVoce.badgeTexto"
-                                @click="abrirDetalhes(receitaAtual.id)"
-                                style="cursor: pointer;"
-                            />
-                            
-                            <div class="section-title-wrapper">
-                                <h3 class="section-title">Rápidas e Gostosas</h3>
-                                <span class="see-all" @click="verTodasCategoria('Rápidas e Gostosas')">Ver todas</span>
-                            </div>
+                        <LoadingSpinner v-if="carregandoInicial" />
 
-                            <div class="grid-mini">
-                                <RecipeCardMini 
-                                    v-for="receita in receitasMini"
-                                    :key="receita.id"
-                                    :id="receita.id"
-                                    :imagemUrl="receita.imagemUrl"
-                                    :titulo="receita.titulo"
-                                    :tempo="receita.tempo"
-                                    :porcoes="receita.porcoes"
-                                    :dificuldade="receita.dificuldade"
-                                    @click="abrirDetalhes(receita.id)"
+                        <template v-else>
+                            <div v-if="abaAtiva === 'para-voce'" class="tab-pane">
+                                <RecipeBannerCard 
+                                    v-if="destaqueParaVoce"
+                                    :id="destaqueParaVoce.id"
+                                    :imagemUrl="destaqueParaVoce.imagemUrl"
+                                    :titulo="destaqueParaVoce.titulo"
+                                    :tempo="destaqueParaVoce.tempo"
+                                    :porcoes="destaqueParaVoce.porcoes"
+                                    :custo="destaqueParaVoce.custo"
+                                    :autorNome="destaqueParaVoce.autorNome"
+                                    :authorIniciais="destaqueParaVoce.authorIniciais"
+                                    :autorFotoUrl="destaqueParaVoce.autorFotoUrl"
+                                    :dificuldade="destaqueParaVoce.dificuldade"
+                                    :badgeTexto="destaqueParaVoce.badgeTexto"
+                                    @click="abrirDetalhes(destaqueParaVoce.id)"
+                                    style="cursor: pointer;"
                                 />
+
+                                <RecipeCard 
+                                    v-for="receita in listaDeReceitas" 
+                                    :key="receita.id" 
+                                    :id="receita.id"
+                                    :imagemUrl="receita.imagemUrl" 
+                                    :titulo="receita.titulo" 
+                                    :tempo="receita.tempo"
+                                    :porcoes="receita.porcoes" 
+                                    :custo="receita.custo" 
+                                    :curtidas="receita.curtidas"
+                                    :comentarios="receita.comentarios" 
+                                    :autorNome="receita.autorNome"
+                                    :authorIniciais="receita.authorIniciais" 
+                                    :autorFotoUrl="receita.autorFotoUrl"
+                                    :dificuldade="receita.dificuldade"
+                                    v-model:salvo="receita.salvo" 
+                                    @toggle-save="tratarSalvarReceita" 
+                                    style="cursor: pointer;"
+                                />
+
+                                <p v-if="!destaqueParaVoce && listaDeReceitas.length === 0" class="sem-receitas">
+                                    Nenhuma receita encontrada no momento.
+                                </p>
                             </div>
 
-                            <RecipeCard 
-                                v-for="receita in listaDeReceitas" 
-                                :key="receita.id" 
-                                :id="receita.id"
-                                :imagemUrl="receita.imagemUrl" 
-                                :titulo="receita.titulo" 
-                                :tempo="receita.tempo"
-                                :porcoes="receita.porcoes" 
-                                :custo="receita.custo" 
-                                :curtidas="receita.curtidas"
-                                :comentarios="receita.comentarios" 
-                                :autorNome="receita.autorNome"
-                                :authorIniciais="receita.authorIniciais" 
-                                :dificuldade="receita.dificuldade"
-                                v-model:salvo="receita.salvo" 
-                                @toggle-save="tratarSalvarReceita" 
-                                @click="abrirDetalhes(receita.id)"
-                                style="cursor: pointer;"
-                            />
-                        </div>
+                            <div v-else-if="abaAtiva === 'seguindo'" class="tab-pane">
+                                <RecipeCard 
+                                    v-for="receita in receitasSeguindo" 
+                                    :key="receita.id" 
+                                    :id="receita.id"
+                                    :imagemUrl="receita.imagemUrl" 
+                                    :titulo="receita.titulo" 
+                                    :tempo="receita.tempo"
+                                    :porcoes="receita.porcoes" 
+                                    :custo="receita.custo" 
+                                    :curtidas="receita.curtidas"
+                                    :comentarios="receita.comentarios" 
+                                    :autorNome="receita.autorNome"
+                                    :authorIniciais="receita.authorIniciais" 
+                                    :autorFotoUrl="receita.autorFotoUrl"
+                                    :dificuldade="receita.dificuldade"
+                                    v-model:salvo="receita.salvo" 
+                                    @toggle-save="tratarSalvarReceita" 
+                                    style="cursor: pointer;"
+                                />
 
-                        <div v-else-if="abaAtiva === 'seguindo'" class="tab-pane">
-                            <RecipeCard 
-                                v-for="receita in receitasSeguindo" 
-                                :key="receita.id" 
-                                :id="receita.id"
-                                :imagemUrl="receita.imagemUrl" 
-                                :titulo="receita.titulo" 
-                                :tempo="receita.tempo"
-                                :porcoes="receita.porcoes" 
-                                :custo="receita.custo" 
-                                :curtidas="receita.curtidas"
-                                :comentarios="receita.comentarios" 
-                                :autorNome="receita.autorNome"
-                                :authorIniciais="receita.authorIniciais" 
-                                :dificuldade="receita.dificuldade"
-                                v-model:salvo="receita.salvo" 
-                                @toggle-save="tratarSalvarReceita" 
-                                @click="abrirDetalhes(receita.id)"
-                                style="cursor: pointer;"
-                            />
-                        </div>
-
-                        <div v-else-if="abaAtiva === 'populares'" class="tab-pane">
-                            <div class="category-row" v-for="categoria in categoriasPopulares" :key="categoria.titulo">
-                                <div class="section-title-wrapper">
-                                    <h3 class="section-title">{{ categoria.titulo }}</h3>
-                                    <span class="see-all" @click="verTodasCategoria(categoria.titulo)">Ver todas</span>
-                                </div>
-                                <div class="grid-mini">
-                                    <RecipeCardMini 
-                                        v-for="receita in categoria.receitas"
-                                        :key="receita.id"
-                                        :id="receita.id"
-                                        :imagemUrl="receita.imagemUrl"
-                                        :titulo="receita.titulo"
-                                        :tempo="receita.tempo"
-                                        :porcoes="receita.porcoes"
-                                        :dificuldade="receita.dificuldade"
-                                        @click="abrirDetalhes(receita.id)"
-                                        style="cursor: pointer;"
-                                    />
-                                </div>
+                                <p v-if="receitasSeguindo.length === 0" class="sem-receitas">
+                                    Nenhuma receita dos usuários que você segue encontrada.
+                                </p>
                             </div>
-                        </div>
 
-                        <div v-else-if="abaAtiva === 'receitas'" class="tab-pane">
-                            <RecipePodiumRanking 
-                                :ouro="receitaOuro"
-                                :prata="receitaPrata"
-                                :bronze="receitaBronze"
-                                @ver-receita="() => abrirDetalhes(receitaOuro.id)" 
-                            />
-                        </div>
+                            <div v-else-if="abaAtiva === 'populares'" class="tab-pane">
+                                <LoadingSpinner v-if="carregandoPopulares" />
+
+                                <template v-else>
+                                    <div class="category-row" v-for="categoria in categoriasPopulares" :key="categoria.titulo">
+                                        <div class="section-title-wrapper">
+                                            <h3 class="section-title">{{ categoria.titulo }}</h3>
+                                            <span class="see-all" @click="verTodasCategoria(categoria)">Ver todas</span>
+                                        </div>
+                                        <div v-if="categoria.receitas.length > 0" class="grid-mini">
+                                            <RecipeCardMini 
+                                                v-for="receita in categoria.receitas"
+                                                :key="receita.id"
+                                                :id="receita.id"
+                                                :imagemUrl="receita.imagemUrl"
+                                                :titulo="receita.titulo"
+                                                :tempo="receita.tempo"
+                                                :porcoes="receita.porcoes"
+                                                :dificuldade="receita.dificuldade"
+                                                @click="abrirDetalhes(receita.id)"
+                                                style="cursor: pointer;"
+                                            />
+                                        </div>
+                                        <p v-else class="sem-receitas">
+                                            Nenhuma receita nesta categoria ainda.
+                                        </p>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div v-else-if="abaAtiva === 'receitas'" class="tab-pane">
+                                <LoadingSpinner v-if="carregandoSemana" />
+
+                                <RecipePodiumRanking 
+                                    v-else-if="receitaOuro && receitaPrata && receitaBronze"
+                                    :ouro="receitaOuro"
+                                    :prata="receitaPrata"
+                                    :bronze="receitaBronze"
+                                    @ver-receita="abrirDetalhes" 
+                                />
+
+                                <p v-else class="sem-receitas">
+                                    O ranking das receitas da semana ainda não está disponível.
+                                </p>
+                            </div>
+                        </template>
 
                         <ReportModal 
                             :is-open="isReportOpen" 
@@ -192,7 +180,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
 import HeaderAplicacao from '@/components/HeaderAplicacao.vue';
@@ -203,179 +191,76 @@ import RecipeCardMini from '@/components/RecipeCardMini.vue';
 import RecipeBannerCard from '@/components/RecipeBannerCard.vue';
 import RecipePodiumRanking from '@/components/RecipePodiumRanking.vue';
 import ReportModal from '@/components/ReportModal.vue';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
+
+import { authService } from '@/services/authService';
+import { getListarUsuarios, getSeguindoUsuario } from '@/services/usuarios';
+import {
+    getListarReceitas,
+    getBuscarReceitasPorCategoria,
+    getReceitasDaSemana,
+    postSalvarReceita,
+    deleteSalvarReceita
+} from '@/services/receitas';
 
 const router = useRouter();
 
-const categoriaSelecionada = ref(null);
+const MAPA_CUSTO = { 1: 'Econômico', 2: 'Moderado', 3: 'Alto' };
+const MAPA_DIFICULDADE = { 1: 'Fácil', 2: 'Médio', 3: 'Difícil' };
 
-// Simulação de todas as receitas vindas da API para filtro dinâmico
-const todasAsReceitasDaApi = ref([
-    { id: 1, categoria: 'Rápidas e Gostosas', imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
-    { id: 2, categoria: 'Rápidas e Gostosas', imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
-    { id: 3, categoria: 'Rápidas e Gostosas', imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Macarrão ao Pesto Caseiro', tempo: '25min', porcoes: '2 porções', dificuldade: 'Fácil' },
-    { id: 4, categoria: 'Rápidas e Gostosas', imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Pão de Queijo Mineiro', tempo: '35min', porcoes: '20 porções', dificuldade: 'Fácil' },
-    { id: 5, categoria: 'Almoço', imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
-    { id: 6, categoria: 'Jantar', imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
-    { id: 7, categoria: 'Café da manhã', imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Omelete de Forno com Ervas', tempo: '15min', porcoes: '2 porções', dificuldade: 'Fácil' },
-    { id: 8, categoria: 'Doces veganos', imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Bolo de Chocolate Vegano', tempo: '50min', porcoes: '8 porções', dificuldade: 'Médio' }
-]);
-
-const verTodasCategoria = (nomeCategoria) => {
-    categoriaSelecionada.value = nomeCategoria;
-};
-
-const receitasFiltradasPorCategoria = computed(() => {
-    if (!categoriaSelecionada.value) return [];
-    
-    const tituloNormalizado = categoriaSelecionada.value.trim().toLowerCase();
-
-    if (tituloNormalizado === 'rápidas e gostosas') {
-        return todasAsReceitasDaApi.value.filter(rec => {
-            const tempoNum = parseInt(rec.tempo) || 0;
-            return tempoNum <= 30;
-        });
+const formatarTempo = (tempo) => {
+    if (!tempo) return '30min';
+    if (typeof tempo === 'string' && tempo.includes(':')) {
+        const [horas, minutos] = tempo.split(':').map(Number);
+        const totalMin = (horas || 0) * 60 + (minutos || 0);
+        return totalMin > 0 ? `${totalMin}min` : tempo;
     }
-
-    if (tituloNormalizado === 'doces veganos') {
-        return todasAsReceitasDaApi.value.filter(rec => 
-            rec.categoria.toLowerCase() === 'sobremesa' &&
-            (rec.tags?.some(tag => tag.toLowerCase() === 'vegano') || rec.titulo.toLowerCase().includes('vegano'))
-        );
-    }
-
-    if (tituloNormalizado.includes(' e ')) {
-        const subCategorias = tituloNormalizado.split(' e ').map(c => c.trim());
-        return todasAsReceitasDaApi.value.filter(rec => 
-            subCategorias.some(sub => rec.categoria.toLowerCase() === sub.toLowerCase())
-        );
-    }
-
-    return todasAsReceitasDaApi.value.filter(
-        rec => rec.categoria.toLowerCase() === tituloNormalizado
-    );
-});
-
-const usuarioLogado = ref({
-    id: 101,
-    nome: 'Ana Costa',
-    username: 'anacosta',
-    iniciais: 'AC'
-});
-
-const receitaAtual = ref({
-    id: 1,
-    titulo: 'Frango ao Limão Siciliano',
-    descricao: 'Uma receita deliciosa e perfumada de frango marinado em suco de limão siciliano com ervas frescas. Pronto em menos de 1 hora!',
-    categoria: 'Almoço',
-    imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    tempo: '40min',
-    dificuldade: 'Fácil',
-    custo: 'Moderado',
-    porcoes: '4 porções',
-    autorId: 202,
-    autorNome: 'Ana Costa',
-    autorUsername: 'anacosta',
-    authorIniciais: 'AC',
-    seguindo: true,
-    curtido: true,
-    curtidas: 342,
-    salvo: false,
-    tags: ['Frango', 'Limão', 'Rápido', 'Saudável'],
-    ingredientes: [
-        { nome: 'Filé de frango', quantidade: '600g' },
-        { nome: 'Limão siciliano', quantidade: '2 unidades' },
-        { nome: 'Alho', quantidade: '4 dentes' },
-        { nome: 'Azeite extra virgem', quantidade: '2 col. de sopa' },
-        { nome: 'Tomilho fresco', quantidade: '2 ramos' },
-        { nome: 'Sal e pimenta-do-reino', quantidade: 'a gosto' },
-        { nome: 'Manteiga', quantidade: '2 col. de sopa' }
-    ],
-    passos: [
-        'Aqueça uma frigideira em fogo alto. Sele os filés por 4 minutos cada lado.',
-        'Adicione a manteiga, o tomilho e o suco de limão restante. Regue os filés por 2 minutos.',
-        'Sirva com o molho da frigideira por cima e rodelas de limão.'
-    ]
-});
-
-const listaComentarios = ref([
-    {
-        id: 1,
-        autorId: 301,
-        nome: 'Mariana Lima',
-        username: 'marilima',
-        iniciais: 'ML',
-        texto: 'Fiz essa receita ontem e ficou incrível! O frango ficou super suculento 🤌',
-        tempo: 'ontem'
-    },
-    {
-        id: 2,
-        autorId: 302,
-        nome: 'Carlos Eduardo',
-        username: 'cadu.cozinha',
-        iniciais: 'CE',
-        texto: 'Perfeito! Substituí o azeite por óleo de coco e ficou ainda mais saboroso. Recomendo!',
-        tempo: '2h'
-    },
-    {
-        id: 3,
-        autorId: 101,
-        nome: 'Ana Costa',
-        username: 'anacosta',
-        iniciais: 'AC',
-        texto: 'Qual o tempo máximo de marinada? Estava com pressa e deixei só 10 minutos...',
-        tempo: '10m'
-    }
-]);
-
-const abrirDetalhes = (idReceita) => {
-    router.push({
-        name: 'receita',
-        params: { id: idReceita }
-    });
+    return String(tempo);
 };
 
-const isReportOpen = ref(false);
-const tipoDenuncia = ref('usuario');
-const targetIdDenuncia = ref(null);
-
-const abrirDenuncia = (tipo, id) => {
-    tipoDenuncia.value = tipo;
-    targetIdDenuncia.value = id;
-    isReportOpen.value = true;
+const formatarPorcoes = (porcao) => {
+    const num = Number(porcao) || 1;
+    return `${num} ${num === 1 ? 'porção' : 'porções'}`;
 };
 
-const tratarEnvioDenuncia = (dados) => {
-    console.log('Dados da denúncia enviados:', dados);
+const gerarIniciais = (nome) => {
+    if (!nome) return 'CH';
+    const partes = nome.trim().split(/\s+/);
+    if (partes.length === 1) return partes[0].substring(0, 2).toUpperCase();
+    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
 };
 
-const isModalOpen = ref(false);
+const normalizarReceita = (rec) => {
+    if (!rec) return null;
+    const autorNome = rec.usuario?.nome || rec.autor_nome || 'Chef Entre Panelas';
+    const autorId = rec.usuario?.id ?? rec.id_usuario ?? null;
 
-const listaDeUsuarios = ref([
-    { id: 1, nome: 'Ana Beatriz', username: 'anabeatriz', iniciais: 'AB', seguindo: true },
-    { id: 2, nome: 'Carlos Eduardo', username: 'cadu.cozinha', iniciais: 'CE', seguindo: false },
-    { id: 3, nome: 'Mariana Lopes', username: 'marilopes', iniciais: 'ML', seguindo: false },
-    { id: 4, nome: 'Rafael Souza', username: 'rafa.souza', iniciais: 'RS', seguindo: true },
-    { id: 5, nome: 'Daniel', username: 'daniel.silva', iniciais: 'DS', seguindo: false },
-    { id: 6, nome: 'Eduardo', username: 'edu.ramos', iniciais: 'ER', seguindo: true },
-    { id: 7, nome: 'Fernanda', username: 'fe.alves', iniciais: 'FA', seguindo: false },
-    { id: 8, nome: 'Gabriel', username: 'gabs.souza', iniciais: 'GS', seguindo: false }
-]);
-
-const usuariosSeguidos = computed(() => {
-    return listaDeUsuarios.value.filter(user => user.seguindo === true);
-});
-
-const abrirModal = () => {
-    isModalOpen.value = true;
+    return {
+        id: rec.id,
+        imagemUrl: rec.foto || rec.imagemUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
+        titulo: rec.titulo || 'Receita sem título',
+        descricao: rec.descricao || '',
+        tempo: formatarTempo(rec.tempo),
+        porcoes: formatarPorcoes(rec.id_porcao ?? rec.porcoes),
+        custo: MAPA_CUSTO[rec.id_custo] || rec.custo || 'Econômico',
+        dificuldade: MAPA_DIFICULDADE[rec.id_dificuldade] || rec.dificuldade || 'Fácil',
+        curtidas: Number(rec.qtd_curtidas ?? rec.qtd_curtida ?? 0),
+        comentarios: Array.isArray(rec.comentarios) ? rec.comentarios.length : Number(rec.qtd_comentarios ?? 0),
+        autorId,
+        autorNome,
+        authorIniciais: gerarIniciais(autorNome),
+        autorFotoUrl: rec.usuario?.foto_perfil || '',
+        salvo: Boolean(rec.eh_salva_pelo_usuario),
+        categorias: Array.isArray(rec.categorias) ? rec.categorias : []
+    };
 };
 
-const fecharModal = () => {
-    isModalOpen.value = false;
-};
+const carregandoInicial = ref(true);
+const carregandoPopulares = ref(false);
+const carregandoSemana = ref(false);
+const carregandoCategoria = ref(false);
 
 const abaAtiva = ref('para-voce');
-
 const tabs = [
     { id: 'para-voce', label: 'Para você' },
     { id: 'seguindo', label: 'Seguindo' },
@@ -383,137 +268,252 @@ const tabs = [
     { id: 'receitas', label: 'Receitas da semana' }
 ];
 
-const destaqueParaVoce = ref({
-    id: 10,
-    imagemUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947',
-    titulo: 'Feijoada Completa Tradicional',
-    tempo: '180min',
-    porcoes: '6 porções',
-    custo: 'Alto',
-    autorNome: 'Carlos Ferreira',
-    authorIniciais: 'CF',
-    dificuldade: 'Difícil',
-    badgeTexto: 'Receita do Dia'
+const listaDeUsuarios = ref([]);
+const idsUsuariosSeguidos = ref(new Set());
+
+const usuariosSeguidos = computed(() => {
+    return listaDeUsuarios.value.filter(user => user.seguindo === true);
 });
 
-const receitasMini = ref([
-    { id: 1, imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
-    { id: 2, imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
-    { id: 3, imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Macarrão ao Pesto Caseiro', tempo: '25min', porcoes: '2 porções', dificuldade: 'Fácil' },
-    { id: 4, imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Pão de Queijo Mineiro', tempo: '35min', porcoes: '20 porções', dificuldade: 'Fácil' }
-]);
+const fecharModal = () => { isModalOpen.value = false; };
 
-const listaDeReceitas = ref([
-    {
-        id: 1,
-        imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
-        titulo: 'Frango ao Limão Siciliano',
-        tempo: '40min',
-        porcoes: '4 porções',
-        custo: 'Econômico',
-        curtidas: 342,
-        comentarios: 28,
-        autorNome: 'Ana Costa',
-        authorIniciais: 'AC',
-        dificuldade: 'Fácil',
-        salvo: true
+const carregarUsuariosESeguidos = async () => {
+    const userId = authService.getUserId();
+
+    try {
+        const [usuariosRes, seguindoRes] = await Promise.all([
+            getListarUsuarios({ limite: 50 }).catch(() => null),
+            userId ? getSeguindoUsuario(userId, { limite: 100 }).catch(() => null) : Promise.resolve(null)
+        ]);
+
+        const listaSeguindoApi = seguindoRes?.response?.dados || [];
+        const idsSet = new Set(listaSeguindoApi.map(u => Number(u.id)));
+        idsUsuariosSeguidos.value = idsSet;
+
+        const todosUsuariosApi = usuariosRes?.response?.dados || [];
+        const mapaUsuarios = new Map();
+
+        todosUsuariosApi.forEach(u => {
+            if (Number(u.id) === Number(userId)) return;
+            mapaUsuarios.set(Number(u.id), {
+                id: u.id,
+                nome: u.nome,
+                username: u.username,
+                fotoUrl: u.foto_perfil || '',
+                iniciais: gerarIniciais(u.nome),
+                seguindo: idsSet.has(Number(u.id))
+            });
+        });
+
+        listaSeguindoApi.forEach(u => {
+            if (!mapaUsuarios.has(Number(u.id)) && Number(u.id) !== Number(userId)) {
+                mapaUsuarios.set(Number(u.id), {
+                    id: u.id,
+                    nome: u.nome,
+                    username: u.username,
+                    fotoUrl: u.foto_perfil || '',
+                    iniciais: gerarIniciais(u.nome),
+                    seguindo: true
+                });
+            }
+        });
+
+        listaDeUsuarios.value = Array.from(mapaUsuarios.values());
+    } catch (erro) {
+        console.error('Erro ao carregar usuários:', erro);
     }
-]);
-
-const receitasSeguindo = ref([
-    {
-        id: 2,
-        imagemUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947',
-        titulo: 'Pão de Queijo Mineiro',
-        tempo: '35min',
-        porcoes: '6 porções',
-        custo: 'Econômico',
-        curtidas: 156,
-        comentarios: 14,
-        autorNome: 'Carlos Ferreira',
-        authorIniciais: 'CF',
-        dificuldade: 'Fácil',
-        salvo: false
-    }
-]);
-
-const categoriasPopulares = ref([
-    {
-        titulo: 'Rápidas e Gostosas',
-        receitas: [
-            { id: 1, imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
-            { id: 2, imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
-            { id: 3, imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Macarrão ao Pesto Caseiro', tempo: '25min', porcoes: '2 porções', dificuldade: 'Fácil' },
-            { id: 4, imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Pão de Queijo Mineiro', tempo: '35min', porcoes: '20 porções', dificuldade: 'Fácil' }
-        ]
-    },
-    {
-        titulo: 'Almoço e Jantar',
-        receitas: [
-            { id: 5, imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
-            { id: 6, imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
-            { id: 7, imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Macarrão ao Pesto Caseiro', tempo: '25min', porcoes: '2 porções', dificuldade: 'Fácil' },
-            { id: 8, imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Pão de Queijo Mineiro', tempo: '35min', porcoes: '20 porções', dificuldade: 'Fácil' }
-        ]
-    },
-    {
-        titulo: 'Café da manhã',
-        receitas: [
-            { id: 9, imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
-            { id: 10, imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
-            { id: 11, imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Macarrão ao Pesto Caseiro', tempo: '25min', porcoes: '2 porções', dificuldade: 'Fácil' },
-            { id: 12, imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Pão de Queijo Mineiro', tempo: '35min', porcoes: '20 porções', dificuldade: 'Fácil' }
-        ]
-    },
-    {
-        titulo: 'Doces veganos',
-        receitas: [
-            { id: 13, imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c', titulo: 'Frango ao Limão Siciliano', tempo: '40min', porcoes: '4 porções', dificuldade: 'Fácil' },
-            { id: 14, imagemUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999', titulo: 'Sopa de Abóbora com Coco', tempo: '30min', porcoes: '4 porções', dificuldade: 'Fácil' },
-            { id: 15, imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1', titulo: 'Macarrão ao Pesto Caseiro', tempo: '25min', porcoes: '2 porções', dificuldade: 'Fácil' },
-            { id: 16, imagemUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38', titulo: 'Pão de Queijo Mineiro', tempo: '35min', porcoes: '20 porções', dificuldade: 'Fácil' }
-        ]
-    }
-]);
-
-const tratarSalvarReceita = (dados) => {
-    console.log('Receita salva:', dados);
 };
 
-const receitaOuro = ref({
-  id: 1,
-  imagemUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947',
-  titulo: 'Feijoada Completa Tradicional',
-  descricao: 'Autêntica feijoada brasileira com carnes nobres selecionadas, farofinha crocante, couve refogada no alho e gomos frescos de laranja.',
-  tempo: '180 min',
-  porcoes: '6 porções',
-  dificuldade: 'Médio',
-  autorNome: 'Carlos Ferreira',
-  authorIniciais: 'CF'
+// --- Receitas: "Para você" e "Seguindo" ---
+const todasReceitasFeed = ref([]);
+
+const destaqueParaVoce = computed(() => {
+    if (todasReceitasFeed.value.length === 0) return null;
+    return {
+        ...todasReceitasFeed.value[0],
+        badgeTexto: 'Receita do Dia'
+    };
 });
 
-const receitaPrata = ref({
-  id: 2,
-  imagemUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1',
-  titulo: 'Moqueca Baiana & Bobó de Camarão',
-  descricao: 'Cremoso purê de aipim com leite de coco fresco, azeite de dendê perfumado e camarões suculentos servidos na cumbuca de barro.',
-  tempo: '50 min',
-  porcoes: '4 porções',
-  dificuldade: 'Fácil',
-  autorNome: 'Mariana Lima',
-  authorIniciais: 'ML'
+const listaDeReceitas = computed(() => {
+    if (todasReceitasFeed.value.length <= 1) return [];
+    return todasReceitasFeed.value.slice(1);
 });
 
-const receitaBronze = ref({
-  id: 3,
-  imagemUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947',
-  titulo: 'Picanha na Brasa ao Alho Confitado',
-  descricao: 'Picanha na ponto perfeito com crosta de sal grosso e chimichurri rústico, guarnecida com cabeças de alho assadas e macias.',
-  tempo: '40 min',
-  porcoes: '6 porções',
-  dificuldade: 'Médio',
-  autorNome: 'Pedro Souza',
-  authorIniciais: 'PS'
+const receitasSeguindo = computed(() => {
+    if (idsUsuariosSeguidos.value.size === 0) return [];
+    return todasReceitasFeed.value.filter(rec => idsUsuariosSeguidos.value.has(Number(rec.autorId)));
+});
+
+const carregarFeedReceitas = async () => {
+    try {
+        const res = await getListarReceitas({ limite: 50, ordenar_por: 'recente' });
+        const dados = res?.response?.dados || [];
+        todasReceitasFeed.value = dados.map(normalizarReceita).filter(Boolean);
+    } catch (erro) {
+        console.error('Erro ao carregar feed de receitas:', erro);
+    }
+};
+
+const GRUPOS_CATEGORIAS = [
+    { titulo: 'Almoço e Jantar', ids: [2, 3] },
+    { titulo: 'Café da manhã e Lanche', ids: [1, 5] },
+    { titulo: 'Sobremesa', ids: [4] },
+    { titulo: 'Sopa', ids: [6] },
+    { titulo: 'Salada', ids: [7] },
+    { titulo: 'Bebida', ids: [8] }
+];
+
+const categoriasPopulares = ref([]);
+const popularesJaCarregado = ref(false);
+
+const carregarCategoriasPopulares = async () => {
+    if (popularesJaCarregado.value) return;
+    carregandoPopulares.value = true;
+
+    try {
+        const resultados = await Promise.all(
+            GRUPOS_CATEGORIAS.map(async (grupo) => {
+                const respostas = await Promise.all(
+                    grupo.ids.map(idCat =>
+                        getBuscarReceitasPorCategoria({ id_categoria: idCat, limite: 4 }).catch(() => null)
+                    )
+                );
+
+                const mapaUnico = new Map();
+                respostas.forEach(res => {
+                    const lista = res?.response?.dados || [];
+                    lista.forEach(item => {
+                        if (!mapaUnico.has(item.id)) {
+                            mapaUnico.set(item.id, normalizarReceita(item));
+                        }
+                    });
+                });
+
+                return {
+                    titulo: grupo.titulo,
+                    ids: grupo.ids,
+                    receitas: Array.from(mapaUnico.values()).slice(0, 4)
+                };
+            })
+        );
+
+        categoriasPopulares.value = resultados;
+        popularesJaCarregado.value = true;
+    } catch (erro) {
+        console.error('Erro ao carregar categorias populares:', erro);
+    } finally {
+        carregandoPopulares.value = false;
+    }
+};
+
+const categoriaSelecionada = ref(null);
+const receitasCategoriaExpandida = ref([]);
+
+const verTodasCategoria = async (grupoCategoria) => {
+    categoriaSelecionada.value = grupoCategoria;
+    receitasCategoriaExpandida.value = [];
+    carregandoCategoria.value = true;
+
+    try {
+        const respostas = await Promise.all(
+            grupoCategoria.ids.map(idCat =>
+                getBuscarReceitasPorCategoria({ id_categoria: idCat, limite: 50 }).catch(() => null)
+            )
+        );
+
+        const mapaUnico = new Map();
+        respostas.forEach(res => {
+            const lista = res?.response?.dados || [];
+            lista.forEach(item => {
+                if (!mapaUnico.has(item.id)) {
+                    mapaUnico.set(item.id, normalizarReceita(item));
+                }
+            });
+        });
+
+        receitasCategoriaExpandida.value = Array.from(mapaUnico.values());
+    } catch (erro) {
+        console.error('Erro ao buscar receitas da categoria:', erro);
+    } finally {
+        carregandoCategoria.value = false;
+    }
+};
+
+const fecharCategoria = () => {
+    categoriaSelecionada.value = null;
+    receitasCategoriaExpandida.value = [];
+};
+
+const receitaOuro = ref(null);
+const receitaPrata = ref(null);
+const receitaBronze = ref(null);
+const semanaJaCarregado = ref(false);
+
+const carregarReceitasSemana = async () => {
+    if (semanaJaCarregado.value) return;
+    carregandoSemana.value = true;
+
+    try {
+        const res = await getReceitasDaSemana();
+        const dados = res?.response || {};
+
+        receitaOuro.value = normalizarReceita(dados.top_1);
+        receitaPrata.value = normalizarReceita(dados.top_2);
+        receitaBronze.value = normalizarReceita(dados.top_3);
+        semanaJaCarregado.value = true;
+    } catch (erro) {
+        console.error('Erro ao carregar receitas da semana:', erro);
+    } finally {
+        carregandoSemana.value = false;
+    }
+};
+
+const abrirDetalhes = (idReceita) => {
+    if (!idReceita) return;
+    router.push({
+        name: 'receita',
+        params: { id: idReceita }
+    });
+};
+
+const tratarSalvarReceita = async ({ id, salvo }) => {
+    try {
+        if (salvo) {
+            await postSalvarReceita(id);
+        } else {
+            await deleteSalvarReceita(id);
+        }
+    } catch (erro) {
+        console.error('Erro ao alterar status de receita salva:', erro);
+        const alvo = todasReceitasFeed.value.find(r => r.id === id);
+        if (alvo) alvo.salvo = !salvo;
+    }
+};
+
+const isReportOpen = ref(false);
+const tipoDenuncia = ref('usuario');
+const targetIdDenuncia = ref(null);
+
+const tratarEnvioDenuncia = (dados) => {
+    console.log('Dados da denúncia enviados:', dados);
+};
+
+watch(abaAtiva, (novaAba) => {
+    if (novaAba === 'populares') {
+        carregarCategoriasPopulares();
+    } else if (novaAba === 'receitas') {
+        carregarReceitasSemana();
+    }
+});
+
+onMounted(async () => {
+    carregandoInicial.value = true;
+    await Promise.all([
+        carregarUsuariosESeguidos(),
+        carregarFeedReceitas()
+    ]);
+    carregandoInicial.value = false;
 });
 </script>
 
@@ -717,7 +717,7 @@ nav {
         scrollbar-width: none;
     }
 
-        .fast-navegation {
+    .fast-navegation {
         margin-top: 10px;
     }
 

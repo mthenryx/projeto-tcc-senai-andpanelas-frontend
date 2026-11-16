@@ -67,11 +67,11 @@ import BannerEsquerdo from '@/components/BannerEsquerdo.vue'
 import { authService } from '@/services/authService'
 
 const router = useRouter()
-const email = ref('')
-const password = ref('')
+const email = ref(import.meta.env.VITE_DEV_LOGIN_EMAIL || '')
+const password = ref(import.meta.env.VITE_DEV_LOGIN_SENHA || '')
 const showPassword = ref(false)
 const isLoading = ref(false)
-const errorMessage = ref('')
+const errorMessage = ref('')   
 
 async function handleLogin() {
   errorMessage.value = ''

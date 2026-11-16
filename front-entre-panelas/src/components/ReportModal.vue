@@ -95,6 +95,8 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { authService } from '@/services/authService';
+import { postDenunciaUsuario, postDenunciaComunidade, postDenunciaReceita } from '@/services/denuncias';
 
 const props = defineProps({
     isOpen: { type: Boolean, default: false },
@@ -132,21 +134,33 @@ const listaMotivos = [
     'Outro motivo'
 ];
 
-const enviarDenuncia = () => {
+const enviarDenuncia = async () => {
     if (!motivoSelecionado.value) {
         erroMotivo.value = true;
         return;
     }
 
-    const payload = {
-        tipo: props.tipo,
-        targetId: props.targetId,
+    const idUsuario = authService.getUserId();
+    const base = {
+        id_usuario: idUsuario,
         motivo: motivoSelecionado.value,
-        detalhes: detalhes.value
+        detalhe: detalhes.value
     };
 
-    emit('send', payload);
-    enviado.value = true;
+    try {
+        if (props.tipo === 'comunidade') {
+            await postDenunciaComunidade({ ...base, id_comunidade: Number(props.targetId) });
+        } else if (props.tipo === 'receita') {
+            await postDenunciaReceita({ ...base, id_receita: Number(props.targetId) });
+        } else {
+            await postDenunciaUsuario({ ...base, id_usuario_denunciado: Number(props.targetId) });
+        }
+
+        emit('send', { tipo: props.tipo, targetId: props.targetId, ...base });
+        enviado.value = true;
+    } catch (error) {
+        console.error(error.message);
+    }
 };
 
 const fechar = () => {
