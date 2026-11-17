@@ -23,83 +23,107 @@
                     />
                 </div>
 
-                <section class="secao-bloco">
-                    <h3 class="titulo-secao">Destaque da semana</h3>
-                    <div class="banner-destaque" :style="{ backgroundImage: `url(${comunidadeDestaque.banner_url})` }" @click="irParaDetalhes(comunidadeDestaque.id)">
-                        <div class="banner-overlay">
-                            <div class="badge-emalta">
-                                <span>🔥 Em alta</span>
-                            </div>
-                            <div class="banner-info">
-                                <h2>{{ comunidadeDestaque.nome }}</h2>
-                                <div class="banner-stats">
-                                    <span>
-                                        <img src="../../public/iconPaginas/comunidade_icon_cinza.png" alt="comunidade" class="community">
-                                        {{ comunidadeDestaque.quantidade_pessoas }} 
-                                        membros
-                                    </span>
-                                    <span>
-                                        <img src="../../public/icon_fileira.png" alt="fileira de receitas">
-                                        {{ comunidadeDestaque.quantidade_receitas }} 
-                                        receitas
-                                    </span>
+                <div v-if="carregando" class="sem-resultados">
+                    <p>Carregando comunidades...</p>
+                </div>
+
+                <div v-else-if="erroApi" class="sem-resultados">
+                    <p>{{ erroApi }}</p>
+                </div>
+
+                <template v-else>
+                    <section class="secao-bloco" v-if="comunidadeDestaque">
+                        <h3 class="titulo-secao">Destaque da semana</h3>
+                        <div class="banner-destaque" :style="{ backgroundImage: `url(${comunidadeDestaque.banner_url})` }" @click="irParaDetalhes(comunidadeDestaque.id)">
+                            <div class="banner-overlay">
+                                <div class="badge-emalta">
+                                    <span>🔥 Em alta</span>
                                 </div>
-                            </div>
-                            <button 
-                                type="button" 
-                                class="banner-status-participando" 
-                                :class="{ 'participando': comunidadeDestaque.participa }"
-                                @click.stop="alternarParticipacao(comunidadeDestaque)"
-                            >
-                                {{ comunidadeDestaque.participa ? '✓ Participando' : '+ Entrar' }}
-                            </button>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="secao-bloco" v-if="minhasComunidades.length > 0">
-                    <h3 class="titulo-secao">Minhas comunidades</h3>
-
-                    <div 
-                        class="minhas-comunidades-grid" 
-                        ref="carrosselRef"
-                        @mousedown="iniciarArrasto"
-                        @mouseleave="pararArrasto"
-                        @mouseup="pararArrasto"
-                        @mousemove="arrastar"
-                    >
-                        <div v-for="com in minhasComunidades" :key="com.id" class="minha-comunidade-card" @click="irParaDetalhes(com.id)">
-                            <img :src="com.foto_url" :alt="com.nome" class="minha-comunidade-foto" draggable="false" />
-                            <span class="minha-comunidade-nome">{{ com.nome }}</span>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="secao-bloco">
-                    <h3 class="titulo-secao">Explorar comunidades</h3>
-                    <div class="lista-explorar">
-                        <div v-for="com in comunidadesFiltradas" :key="com.id" class="comunidade-card-item" @click="irParaDetalhes(com.id)">
-                            <div class="comunidade-card-left">
-                                <img :src="com.foto_url" :alt="com.nome" class="comunidade-item-foto" />
-                                <div class="comunidade-item-detalhes">
-                                    <h4>{{ com.nome }}</h4>
-                                    <p>{{ com.descricao }}</p>
-                                    <div class="comunidade-item-stats">
-                                        <span>👥 {{ com.quantidade_pessoas }}</span>
-                                        <span>🔍 {{ com.quantidade_receitas }}</span>
+                                <div class="banner-info">
+                                    <h2>{{ comunidadeDestaque.nome }}</h2>
+                                    <div class="banner-stats">
+                                        <span>
+                                            <img src="../../public/iconPaginas/comunidade_icon_cinza.png" alt="comunidade" class="community">
+                                            {{ comunidadeDestaque.quantidade_pessoas }} 
+                                            membros
+                                        </span>
+                                        <span>
+                                            <img src="../../public/icon_fileira.png" alt="fileira de receitas">
+                                            {{ comunidadeDestaque.quantidade_receitas }} 
+                                            receitas
+                                        </span>
                                     </div>
                                 </div>
+                                <button 
+                                    v-if="!comunidadeDestaque.criador"
+                                    type="button" 
+                                    class="banner-status-participando" 
+                                    :class="{ 'participando': comunidadeDestaque.participa }"
+                                    :disabled="processandoIds[comunidadeDestaque.id]"
+                                    @click.stop="alternarParticipacao(comunidadeDestaque)"
+                                >
+                                    {{ comunidadeDestaque.participa ? '✓ Participando' : '+ Entrar' }}
+                                </button>
+                                <span v-else class="banner-status-participando participando">
+                                    ★ Moderador
+                                </span>
                             </div>
-                            <button type="button" class="btn-participar" :class="{ 'participando': com.participa }"
-                                @click.stop="alternarParticipacao(com)">
-                                {{ com.participa ? '✓ Participando' : '+ Entrar' }}
-                            </button>
                         </div>
-                        <div v-if="comunidadesFiltradas.length === 0" class="sem-resultados">
-                            <p>Nenhuma comunidade encontrada com esse nome.</p>
+                    </section>
+
+                    <section class="secao-bloco" v-if="minhasComunidades.length > 0">
+                        <h3 class="titulo-secao">Minhas comunidades</h3>
+
+                        <div 
+                            class="minhas-comunidades-grid" 
+                            ref="carrosselRef"
+                            @mousedown="iniciarArrasto"
+                            @mouseleave="pararArrasto"
+                            @mouseup="pararArrasto"
+                            @mousemove="arrastar"
+                        >
+                            <div v-for="com in minhasComunidades" :key="com.id" class="minha-comunidade-card" @click="irParaDetalhes(com.id)">
+                                <img :src="com.foto_url" :alt="com.nome" class="minha-comunidade-foto" draggable="false" />
+                                <span class="minha-comunidade-nome">{{ com.nome }}</span>
+                            </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
+
+                    <section class="secao-bloco">
+                        <h3 class="titulo-secao">Explorar comunidades</h3>
+                        <div class="lista-explorar">
+                            <div v-for="com in comunidadesFiltradas" :key="com.id" class="comunidade-card-item" @click="irParaDetalhes(com.id)">
+                                <div class="comunidade-card-left">
+                                    <img :src="com.foto_url" :alt="com.nome" class="comunidade-item-foto" />
+                                    <div class="comunidade-item-detalhes">
+                                        <h4>{{ com.nome }}</h4>
+                                        <p>{{ com.descricao }}</p>
+                                        <div class="comunidade-item-stats">
+                                            <span>👥 {{ com.quantidade_pessoas }}</span>
+                                            <span>🔍 {{ com.quantidade_receitas }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    v-if="!com.criador"
+                                    type="button"
+                                    class="btn-participar"
+                                    :class="{ 'participando': com.participa }"
+                                    :disabled="processandoIds[com.id]"
+                                    @click.stop="alternarParticipacao(com)"
+                                >
+                                    {{ com.participa ? '✓ Participando' : '+ Entrar' }}
+                                </button>
+                                <span v-else class="btn-participar participando">
+                                    ★ Minha
+                                </span>
+                            </div>
+                            <div v-if="comunidadesFiltradas.length === 0" class="sem-resultados">
+                                <p>Nenhuma comunidade encontrada com esse nome.</p>
+                            </div>
+                        </div>
+                    </section>
+                </template>
 
             </div>
         </div>
@@ -107,70 +131,133 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
+import {
+    getListarComunidades,
+    postEntrarComunidade,
+    deleteSairComunidade,
+    obterIdUsuarioLogado
+} from '@/services/comunidades';
 
 const router = useRouter();
 
 const termoPesquisa = ref('');
+const carregando = ref(false);
+const erroApi = ref('');
+const usuarioAtualId = ref(null);
+const processandoIds = reactive({});
 
-const comunidadesGeral = ref([
-    {
-        id: 1,
-        nome: 'Veganos Criativos',
-        descricao: 'Receitas plant-based deliciosas para mostrar que vegano não come só salada! 🌱',
-        quantidade_pessoas: '12.4k',
-        quantidade_receitas: '3.2k',
-        foto_url: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=150',
-        participa: false,
-        criador: false
-    },
-    {
-        id: 2,
-        nome: 'Bolos & Confeitaria',
-        descricao: 'Para quem ama bolos artísticos, confeitar e criar sobremesas que encantam! 🍰',
-        quantidade_pessoas: '28.7k',
-        quantidade_receitas: '7.9k',
-        foto_url: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=150',
-        participa: true,
-        criador: false
-    },
-    {
-        id: 4,
-        nome: 'Fitness & Saúde',
-        descricao: 'Receitas nutritivas e fitness para quem quer comer bem sem abrir mão do sabor! 💪',
-        quantidade_pessoas: '19.8k',
-        quantidade_receitas: '4.6k',
-        foto_url: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=150',
-        participa: false,
-        criador: false
-    },
-    {
-        id: 5,
-        nome: 'Massas & Risotos',
-        descricao: 'O melhor da culinária italiana feita em casa. Receitas autênticas e adaptações! 🍝',
-        quantidade_pessoas: '8.9k',
-        quantidade_receitas: '2.3k',
-        foto_url: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=150',
-        participa: false,
-        criador: false
+const comunidadesGeral = ref([]);
+const comunidadeDestaque = ref(null);
+
+const BANNER_FALLBACK = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200';
+const FOTO_FALLBACK = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=150';
+
+const extrairLista = (res) => {
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.response?.dados)) return res.response.dados;
+    if (Array.isArray(res?.response)) return res.response;
+    if (Array.isArray(res?.dados)) return res.dados;
+    return [];
+};
+
+const normalizarComunidade = (item) => {
+    const criadorId = Number(item.criador_id || item.id_usuario || item.id_criador || item.criador?.id || 0);
+    const ehCriador = Boolean(item.criador === true) || (usuarioAtualId.value && criadorId === Number(usuarioAtualId.value));
+    const participantes = Array.isArray(item.participantes) ? item.participantes : [];
+    const participaLista = usuarioAtualId.value
+        ? participantes.some(p => Number(p.id || p.id_usuario) === Number(usuarioAtualId.value))
+        : false;
+
+    const qtdMembros = item.quantidade_pessoas ?? item.total_membros ?? item.membros_count ?? participantes.length ?? 0;
+    const qtdReceitas = item.quantidade_receitas ?? item.total_receitas ?? item.receitas_count ?? 0;
+
+    return {
+        id: Number(item.id),
+        nome: item.nome || 'Comunidade',
+        descricao: item.descricao || '',
+        banner_url: item.banner_url || item.banner || item.foto_capa || item.foto_url || BANNER_FALLBACK,
+        foto_url: item.foto_url || item.foto || item.icone || item.banner_url || FOTO_FALLBACK,
+        quantidade_pessoas: qtdMembros,
+        quantidade_receitas: qtdReceitas,
+        criador_id: criadorId,
+        criador: ehCriador,
+        participa: Boolean(item.participa || item.eh_membro || item.participando || participaLista || ehCriador)
+    };
+};
+
+const carregarComunidades = async () => {
+    carregando.value = true;
+    erroApi.value = '';
+    try {
+        usuarioAtualId.value = await obterIdUsuarioLogado();
+        const res = await getListarComunidades({ limite: 100 });
+        const listaNormalizada = extrairLista(res).map(normalizarComunidade);
+
+        comunidadesGeral.value = listaNormalizada;
+
+        if (listaNormalizada.length > 0) {
+            const ordenadaPorMembros = [...listaNormalizada].sort((a, b) => {
+                const numA = Number(String(a.quantidade_pessoas).replace(/\D/g, '')) || 0;
+                const numB = Number(String(b.quantidade_pessoas).replace(/\D/g, '')) || 0;
+                return numB - numA;
+            });
+            comunidadeDestaque.value = { ...ordenadaPorMembros[0] };
+        } else {
+            comunidadeDestaque.value = null;
+        }
+    } catch (erro) {
+        console.error('Erro ao carregar comunidades:', erro);
+        erroApi.value = erro.message || 'Não foi possível carregar as comunidades.';
+    } finally {
+        carregando.value = false;
     }
-]);
+};
 
-const comunidadeDestaque = ref({
-    id: 3,
-    nome: 'Cozinha Brasileira',
-    quantidade_pessoas: '45.6k',
-    quantidade_receitas: '15.2k',
-    banner_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200',
-    foto_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=150',
-    participa: false, 
-    criador: false
-});
+onMounted(carregarComunidades);
 
-const alternarParticipacao = (com) => {
-    com.participa = !com.participa;
+const sincronizarEstadoParticipacao = (id, novoEstadoParticipa, deltaMembros) => {
+    const atualizarItem = (item) => {
+        if (!item || Number(item.id) !== Number(id)) return;
+        item.participa = novoEstadoParticipa;
+        if (typeof item.quantidade_pessoas === 'number') {
+            item.quantidade_pessoas = Math.max(0, item.quantidade_pessoas + deltaMembros);
+        }
+    };
+
+    atualizarItem(comunidadeDestaque.value);
+    const alvoLista = comunidadesGeral.value.find(c => Number(c.id) === Number(id));
+    atualizarItem(alvoLista);
+};
+
+const alternarParticipacao = async (com) => {
+    if (com.criador || processandoIds[com.id]) return;
+
+    if (!usuarioAtualId.value) {
+        router.push('/login');
+        return;
+    }
+
+    const estavaParticipando = com.participa;
+    processandoIds[com.id] = true;
+
+    try {
+        if (estavaParticipando) {
+            await deleteSairComunidade(com.id);
+            sincronizarEstadoParticipacao(com.id, false, -1);
+        } else {
+            await postEntrarComunidade(com.id);
+            sincronizarEstadoParticipacao(com.id, true, 1);
+        }
+    } catch (erro) {
+        console.error('Erro ao alterar participação:', erro);
+        alert(erro.message || 'Não foi possível atualizar sua participação na comunidade.');
+    } finally {
+        processandoIds[com.id] = false;
+    }
 };
 
 const irParaDetalhes = (id) => {
@@ -178,23 +265,27 @@ const irParaDetalhes = (id) => {
 };
 
 const minhasComunidades = computed(() => {
-    const listGeral = comunidadesGeral.value
-        .filter(com => com.participa || com.criador)
-        .map(com => ({
-            id: com.id,
-            foto_url: com.foto_url,
-            nome: com.nome
-        }));
+    const mapa = new Map();
 
-    if (comunidadeDestaque.value.participa || comunidadeDestaque.value.criador) {
-        listGeral.unshift({
+    comunidadesGeral.value.forEach((com) => {
+        if (com.participa || com.criador) {
+            mapa.set(com.id, {
+                id: com.id,
+                foto_url: com.foto_url,
+                nome: com.nome
+            });
+        }
+    });
+
+    if (comunidadeDestaque.value && (comunidadeDestaque.value.participa || comunidadeDestaque.value.criador)) {
+        mapa.set(comunidadeDestaque.value.id, {
             id: comunidadeDestaque.value.id,
             foto_url: comunidadeDestaque.value.foto_url,
             nome: comunidadeDestaque.value.nome
         });
     }
 
-    return listGeral;
+    return Array.from(mapa.values());
 });
 
 const comunidadesFiltradas = computed(() => {
@@ -202,7 +293,7 @@ const comunidadesFiltradas = computed(() => {
         return comunidadesGeral.value;
     }
     const termo = termoPesquisa.value.toLowerCase();
-    return comunidadesGeral.value.filter(com => 
+    return comunidadesGeral.value.filter(com =>
         com.nome.toLowerCase().includes(termo)
     );
 });
@@ -230,7 +321,7 @@ const arrastar = (e) => {
     if (!isDown) return;
     e.preventDefault();
     const x = e.pageX - carrosselRef.value.offsetLeft;
-    const walk = (x - startX) * 1.5; 
+    const walk = (x - startX) * 1.5;
     carrosselRef.value.scrollLeft = scrollLeft - walk;
 };
 </script>
@@ -523,6 +614,12 @@ const arrastar = (e) => {
 .btn-participar.participando {
     background-color: #E3F4ED;
     color: var(--verde-escuro);
+}
+
+.btn-participar:disabled,
+.banner-status-participando:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
 }
 
 .sem-resultados {

@@ -3,139 +3,169 @@
         <BarraNavegacao />
 
         <div class="coluna">
-            <header class="banner-capa-header" :style="{ backgroundImage: `url(${comunidade.banner_url})` }">
-                <div class="banner-overlay">
-                    <button class="back-btn-circle" @click="voltar" aria-label="Voltar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="19" y1="12" x2="5" y2="12"></line>
-                            <polyline points="12 19 5 12 12 5"></polyline>
-                        </svg>
-                    </button>
+            <div v-if="carregando" class="sem-resultados" style="padding: 60px 20px;">
+                <p>Carregando comunidade...</p>
+            </div>
 
-                    <div class="banner-info-bottom">
-                        <h1 class="comunidade-titulo">{{ comunidade.nome }}</h1>
-                        <div class="comunidade-stats">
-                            <span class="stat-item-capa">
-                                <img src="/iconPaginas/comunidade_icon_cinza.png" alt="Membros"
-                                    class="icone-estendido-marrom" />
-                                {{ comunidade.quantidade_pessoas }} membros
-                            </span>
-                            <span class="stat-item-capa">
-                                <img src="/icon_fileira.png" alt="Receitas" class="icone-estendido-marrom" />
-                                {{ comunidade.quantidade_receitas }} receitas
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <div v-else-if="erroApi" class="sem-resultados" style="padding: 60px 20px;">
+                <p>{{ erroApi }}</p>
+            </div>
 
-            <main class="conteudo-principal">
-                <p class="comunidade-descricao">{{ comunidade.descricao }}</p>
-
-                <div class="membros-avatares-row">
-                    <div class="avatares-stack">
-                        <div v-for="(membro, idx) in primeirosMembros" :key="membro.id" class="avatar-circle-wrapper" @click="abrirPerfilMembro(membro.id)">
-                            <img v-if="membro.foto_url && membro.foto_url.trim() !== ''" :src="membro.foto_url"
-                                :alt="membro.nome" class="avatar-img-stack" />
-                            <div v-else class="avatar-circle" :style="{ backgroundColor: obterCorAvatar(idx) }">
-                                {{ obterIniciais(membro.nome) }}
-                            </div>
-                        </div>
-                    </div>
-                    <span class="membros-restantes-text" v-if="membrosRestantesCount > 0">
-                        +{{ membrosRestantesCount }} outros membros
-                    </span>
-                </div>
-
-                <div class="denunciar-row">
-                    <button class="btn-denunciar" @click="abrirModalDenuncia">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
-                            <line x1="4" y1="22" x2="4" y2="15"></line>
-                        </svg>
-                        Denunciar
-                    </button>
-                </div>
-
-                <div class="acoes-comunidade-row">
-                    <template v-if="!ehCriador">
-                        <button type="button" class="btn-acao-participacao" :class="{ 'participando': ehParticipante }"
-                            @click="alternarParticipacao">
-                            {{ ehParticipante ? 'Sair da comunidade' : 'Participar da comunidade' }}
+            <template v-else>
+                <header class="banner-capa-header" :style="{ backgroundImage: `url(${comunidade.banner_url})` }">
+                    <div class="banner-overlay">
+                        <button class="back-btn-circle" @click="voltar" aria-label="Voltar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
                         </button>
-                    </template>
 
-                    <template v-else>
-                        <div class="criador-badge-info">
-                            <span>Você é o moderador / criador desta comunidade</span>
-                        </div>
-                    </template>
-
-                    <button class="btn-share-icon" title="Compartilhar" @click="compartilhar">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-                            <polyline points="16 6 12 2 8 6"></polyline>
-                            <line x1="12" y1="2" x2="12" y2="15"></line>
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="abas-container">
-                    <button class="aba-btn" :class="{ active: abaAtiva === 'receitas' }" @click="abaAtiva = 'receitas'">
-                        <img src="/icon_fileira.png" alt="Receitas" class="icone-aba" />
-                        Receitas
-                    </button>
-                    <button class="aba-btn" :class="{ active: abaAtiva === 'membros' }" @click="abaAtiva = 'membros'">
-                        <img src="/iconPaginas/comunidade_icon_cinza.png" alt="Membros" class="icone-aba" />
-                        Membros
-                    </button>
-                </div>
-
-                <div v-if="ehCriador" class="btn-editar-wrapper">
-                    <button class="btn-editar-comunidade" @click="irParaEdicao">
-                        ✏️ㅤEditar comunidade
-                    </button>
-                </div>
-
-                <div v-if="abaAtiva === 'receitas'" class="lista-receitas-grid">
-                    <RecipeCard v-for="rec in receitasComunidade" :key="rec.id" :id="rec.id" :imagemUrl="rec.imagem_url"
-                        :titulo="rec.titulo" :tempo="rec.tempo" :porcoes="String(rec.porcoes)" :custo="rec.custo"
-                        :curtidas="rec.curtidas" :comentarios="rec.comentarios" :autorNome="rec.autor_nome"
-                        :authorIniciais="obterIniciais(rec.autor_nome)" :dificuldade="rec.dificuldade"
-                        v-model:salvo="rec.salvo" @click="irParaReceita(rec.id)" />
-                    <div v-if="receitasComunidade.length === 0" class="sem-resultados">
-                        <p>Nenhuma receita cadastrada nesta comunidade ainda.</p>
-                    </div>
-                </div>
-
-                <div v-else-if="abaAtiva === 'membros'" class="lista-membros-vertical">
-                    <div v-for="membro in comunidade.participantes" :key="membro.id" class="membro-card-item" @click="abrirPerfilMembro(membro.id)">
-                        <div class="membro-left">
-                            <img v-if="membro.foto_url && membro.foto_url.trim() !== ''" :src="membro.foto_url"
-                                :alt="membro.nome" class="membro-foto" />
-                            <div v-else class="membro-avatar-fallback"
-                                :style="{ backgroundColor: obterCorAvatar(membro.id) }">
-                                {{ obterIniciais(membro.nome) }}
-                            </div>
-
-                            <div class="membro-info">
-                                <h4 class="membro-nome">{{ membro.nome }}</h4>
-                                <p class="membro-sub">
-                                    {{ membro.id === comunidade.criador_id ? 'Moderador(a)' : 'Membro' }} • {{
-                                        membro.quantidade_receitas }} receitas
-                                </p>
+                        <div class="banner-info-bottom">
+                            <h1 class="comunidade-titulo">{{ comunidade.nome }}</h1>
+                            <div class="comunidade-stats">
+                                <span class="stat-item-capa">
+                                    <img src="/iconPaginas/comunidade_icon_cinza.png" alt="Membros"
+                                        class="icone-estendido-marrom" />
+                                    {{ comunidade.quantidade_pessoas }} membros
+                                </span>
+                                <span class="stat-item-capa">
+                                    <img src="/icon_fileira.png" alt="Receitas" class="icone-estendido-marrom" />
+                                    {{ comunidade.quantidade_receitas }} receitas
+                                </span>
                             </div>
                         </div>
+                    </div>
+                </header>
 
-                        <div v-if="membro.id === comunidade.criador_id" class="badge-mod">
-                            MOD
+                <main class="conteudo-principal">
+                    <p class="comunidade-descricao">{{ comunidade.descricao }}</p>
+
+                    <div class="membros-avatares-row" v-if="comunidade.participantes.length > 0">
+                        <div class="avatares-stack">
+                            <div v-for="(membro, idx) in primeirosMembros" :key="membro.id" class="avatar-circle-wrapper" @click="abrirPerfilMembro(membro.id)">
+                                <img v-if="membro.foto_url && membro.foto_url.trim() !== ''" :src="membro.foto_url"
+                                    :alt="membro.nome" class="avatar-img-stack" />
+                                <div v-else class="avatar-circle" :style="{ backgroundColor: obterCorAvatar(idx) }">
+                                    {{ obterIniciais(membro.nome) }}
+                                </div>
+                            </div>
+                        </div>
+                        <span class="membros-restantes-text" v-if="membrosRestantesCount > 0">
+                            +{{ membrosRestantesCount }} outros membros
+                        </span>
+                    </div>
+
+                    <div class="denunciar-row" v-if="!ehCriador">
+                        <button class="btn-denunciar" @click="abrirModalDenuncia">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                                <line x1="4" y1="22" x2="4" y2="15"></line>
+                            </svg>
+                            Denunciar
+                        </button>
+                    </div>
+
+                    <div class="acoes-comunidade-row">
+                        <template v-if="!ehCriador">
+                            <button
+                                type="button"
+                                class="btn-acao-participacao"
+                                :class="{ 'participando': ehParticipante }"
+                                :disabled="processandoParticipacao"
+                                @click="alternarParticipacao"
+                            >
+                                {{
+                                    processandoParticipacao
+                                        ? 'Atualizando...'
+                                        : (ehParticipante ? 'Sair da comunidade' : 'Participar da comunidade')
+                                }}
+                            </button>
+                        </template>
+
+                        <template v-else>
+                            <div class="criador-badge-info">
+                                <span>Você é o moderador / criador desta comunidade</span>
+                            </div>
+                        </template>
+
+                        <button class="btn-share-icon" title="Compartilhar" @click="compartilhar">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                                <polyline points="16 6 12 2 8 6"></polyline>
+                                <line x1="12" y1="2" x2="12" y2="15"></line>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="abas-container">
+                        <button class="aba-btn" :class="{ active: abaAtiva === 'receitas' }" @click="abaAtiva = 'receitas'">
+                            <img src="/icon_fileira.png" alt="Receitas" class="icone-aba" />
+                            Receitas
+                        </button>
+                        <button class="aba-btn" :class="{ active: abaAtiva === 'membros' }" @click="abaAtiva = 'membros'">
+                            <img src="/iconPaginas/comunidade_icon_cinza.png" alt="Membros" class="icone-aba" />
+                            Membros
+                        </button>
+                    </div>
+
+                    <div v-if="ehCriador" class="btn-editar-wrapper">
+                        <button class="btn-editar-comunidade" @click="irParaEdicao">
+                            ✏️ㅤEditar comunidade
+                        </button>
+                        <button
+                            class="btn-excluir-comunidade"
+                            :disabled="excluindoComunidade"
+                            @click="confirmarExclusaoComunidade"
+                        >
+                            {{ excluindoComunidade ? 'Excluindo...' : '🗑️ㅤExcluir comunidade' }}
+                        </button>
+                    </div>
+
+                    <div v-if="abaAtiva === 'receitas'" class="lista-receitas-grid">
+                        <RecipeCard v-for="rec in receitasComunidade" :key="rec.id" :id="rec.id" :imagemUrl="rec.imagem_url"
+                            :titulo="rec.titulo" :tempo="rec.tempo" :porcoes="String(rec.porcoes)" :custo="rec.custo"
+                            :curtidas="rec.curtidas" :comentarios="rec.comentarios" :autorNome="rec.autor_nome"
+                            :authorIniciais="obterIniciais(rec.autor_nome)" :dificuldade="rec.dificuldade"
+                            v-model:salvo="rec.salvo" @click="irParaReceita(rec.id)" />
+                        <div v-if="receitasComunidade.length === 0" class="sem-resultados">
+                            <p>Nenhuma receita cadastrada nesta comunidade ainda.</p>
                         </div>
                     </div>
-                </div>
-            </main>
+
+                    <div v-else-if="abaAtiva === 'membros'" class="lista-membros-vertical">
+                        <div v-for="membro in comunidade.participantes" :key="membro.id" class="membro-card-item" @click="abrirPerfilMembro(membro.id)">
+                            <div class="membro-left">
+                                <img v-if="membro.foto_url && membro.foto_url.trim() !== ''" :src="membro.foto_url"
+                                    :alt="membro.nome" class="membro-foto" />
+                                <div v-else class="membro-avatar-fallback"
+                                    :style="{ backgroundColor: obterCorAvatar(membro.id) }">
+                                    {{ obterIniciais(membro.nome) }}
+                                </div>
+
+                                <div class="membro-info">
+                                    <h4 class="membro-nome">{{ membro.nome }}</h4>
+                                    <p class="membro-sub">
+                                        {{ Number(membro.id) === Number(comunidade.criador_id) ? 'Moderador(a)' : 'Membro' }} • {{
+                                            membro.quantidade_receitas }} receitas
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div v-if="Number(membro.id) === Number(comunidade.criador_id)" class="badge-mod">
+                                MOD
+                            </div>
+                        </div>
+
+                        <div v-if="comunidade.participantes.length === 0" class="sem-resultados">
+                            <p>Nenhum membro listado nesta comunidade ainda.</p>
+                        </div>
+                    </div>
+                </main>
+            </template>
         </div>
 
         <ReportModal :isOpen="modalDenunciaAberto" tipo="comunidade" :targetId="comunidade.id"
@@ -144,42 +174,53 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
 import ReportModal from '@/components/ReportModal.vue';
 import RecipeCard from '@/components/RecipeCard.vue';
+import {
+    getBuscarComunidade,
+    getReceitasDaComunidade,
+    postEntrarComunidade,
+    deleteSairComunidade,
+    deleteComunidade,
+    obterIdUsuarioLogado
+} from '@/services/comunidades';
 
 const router = useRouter();
 const route = useRoute();
 
-const abaAtiva = ref('membros');
+const abaAtiva = ref('receitas');
 const modalDenunciaAberto = ref(false);
+const carregando = ref(false);
+const erroApi = ref('');
+const processandoParticipacao = ref(false);
+const excluindoComunidade = ref(false);
 
-const usuarioAtualId = ref(2);
+const usuarioAtualId = ref(null);
+const ehParticipante = ref(false);
+
+const BANNER_FALLBACK = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1200';
 
 const comunidade = ref({
-    id: route.params.id || 1,
-    nome: 'Veganos Criativos',
-    descricao: 'Receitas plant-based deliciosas para mostrar que vegano não come só salada! 🌱',
-    banner_url: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1200',
-    quantidade_pessoas: '12.4k',
-    quantidade_receitas: '3.2k',
-    criador_id: 1,
-    participantes: [
-        { id: 1, nome: 'Mariana Lima', foto_url: '', quantidade_receitas: 89 },
-        { id: 2, nome: 'Ana Costa', foto_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', quantidade_receitas: 47 },
-        { id: 3, nome: 'Pedro Souza', foto_url: '', quantidade_receitas: 21 },
-        { id: 4, nome: 'Beatriz Alves', foto_url: '', quantidade_receitas: 63 },
-        { id: 5, nome: 'Carlos Ferreira', foto_url: '', quantidade_receitas: 22 },
-        { id: 101, nome: 'Matheus Henry', foto_url: '', quantidade_receitas: 12 }
-    ]
+    id: Number(route.params.id) || 0,
+    nome: '',
+    descricao: '',
+    banner_url: BANNER_FALLBACK,
+    foto_url: '',
+    quantidade_pessoas: 0,
+    quantidade_receitas: 0,
+    criador_id: null,
+    participantes: []
 });
 
-const ehParticipante = ref(true);
+const receitasComunidade = ref([]);
 
 const ehCriador = computed(() => {
-    return usuarioAtualId.value === comunidade.value.criador_id;
+    return Boolean(usuarioAtualId.value) &&
+        Boolean(comunidade.value.criador_id) &&
+        Number(usuarioAtualId.value) === Number(comunidade.value.criador_id);
 });
 
 const primeirosMembros = computed(() => {
@@ -191,34 +232,122 @@ const membrosRestantesCount = computed(() => {
     return total > 5 ? total - 5 : 0;
 });
 
-const receitasComunidade = ref([
-    {
-        id: 101,
-        titulo: 'Pão de Queijo Mineiro',
-        dificuldade: 'Fácil',
-        autor_nome: 'Carlos Ferreira',
-        tempo: '35min',
-        porcoes: 3,
-        custo: 'Econômico',
-        curtidas: 756,
-        comentarios: 54,
-        salvo: false,
-        imagem_url: 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=600'
-    },
-    {
-        id: 102,
-        titulo: 'Risoto de Cogumelos Selvagens',
-        dificuldade: 'Médio',
-        autor_nome: 'Mariana Lima',
-        tempo: '45min',
-        porcoes: 2,
-        custo: 'Moderado',
-        curtidas: 1240,
-        comentarios: 98,
-        salvo: true,
-        imagem_url: 'https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=600'
+const extrairLista = (res) => {
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.response?.dados)) return res.response.dados;
+    if (Array.isArray(res?.response)) return res.response;
+    if (Array.isArray(res?.dados)) return res.dados;
+    return [];
+};
+
+const formatarTempoReceita = (tempo) => {
+    if (!tempo) return '30min';
+    if (typeof tempo === 'number') return `${tempo}min`;
+    const str = String(tempo);
+    if (str.includes('min') || str.includes('h')) return str;
+    const partes = str.split(':').map(Number);
+    if (partes.length >= 2 && !isNaN(partes[0]) && !isNaN(partes[1])) {
+        const totalMin = (partes[0] * 60) + partes[1];
+        return `${totalMin}min`;
     }
-]);
+    return str;
+};
+
+const normalizarReceita = (rec) => ({
+    id: Number(rec.id),
+    titulo: rec.titulo || 'Receita',
+    dificuldade: rec.dificuldade || rec.nivel_dificuldade || 'Fácil',
+    autor_nome: rec.autor_nome || rec.nome_usuario || rec.usuario?.nome || rec.autor || 'Chef',
+    tempo: formatarTempoReceita(rec.tempo),
+    porcoes: rec.porcoes || rec.quantidade_porcoes || rec.id_porcao || 1,
+    custo: rec.custo || 'Econômico',
+    curtidas: Number(rec.curtidas ?? rec.total_curtidas ?? 0),
+    comentarios: Number(rec.comentarios ?? rec.total_comentarios ?? 0),
+    salvo: Boolean(rec.salvo),
+    imagem_url: rec.imagem_url || rec.foto || ''
+});
+
+const carregarDetalhesComunidade = async (idParam) => {
+    const id = Number(idParam);
+    if (!id) return;
+
+    carregando.value = true;
+    erroApi.value = '';
+
+    try {
+        usuarioAtualId.value = await obterIdUsuarioLogado();
+
+        const [comRes, recRes] = await Promise.all([
+            getBuscarComunidade(id),
+            getReceitasDaComunidade(id, { limite: 50 }).catch(() => null)
+        ]);
+
+        const dados = comRes?.response?.dados || comRes?.response || comRes?.dados || comRes;
+
+        if (!dados || !dados.nome) {
+            throw new Error('Comunidade não encontrada.');
+        }
+
+        const listaParticipantesRaw = Array.isArray(dados.participantes)
+            ? dados.participantes
+            : (Array.isArray(dados.membros) ? dados.membros : []);
+
+        const participantesNormalizados = listaParticipantesRaw.map(m => ({
+            id: Number(m.id || m.id_usuario),
+            nome: m.nome || 'Membro',
+            foto_url: m.foto_url || m.foto || '',
+            quantidade_receitas: Number(m.quantidade_receitas ?? m.total_receitas ?? 0)
+        }));
+
+        const criadorId = Number(
+            dados.criador_id ||
+            dados.id_usuario ||
+            dados.id_criador ||
+            dados.criador?.id ||
+            0
+        );
+
+        const listaReceitas = extrairLista(recRes).map(normalizarReceita);
+        receitasComunidade.value = listaReceitas;
+
+        comunidade.value = {
+            id: Number(dados.id || id),
+            nome: dados.nome,
+            descricao: dados.descricao || '',
+            banner_url: dados.banner_url || dados.banner || dados.foto_capa || dados.foto_url || BANNER_FALLBACK,
+            foto_url: dados.foto_url || dados.foto || dados.icone || '',
+            quantidade_pessoas: dados.quantidade_pessoas ?? dados.total_membros ?? participantesNormalizados.length,
+            quantidade_receitas: dados.quantidade_receitas ?? dados.total_receitas ?? listaReceitas.length,
+            criador_id: criadorId,
+            participantes: participantesNormalizados
+        };
+
+        const estaNaLista = usuarioAtualId.value
+            ? participantesNormalizados.some(p => Number(p.id) === Number(usuarioAtualId.value))
+            : false;
+
+        ehParticipante.value = Boolean(dados.participa || dados.eh_membro || dados.participando || estaNaLista);
+    } catch (erro) {
+        console.error('Erro ao carregar detalhes da comunidade:', erro);
+        erroApi.value = erro.message || 'Erro ao carregar os detalhes da comunidade.';
+    } finally {
+        carregando.value = false;
+    }
+};
+
+onMounted(() => {
+    carregarDetalhesComunidade(route.params.id);
+});
+
+watch(
+    () => route.params.id,
+    (novoId) => {
+        if (novoId) {
+            carregarDetalhesComunidade(novoId);
+        }
+    }
+);
 
 const abrirPerfilMembro = (membroId) => {
     router.push({ path: '/others-perfil', query: { id: membroId } });
@@ -243,12 +372,44 @@ const obterIniciais = (nome) => {
 
 const coresAvatar = ['#BFE3D5', '#FCE3B4', '#FCD2D1', '#D4E3FC', '#E3D4FC'];
 const obterCorAvatar = (index) => {
-    return coresAvatar[index % coresAvatar.length];
+    return coresAvatar[Number(index) % coresAvatar.length];
 };
 
-const alternarParticipacao = () => {
-    if (ehCriador.value) return;
-    ehParticipante.value = !ehParticipante.value;
+const alternarParticipacao = async () => {
+    if (ehCriador.value || processandoParticipacao.value) return;
+
+    if (!usuarioAtualId.value) {
+        router.push('/login');
+        return;
+    }
+
+    processandoParticipacao.value = true;
+
+    try {
+        if (ehParticipante.value) {
+            await deleteSairComunidade(comunidade.value.id);
+            ehParticipante.value = false;
+            comunidade.value.participantes = comunidade.value.participantes.filter(
+                p => Number(p.id) !== Number(usuarioAtualId.value)
+            );
+            if (typeof comunidade.value.quantidade_pessoas === 'number') {
+                comunidade.value.quantidade_pessoas = Math.max(0, comunidade.value.quantidade_pessoas - 1);
+            }
+        } else {
+            await postEntrarComunidade(comunidade.value.id);
+            ehParticipante.value = true;
+            if (typeof comunidade.value.quantidade_pessoas === 'number') {
+                comunidade.value.quantidade_pessoas += 1;
+            }
+            // Recarrega para trazer os dados atualizados do usuário na lista de membros
+            await carregarDetalhesComunidade(comunidade.value.id);
+        }
+    } catch (erro) {
+        console.error('Erro ao alterar participação na comunidade:', erro);
+        alert(erro.message || 'Não foi possível atualizar sua participação.');
+    } finally {
+        processandoParticipacao.value = false;
+    }
 };
 
 const irParaEdicao = () => {
@@ -258,11 +419,31 @@ const irParaEdicao = () => {
     });
 };
 
+const confirmarExclusaoComunidade = async () => {
+    if (!ehCriador.value || excluindoComunidade.value) return;
+
+    const confirmou = window.confirm(
+        `Tem certeza que deseja excluir a comunidade "${comunidade.value.nome}"? Essa ação não pode ser desfeita.`
+    );
+    if (!confirmou) return;
+
+    excluindoComunidade.value = true;
+    try {
+        await deleteComunidade(comunidade.value.id);
+        router.push('/comunidade');
+    } catch (erro) {
+        console.error('Erro ao excluir comunidade:', erro);
+        alert(erro.message || 'Não foi possível excluir a comunidade.');
+    } finally {
+        excluindoComunidade.value = false;
+    }
+};
+
 const abrirModalDenuncia = () => {
     modalDenunciaAberto.value = true;
 };
 
-const tratarEnvioDenuncia = (dadosDenuncia) => {
+const tratarEnvioDenuncia = () => {
     modalDenunciaAberto.value = false;
 };
 
@@ -467,6 +648,11 @@ const compartilhar = () => {
     color: var(--verde-escuro, #2E6F59);
 }
 
+.btn-acao-participacao:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
 .btn-share-icon {
     width: 44px;
     height: 44px;
@@ -525,6 +711,9 @@ const compartilhar = () => {
 }
 
 .btn-editar-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 16px;
 }
 
@@ -537,6 +726,22 @@ const compartilhar = () => {
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
+}
+
+.btn-excluir-comunidade {
+    background-color: #FFF5F5;
+    border: 1px solid #F5C2C7;
+    color: #BC0B27;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-excluir-comunidade:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
 }
 
 .lista-membros-vertical {

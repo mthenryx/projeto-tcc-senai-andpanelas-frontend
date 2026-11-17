@@ -5,13 +5,6 @@
         <main class="chat-main-area">
             <header class="chat-header">
                 <div class="chefe-info">
-                    <button class="back-btn" @click="voltar" aria-label="Voltar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="19" y1="12" x2="5" y2="12"></line>
-                            <polyline points="12 19 5 12 12 5"></polyline>
-                        </svg>
-                    </button>
                     <div class="chefe-avatar-header">
                         <img src="/icon chefinho.png" alt="Chefinho IA" />
                     </div>
@@ -210,14 +203,14 @@ const obterIdUsuarioLogado = async () => {
         const dadosUsuario = res?.response?.dados || res?.dados || res;
 
         if (dadosUsuario?.id) {
-            authService.setUser({ ...(usuarioSalvo || {}), ...dadosUsuario });
+            authService.setUser({ ...usuarioSalvo, ...dadosUsuario });
             localStorage.setItem('id_usuario', String(dadosUsuario.id));
             return Number(dadosUsuario.id);
         }
     } catch {
         const idToken = extrairIdDoToken(authService.getToken());
         if (idToken) {
-            authService.setUser({ ...(usuarioSalvo || {}), id: Number(idToken) });
+            authService.setUser({ ...usuarioSalvo, id: Number(idToken) });
             localStorage.setItem('id_usuario', String(idToken));
             return Number(idToken);
         }
@@ -396,10 +389,6 @@ const excluirConversa = async (id) => {
     } catch (error) {
         erroApi.value = error.message || 'Não foi possível excluir a conversa.';
     }
-};
-
-const voltar = () => {
-    history.back();
 };
 
 onMounted(() => {

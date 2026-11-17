@@ -34,7 +34,7 @@
                                 :class="{ 'selected': motivoSelecionado === motivo }">
                                 <span>{{ motivo }}</span>
                                 <input type="radio" name="motivo" :value="motivo" v-model="motivoSelecionado"
-                                    @change="erroMotivo = false" />
+                                    @change="aoSelecionarMotivo" />
                                 <span class="custom-radio"></span>
                             </label>
                         </div>
@@ -46,11 +46,20 @@
                 <div class="right-col">
                     <div class="textarea-section">
                         <div class="textarea-header">
-                            <label>Detalhes adicionais <span>(opcional)</span></label>
+                            <label>
+                                Detalhes adicionais
+                                <span v-if="!isOutroMotivo">(opcional)</span>
+                                <span v-else class="required-label">(obrigatório)</span>
+                            </label>
                             <span class="char-count">{{ detalhes.length }}/200</span>
                         </div>
                         <textarea v-model="detalhes" maxlength="200"
-                            placeholder="Conte brevemente o que aconteceu..."></textarea>
+                            :class="{ 'textarea-erro': erroDetalhes }"
+                            :placeholder="isOutroMotivo ? 'Descreva o motivo da denúncia...' : 'Conte brevemente o que aconteceu...'"
+                            @input="erroDetalhes = false"></textarea>
+                        <span v-if="erroDetalhes" class="error-msg">
+                            Por favor, informe os detalhes da denúncia ao selecionar "Outro motivo".
+                        </span>
                     </div>
 
                     <div class="info-box">
@@ -113,7 +122,10 @@ const emit = defineEmits(['close', 'send']);
 const motivoSelecionado = ref('');
 const detalhes = ref('');
 const erroMotivo = ref(false);
+const erroDetalhes = ref(false);
 const enviado = ref(false);
+
+const isOutroMotivo = computed(() => motivoSelecionado.value === 'Outro motivo');
 
 const tipoTexto = computed(() => {
     switch (props.tipo) {
@@ -134,9 +146,21 @@ const listaMotivos = [
     'Outro motivo'
 ];
 
+const aoSelecionarMotivo = () => {
+    erroMotivo.value = false;
+    if (!isOutroMotivo.value) {
+        erroDetalhes.value = false;
+    }
+};
+
 const enviarDenuncia = async () => {
     if (!motivoSelecionado.value) {
         erroMotivo.value = true;
+        return;
+    }
+
+    if (isOutroMotivo.value && !detalhes.value.trim()) {
+        erroDetalhes.value = true;
         return;
     }
 
@@ -144,7 +168,7 @@ const enviarDenuncia = async () => {
     const base = {
         id_usuario: idUsuario,
         motivo: motivoSelecionado.value,
-        detalhe: detalhes.value
+        detalhe: detalhes.value.trim()
     };
 
     try {
@@ -169,6 +193,7 @@ const fechar = () => {
         motivoSelecionado.value = '';
         detalhes.value = '';
         erroMotivo.value = false;
+        erroDetalhes.value = false;
         enviado.value = false;
     }, 200);
 };
@@ -375,6 +400,11 @@ const fechar = () => {
     font-weight: 400;
 }
 
+.textarea-header .required-label {
+    color: #D32F2F;
+    font-weight: 600;
+}
+
 .char-count {
     font-size: 12px;
     color: #8C827A;
@@ -393,6 +423,7 @@ textarea {
     resize: none;
     outline: none;
     background-color: #FFFFFF;
+    transition: border-color 0.2s;
 }
 
 textarea::placeholder {
@@ -401,6 +432,11 @@ textarea::placeholder {
 
 textarea:focus {
     border-color: #C0B7B1;
+}
+
+textarea.textarea-erro {
+    border-color: #D32F2F !important;
+    background-color: #FFFDFD;
 }
 
 .info-box {

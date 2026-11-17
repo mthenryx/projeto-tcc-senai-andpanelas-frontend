@@ -1,10 +1,9 @@
 import { authService } from './authService'
 
 const url = `${import.meta.env.VITE_API_URL}/conversas`
-
 const urlSugestao = `${import.meta.env.VITE_API_URL}/receita/busca/sugestao`
 
-async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackError } = {}) {
+async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackError, baseUrl = url } = {}) {
   const token = jwt || authService.getToken()
   const headers = {}
 
@@ -14,11 +13,13 @@ async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackErro
   const options = { method, headers }
   if (dados !== undefined) options.body = JSON.stringify(dados)
 
-  const response = await fetch(`${url}${endpoint}`, options)
+  const response = await fetch(`${baseUrl}${endpoint}`, options)
   const data = await response.json().catch(() => null)
 
-  if (!response.ok || (data && data.status === false)) {
-    throw new Error(data?.message || fallbackError)
+  if (!response.ok || (data && (data.status === false || data.success === false))) {
+    const error = new Error(data?.message || fallbackError)
+    error.status = response.status
+    throw error
   }
 
   return data ?? true
@@ -62,5 +63,22 @@ export async function postMensagemChefinho(id, dados, jwt) {
     dados,
     jwt,
     fallbackError: 'Erro ao enviar a mensagem para o Chefinho!'
+  })
+}
+
+export async function postSugestaoBuscaReceita(dados, jwt) {
+  const payload = {
+    pesquisa_usuario: dados?.pesquisa_usuario ?? '',
+    encontrados_db: Array.isArray(dados?.encontrados_db)
+      ? dados.encontrados_db.slice(0, 50)
+      : []
+  }
+
+  return request('', {
+    method: 'POST',
+    dados: payload,
+    jwt,
+    baseUrl: urlSugestao,
+    fallbackError: 'Erro ao buscar sugestão de receita com o Chefinho!'
   })
 }

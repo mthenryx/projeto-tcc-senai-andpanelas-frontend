@@ -14,14 +14,20 @@
                         </svg>
                     </button>
                     <div class="header-titles">
-                        <h2>Nova Receita</h2>
+                        <h2>{{ isModoEdicao ? 'Editar Receita' : 'Nova Receita' }}</h2>
                         <p>Etapa {{ etapaAtual }} de 3</p>
                     </div>
                 </div>
             </header>
 
             <div class="conteudo">
-                <div class="form-container" v-if="!sucessoPublicacao">
+                <div v-if="carregandoInicial" class="form-container loading-box">
+                    <p class="loading-text">
+                        {{ isModoEdicao ? 'Carregando dados da receita...' : 'Carregando opções do formulário...' }}
+                    </p>
+                </div>
+
+                <div class="form-container" v-else-if="!sucessoPublicacao">
 
                     <div class="progress-bar-container">
                         <div class="progress-segment" :class="{ active: etapaAtual >= 1 }"></div>
@@ -29,10 +35,15 @@
                         <div class="progress-segment" :class="{ active: etapaAtual >= 3 }"></div>
                     </div>
 
+                    <div v-if="erroApi" class="api-error-banner">
+                        {{ erroApi }}
+                    </div>
+
                     <div v-if="etapaAtual === 1" class="etapa-content">
                         <h3 class="section-title">Informações da receita</h3>
 
-                        <div class="upload-box" @click="dispararInputFoto" :class="{ 'error-upload-box': erros.foto, 'has-file': previewFoto }">
+                        <div class="upload-box" @click="dispararInputFoto"
+                            :class="{ 'error-upload-box': erros.foto, 'has-file': previewFoto }">
                             <input type="file" ref="fileFotoRef" accept="image/*" @change="tratarUploadFoto"
                                 style="display: none;" />
                             <div v-if="!previewFoto" class="upload-placeholder">
@@ -42,7 +53,9 @@
                             </div>
                             <div v-else class="preview-container">
                                 <img :src="previewFoto" alt="Pré-visualização da foto" class="preview-media" />
-                                <span class="change-overlay">Alterar foto</span>
+                                <span class="change-overlay">
+                                    {{ enviandoFoto ? 'Enviando foto...' : 'Alterar foto' }}
+                                </span>
                             </div>
                         </div>
 
@@ -56,7 +69,9 @@
                             </div>
                             <div v-else class="preview-container video-preview">
                                 <video :src="previewVideo" class="preview-media" controls></video>
-                                <span class="change-overlay">Alterar vídeo</span>
+                                <span class="change-overlay">
+                                    {{ enviandoVideo ? 'Enviando vídeo...' : 'Alterar vídeo' }}
+                                </span>
                             </div>
                         </div>
 
@@ -64,22 +79,26 @@
                             <label class="input-label">Nome da receita <span class="required">*</span></label>
                             <input type="text" v-model="form.titulo" class="text-input"
                                 :class="{ 'error-input': erros.titulo }"
-                                placeholder="Ex: Bolo de Cenoura com Brigadeiro" @input="erros.titulo = false" maxlength="50"/>
+                                placeholder="Ex: Bolo de Cenoura com Brigadeiro" @input="erros.titulo = false"
+                                maxlength="50" />
                         </div>
 
                         <div class="input-group">
-                            <label class="input-label">Descrição</label>
-                            <textarea v-model="form.descricao" class="textarea-input" :class="{ 'error-input': erros.descricao }" rows="3"
-                                placeholder="Conte um pouco sobre essa receita..." @input="erros.descricao = false" maxlength="200"></textarea>
+                            <label class="input-label">Descrição <span class="required">*</span></label>
+                            <textarea v-model="form.descricao" class="textarea-input"
+                                :class="{ 'error-input': erros.descricao }" rows="3"
+                                placeholder="Conte um pouco sobre essa receita..." @input="erros.descricao = false"
+                                maxlength="200"></textarea>
                         </div>
 
                         <div class="input-group">
                             <label class="input-label">Categoria <span class="required">*</span></label>
                             <div class="categories-chips-row">
-                                <button type="button" v-for="cat in categoriasDisponiveis" :key="cat" class="cat-chip"
-                                    :class="{ active: form.categoria === cat, 'error-border': erros.categoria && !form.categoria }"
-                                    @click="selecionarCategoria(cat)">
-                                    {{ cat }}
+                                <button type="button" v-for="cat in categoriasDisponiveis" :key="cat.id"
+                                    class="cat-chip"
+                                    :class="{ active: form.categoriaId === cat.id, 'error-border': erros.categoria && !form.categoriaId }"
+                                    @click="selecionarCategoria(cat.id)">
+                                    {{ cat.nome }}
                                 </button>
                             </div>
                         </div>
@@ -87,16 +106,18 @@
                         <div class="row-dupla">
                             <div class="input-group flex-1">
                                 <label class="input-label">Dificuldade <span class="required">*</span></label>
-                                <select v-model="form.dificuldade" class="select-input">
-                                    <option v-for="dif in dificuldadesDisponiveis" :key="dif" :value="dif">{{ dif }}
+                                <select v-model.number="form.id_dificuldade" class="select-input">
+                                    <option v-for="dif in dificuldadesDisponiveis" :key="dif.id" :value="dif.id">
+                                        {{ dif.nome }}
                                     </option>
                                 </select>
                             </div>
 
                             <div class="input-group flex-1">
                                 <label class="input-label">Custo estimado <span class="required">*</span></label>
-                                <select v-model="form.custo" class="select-input">
-                                    <option v-for="custo in custosDisponiveis" :key="custo" :value="custo">{{ custo }}
+                                <select v-model.number="form.id_custo" class="select-input">
+                                    <option v-for="custo in custosDisponiveis" :key="custo.id" :value="custo.id">
+                                        {{ custo.nome }}
                                     </option>
                                 </select>
                             </div>
@@ -111,15 +132,17 @@
 
                             <div class="input-group flex-1">
                                 <label class="input-label">Porções <span class="required">*</span></label>
-                                <select v-model="form.porcoes" class="select-input">
-                                    <option v-for="porcao in porcoesDisponiveis" :key="porcao" :value="porcao">{{ porcao
-                                        }}</option>
+                                <select v-model.number="form.id_porcao" class="select-input">
+                                    <option v-for="porcao in porcoesDisponiveis" :key="porcao.id" :value="porcao.id">
+                                        {{ porcao.nome }}
+                                    </option>
                                 </select>
                             </div>
                         </div>
 
-                        <button type="button" class="btn-primary-ingrediente" @click="avancarParaEtapa2">
-                            Próximo: Ingredientes →
+                        <button type="button" class="btn-primary-ingrediente" :disabled="enviandoFoto || enviandoVideo"
+                            @click="avancarParaEtapa2">
+                            {{ enviandoFoto || enviandoVideo ? 'Aguarde o envio da mídia...' : 'Próximo: Ingredientes →' }}
                         </button>
                     </div>
 
@@ -127,21 +150,22 @@
                         <h3 class="section-title">Ingredientes</h3>
 
                         <div class="dynamic-list-container">
-                            <div v-for="(ing, index) in form.ingredientes" :key="index" class="dynamic-row">
+                            <div v-for="(ing, index) in form.ingredientes" :key="ing.id || index" class="dynamic-row">
                                 <input type="text" v-model="ing.nome" class="text-input flex-2"
                                     :class="{ 'error-input': erros.ingredientes && !ing.nome.trim() }"
                                     placeholder="Ingrediente" maxlength="35" />
 
-                                <select v-model="ing.unidadeMedida" class="select-input flex-1"
-                                    :class="{ 'error-input': erros.ingredientes && !ing.unidadeMedida }">
-                                    <option value="" disabled selected>Unidade de medida</option>
-                                    <option v-for="uni in unidadesMedidaDisponiveis" :key="uni" :value="uni">
-                                        {{ uni }}
+                                <select v-model.number="ing.id_unidade_medida" class="select-input flex-1"
+                                    :class="{ 'error-input': erros.ingredientes && !ing.id_unidade_medida }">
+                                    <option value="" disabled>Unidade de medida</option>
+                                    <option v-for="uni in unidadesMedidaDisponiveis" :key="uni.id" :value="uni.id">
+                                        {{ uni.nome }}
                                     </option>
                                 </select>
 
-                                <input type="number" v-model.number="ing.quantidade" min="0" max="1000" class="text-input flex-1"
-                                    :class="{ 'error-input': erros.ingredientes && (ing.quantidade === '' || ing.quantidade < 0) }"
+                                <input type="number" v-model.number="ing.quantidade" min="0" max="1000" step="any"
+                                    class="text-input flex-1"
+                                    :class="{ 'error-input': erros.ingredientes && (ing.quantidade === '' || ing.quantidade <= 0) }"
                                     placeholder="Qtd." />
 
                                 <button type="button" class="remove-row-btn" @click="removerIngrediente(index)"
@@ -169,10 +193,11 @@
                         <h3 class="section-title">Modo de preparo</h3>
 
                         <div class="dynamic-list-container">
-                            <div v-for="(passo, index) in form.passos" :key="index" class="dynamic-row passo-row">
+                            <div v-for="(passo, index) in form.passos" :key="passo.id || index"
+                                class="dynamic-row passo-row">
                                 <span class="step-badge-num">{{ index + 1 }}</span>
-                                <textarea v-model="form.passos[index]" class="textarea-input flex-1" rows="2"
-                                    :class="{ 'error-input': erros.passos && !passo.trim() }"
+                                <textarea v-model="passo.metodo_preparo" class="textarea-input flex-1" rows="2"
+                                    :class="{ 'error-input': erros.passos && !passo.metodo_preparo.trim() }"
                                     :placeholder="`Passo ${index + 1}...`" maxlength="250"></textarea>
                                 <button type="button" class="remove-row-btn" @click="removerPasso(index)"
                                     aria-label="Remover">
@@ -189,12 +214,20 @@
                             <label class="input-label">Tags (opcional)</label>
                             <div class="tag-input-row">
                                 <input type="text" v-model="novaTagInput" maxlength="30" class="text-input"
-                                    placeholder="Ex: vegano, rápido..." @keyup.enter="adicionarTag" />
-                                <button type="button" class="btn-add-tag" @click="adicionarTag">+</button>
+                                    placeholder="Ex: CoisasRapidas, Vegano..." @keyup.enter.prevent="adicionarTag()" />
+                                <button type="button" class="btn-add-tag" @click="adicionarTag()">+</button>
                             </div>
+
+                            <div class="suggested-tags-row" v-if="tagsSugeridasFiltradas.length > 0">
+                                <button type="button" v-for="tagSug in tagsSugeridasFiltradas" :key="tagSug.id"
+                                    class="suggested-tag-btn" @click="adicionarTag(tagSug.nome)">
+                                    + #{{ tagSug.nome }}
+                                </button>
+                            </div>
+
                             <div class="chips-tags-list" v-if="form.tags.length > 0">
                                 <span v-for="(tag, idx) in form.tags" :key="idx" class="tag-chip-item">
-                                    {{ tag }} <button type="button" @click="removerTag(idx)">×</button>
+                                    #{{ tag }} <button type="button" @click="removerTag(idx)">×</button>
                                 </span>
                             </div>
                         </div>
@@ -203,17 +236,24 @@
                             <label class="input-label">Relacione a comunidade na qual participa</label>
                             <select v-model="form.comunidadeId" class="select-input">
                                 <option :value="null">Não está relacionado a nenhuma comunidade</option>
-                                <option v-for="com in comunidadesDisponiveis" :key="com.id" :value="com.id">{{ com.nome
-                                    }}</option>
+                                <option v-for="com in comunidadesDisponiveis" :key="com.id" :value="com.id">
+                                    {{ com.nome }}
+                                </option>
                             </select>
                         </div>
 
                         <div class="navigation-buttons-row">
-                            <button type="button" class="btn-secondary" @click="etapaAtual = 2">
+                            <button type="button" class="btn-secondary" :disabled="enviandoReceita"
+                                @click="etapaAtual = 2">
                                 ← Voltar
                             </button>
-                            <button type="button" class="btn-danger-primary" @click="publicarReceita">
-                                Publicar receita
+                            <button type="button" class="btn-danger-primary" :disabled="enviandoReceita"
+                                @click="salvarReceita">
+                                {{
+                                    enviandoReceita
+                                        ? (isModoEdicao ? 'Salvando...' : 'Publicando...')
+                                        : (isModoEdicao ? 'Salvar alterações' : 'Publicar receita')
+                                }}
                             </button>
                         </div>
                     </div>
@@ -225,9 +265,15 @@
                         <img src="/icon_ok.png" alt="Sucesso" class="success-ok-icon" />
                     </div>
 
-                    <h2 class="success-title">Receita publicada!</h2>
+                    <h2 class="success-title">
+                        {{ isModoEdicao ? 'Receita atualizada!' : 'Receita publicada!' }}
+                    </h2>
                     <p class="success-desc">
-                        Sua receita foi compartilhada com a comunidade. Agora é esperar os elogios!
+                        {{
+                            isModoEdicao
+                                ? 'As alterações da sua receita foram salvas com sucesso.'
+                                : 'Sua receita foi compartilhada com a comunidade. Agora é esperar os elogios!'
+                        }}
                     </p>
 
                     <div class="success-actions">
@@ -246,51 +292,98 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, reactive, computed, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
+import { authService } from '@/services/authService';
+import {
+    postReceita,
+    putReceita,
+    getBuscarReceita
+} from '@/services/receitas';
+import {
+    getListarCategorias,
+    getListarTags
+} from '@/services/catalogo';
+import { getListarComunidades } from '@/services/comunidades';
 
 const router = useRouter();
+const route = useRoute();
 
 const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const uploadPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
 
+const receitaIdEdicao = computed(() => {
+    const idParam = route.params.id || route.query.id || route.query.editar;
+    return idParam ? Number(idParam) : null;
+});
+const isModoEdicao = computed(() => Boolean(receitaIdEdicao.value));
+
 const etapaAtual = ref(1);
 const sucessoPublicacao = ref(false);
+const carregandoInicial = ref(false);
+const enviandoReceita = ref(false);
+const enviandoFoto = ref(false);
+const enviandoVideo = ref(false);
+const erroApi = ref('');
+const receitaSalvaId = ref(null);
+const usuarioLogadoId = ref(null);
 
 const fileFotoRef = ref(null);
 const fileVideoRef = ref(null);
 const previewFoto = ref(null);
 const previewVideo = ref(null);
 
-const categoriasDisponiveis = ref(['Café da manhã', 'Almoço', 'Jantar', 'Sobremesa', 'Lanche', 'Sopa', 'Salada', 'Bebida']);
-const dificuldadesDisponiveis = ref(['Fácil', 'Médio', 'Difícil']);
-const custosDisponiveis = ref(['Econômico', 'Moderado', 'Elevado']);
-const porcoesDisponiveis = ref([1, 2, 4, 6, 8, 10, 12]);
-const unidadesMedidaDisponiveis = ref(['g', 'kg', 'ml', 'L', 'Xícara(s)', 'Colher(es) de sopa', 'Colher(es) de chá', 'Unidade(s)', 'Pitada', 'Dente(s)']);
-const comunidadesDisponiveis = ref([
-    { id: 1, nome: 'Cozinha Brasileira' },
-    { id: 2, nome: 'Veganos Criativos' },
-    { id: 3, nome: 'Bolos & Confeitaria' }
-]);
+const DIFICULDADES_PADRAO = [
+    { id: 1, nome: 'Fácil' },
+    { id: 2, nome: 'Médio' },
+    { id: 3, nome: 'Difícil' }
+];
+
+const CUSTOS_PADRAO = [
+    { id: 1, nome: 'Econômico' },
+    { id: 2, nome: 'Moderado' },
+    { id: 3, nome: 'Alto' }
+];
+
+const PORCOES_PADRAO = Array.from({ length: 15 }, (_, idx) => {
+    const qtd = idx + 1;
+    return { id: qtd, nome: qtd === 1 ? '1 porção' : `${qtd} porções` };
+});
+
+const UNIDADES_PADRAO = [
+    { id: 1, nome: 'g' },
+    { id: 2, nome: 'kg' },
+    { id: 3, nome: 'ml' },
+    { id: 4, nome: 'L' },
+    { id: 5, nome: 'un' }
+];
+
+const categoriasDisponiveis = ref([]);
+const dificuldadesDisponiveis = ref([...DIFICULDADES_PADRAO]);
+const custosDisponiveis = ref([...CUSTOS_PADRAO]);
+const porcoesDisponiveis = ref([...PORCOES_PADRAO]);
+const unidadesMedidaDisponiveis = ref([...UNIDADES_PADRAO]);
+const tagsDisponiveis = ref([]);
+const comunidadesDisponiveis = ref([]);
 
 const form = reactive({
     titulo: '',
     descricao: '',
-    categoria: '',
-    dificuldade: 'Fácil',
-    custo: 'Econômico',
+    categoriaId: null,
+    id_dificuldade: 1,
+    id_custo: 1,
     tempo: 30,
-    porcoes: 4,
+    id_porcao: 4,
     fotoUrl: '',
     videoUrl: '',
     ingredientes: [
-        { nome: '', unidadeMedida: '', quantidade: 1 },
-        { nome: '', unidadeMedida: '', quantidade: 1 }
+        { id: null, nome: '', id_unidade_medida: '', quantidade: 1 },
+        { id: null, nome: '', id_unidade_medida: '', quantidade: 1 }
     ],
     passos: [
-        '',
-        ''
+        { id: null, metodo_preparo: '' },
+        { id: null, metodo_preparo: '' }
     ],
     tags: [],
     comunidadeId: null
@@ -303,10 +396,243 @@ const erros = reactive({
     tempo: false,
     foto: false,
     ingredientes: false,
-    passos: false,
+    passos: false
 });
 
 const novaTagInput = ref('');
+
+const tagsSugeridasFiltradas = computed(() => {
+    return tagsDisponiveis.value
+        .filter(t => !form.tags.some(adicionada => adicionada.toLowerCase() === t.nome.toLowerCase()))
+        .slice(0, 10);
+});
+
+const extrairLista = (res) => {
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.response?.dados)) return res.response.dados;
+    if (Array.isArray(res?.response)) return res.response;
+    if (Array.isArray(res?.dados)) return res.dados;
+    if (Array.isArray(res?.categorias)) return res.categorias;
+    if (Array.isArray(res?.tags)) return res.tags;
+    if (Array.isArray(res?.comunidades)) return res.comunidades;
+    if (Array.isArray(res?.data)) return res.data;
+    return [];
+};
+
+const formatarMinutosParaTempo = (totalMinutos) => {
+    const mins = Math.max(1, Number(totalMinutos) || 0);
+    const horas = Math.floor(mins / 60);
+    const restoMinutos = mins % 60;
+    const hh = String(horas).padStart(2, '0');
+    const mm = String(restoMinutos).padStart(2, '0');
+    return `${hh}:${mm}:00`;
+};
+
+const converterTempoParaMinutos = (tempoStr) => {
+    if (!tempoStr) return 30;
+    if (typeof tempoStr === 'number') return tempoStr;
+    const partes = String(tempoStr).split(':').map(Number);
+    if (partes.length >= 2 && !isNaN(partes[0]) && !isNaN(partes[1])) {
+        return (partes[0] * 60) + partes[1];
+    }
+    return 30;
+};
+
+const obterIdUsuarioAtual = () => {
+    const usuarioLocal = authService.getUser?.() || authService.getUsuario?.();
+    const idDireto = usuarioLocal?.id ?? usuarioLocal?.id_usuario ?? usuarioLocal?.usuario?.id;
+    if (idDireto) return Number(idDireto);
+
+    try {
+        for (const chave of ['usuario', 'user', 'userData']) {
+            const salvo = localStorage.getItem(chave);
+            if (salvo) {
+                const parsed = JSON.parse(salvo);
+                const idSalvo = parsed?.id ?? parsed?.id_usuario ?? parsed?.usuario?.id;
+                if (idSalvo) return Number(idSalvo);
+            }
+        }
+    } catch {
+        // ignora erro de parse no localStorage
+    }
+
+    const token = authService.getToken?.();
+    if (token) {
+        try {
+            const payloadBase64 = token.split('.')[1];
+            if (payloadBase64) {
+                const decoded = JSON.parse(atob(payloadBase64));
+                const idToken = decoded?.id || decoded?.id_usuario || decoded?.sub;
+                if (idToken && !isNaN(Number(idToken))) {
+                    return Number(idToken);
+                }
+            }
+        } catch {
+            // ignora caso o token não seja decodificável diretamente
+        }
+    }
+
+    return null;
+};
+
+const carregarOpcoesDaApi = async () => {
+    usuarioLogadoId.value = obterIdUsuarioAtual();
+
+    const [catRes, tagsRes, comRes] = await Promise.all([
+        getListarCategorias().catch(() => null),
+        getListarTags({ limite: 50 }).catch(() => null),
+        getListarComunidades({ limite: 100 }).catch(() => null)
+    ]);
+
+    const listaCategorias = extrairLista(catRes);
+    if (listaCategorias.length > 0) {
+        categoriasDisponiveis.value = listaCategorias.map(c => ({
+            id: Number(c.id),
+            nome: c.categoria || c.nome
+        }));
+    }
+
+    const listaTags = extrairLista(tagsRes);
+    if (listaTags.length > 0) {
+        tagsDisponiveis.value = listaTags
+            .map(t => ({
+                id: t.id,
+                nome: String(t.nome_tag || t.nome || '').replace(/^#+/, '').trim()
+            }))
+            .filter(t => t.nome.length > 0);
+    }
+
+    const listaComunidades = extrairLista(comRes);
+    if (listaComunidades.length > 0) {
+        const possuiFlagParticipacao = listaComunidades.some(
+            c => typeof c.participa === 'boolean' || typeof c.eh_membro === 'boolean'
+        );
+        const filtradas = possuiFlagParticipacao
+            ? listaComunidades.filter(c => c.participa === true || c.eh_membro === true)
+            : listaComunidades;
+
+        comunidadesDisponiveis.value = filtradas.map(c => ({
+            id: Number(c.id),
+            nome: c.nome
+        }));
+    }
+};
+
+const preencherFormularioParaEdicao = async (id) => {
+    try {
+        if (!usuarioLogadoId.value) {
+            router.replace('/login');
+            return;
+        }
+
+        const res = await getBuscarReceita(id);
+        const receita = res?.response?.dados || res?.response || res?.dados || res;
+
+        if (!receita || !receita.titulo) {
+            throw new Error('Não foi possível carregar os dados desta receita.');
+        }
+
+        const donoReceitaId = Number(receita.id_usuario || receita.usuario?.id);
+        if (donoReceitaId && donoReceitaId !== Number(usuarioLogadoId.value)) {
+            router.replace(`/receita/${id}`);
+            return;
+        }
+
+        form.titulo = receita.titulo || '';
+        form.descricao = receita.descricao || '';
+        form.fotoUrl = receita.foto || '';
+        previewFoto.value = receita.foto || null;
+        form.videoUrl = receita.video || '';
+        previewVideo.value = receita.video || null;
+        form.tempo = converterTempoParaMinutos(receita.tempo);
+
+        if (receita.id_dificuldade) form.id_dificuldade = Number(receita.id_dificuldade);
+        if (receita.id_custo) form.id_custo = Number(receita.id_custo);
+        if (receita.id_porcao) form.id_porcao = Number(receita.id_porcao);
+        if (receita.id_usuario && !usuarioLogadoId.value) {
+            usuarioLogadoId.value = Number(receita.id_usuario);
+        }
+
+        const catsReceita = receita.categorias || receita.categoria || [];
+        if (Array.isArray(catsReceita) && catsReceita.length > 0) {
+            const primeira = catsReceita[0];
+            if (typeof primeira === 'object' && primeira !== null && primeira.id) {
+                form.categoriaId = Number(primeira.id);
+            } else if (typeof primeira === 'string') {
+                const encontrada = categoriasDisponiveis.value.find(
+                    c => c.nome.toLowerCase() === primeira.toLowerCase()
+                );
+                if (encontrada) form.categoriaId = encontrada.id;
+            }
+        } else if (receita.id_categoria) {
+            form.categoriaId = Number(receita.id_categoria);
+        }
+
+        const comReceita = receita.comunidade || receita.comunidades;
+        if (Array.isArray(comReceita) && comReceita.length > 0) {
+            const primeiraCom = comReceita[0];
+            form.comunidadeId = typeof primeiraCom === 'object' ? Number(primeiraCom.id) : Number(primeiraCom);
+        } else if (comReceita && typeof comReceita === 'object' && comReceita.id) {
+            form.comunidadeId = Number(comReceita.id);
+        } else if (receita.id_comunidade) {
+            form.comunidadeId = Number(receita.id_comunidade);
+        } else {
+            form.comunidadeId = null;
+        }
+
+        if (Array.isArray(receita.tags)) {
+            form.tags = receita.tags
+                .map(t => (typeof t === 'string' ? t : (t.nome_tag || t.nome || '')))
+                .map(t => t.replace(/^#+/, '').trim())
+                .filter(Boolean);
+        }
+
+        if (Array.isArray(receita.ingredientes) && receita.ingredientes.length > 0) {
+            form.ingredientes = receita.ingredientes.map(ing => {
+                let unidadeId = ing.id_unidade_medida ? Number(ing.id_unidade_medida) : '';
+                if (!unidadeId && ing.unidade_medida) {
+                    const uniEncontrada = unidadesMedidaDisponiveis.value.find(
+                        u => u.nome.toLowerCase() === String(ing.unidade_medida).toLowerCase()
+                    );
+                    if (uniEncontrada) unidadeId = uniEncontrada.id;
+                }
+                return {
+                    id: ing.id ? Number(ing.id) : null,
+                    nome: ing.nome || '',
+                    id_unidade_medida: unidadeId,
+                    quantidade: ing.quantidade !== undefined ? Number(ing.quantidade) : 1
+                };
+            });
+        }
+
+        if (Array.isArray(receita.modo_preparo) && receita.modo_preparo.length > 0) {
+            const passosOrdenados = [...receita.modo_preparo].sort(
+                (a, b) => (Number(a.ordem_preparo) || 0) - (Number(b.ordem_preparo) || 0)
+            );
+            form.passos = passosOrdenados.map(passo => ({
+                id: passo.id ? Number(passo.id) : null,
+                metodo_preparo: passo.metodo_preparo || ''
+            }));
+        }
+    } catch (erro) {
+        console.error('Erro ao carregar receita para edição:', erro);
+        erroApi.value = erro.message || 'Erro ao carregar os dados da receita para edição.';
+    }
+};
+
+onMounted(async () => {
+    carregandoInicial.value = true;
+    erroApi.value = '';
+    try {
+        await carregarOpcoesDaApi();
+        if (isModoEdicao.value) {
+            await preencherFormularioParaEdicao(receitaIdEdicao.value);
+        }
+    } finally {
+        carregandoInicial.value = false;
+    }
+});
 
 const dispararInputFoto = () => { fileFotoRef.value.click(); };
 const dispararInputVideo = () => { fileVideoRef.value.click(); };
@@ -322,7 +648,7 @@ const enviarParaCloudinary = async (arquivo, tipo) => {
             body: formData
         });
         const data = await response.json();
-        
+
         if (data.secure_url) {
             return data.secure_url;
         }
@@ -340,10 +666,15 @@ const tratarUploadFoto = async (event) => {
 
     previewFoto.value = URL.createObjectURL(arquivo);
     erros.foto = false;
+    enviandoFoto.value = true;
 
-    const urlServidor = await enviarParaCloudinary(arquivo, 'image');
-    if (urlServidor) {
-        form.fotoUrl = urlServidor;
+    try {
+        const urlServidor = await enviarParaCloudinary(arquivo, 'image');
+        if (urlServidor) {
+            form.fotoUrl = urlServidor;
+        }
+    } finally {
+        enviandoFoto.value = false;
     }
 };
 
@@ -352,43 +683,54 @@ const tratarUploadVideo = async (event) => {
     if (!arquivo) return;
 
     previewVideo.value = URL.createObjectURL(arquivo);
+    enviandoVideo.value = true;
 
-    const urlServidor = await enviarParaCloudinary(arquivo, 'video');
-    if (urlServidor) {
-        form.videoUrl = urlServidor;
+    try {
+        const urlServidor = await enviarParaCloudinary(arquivo, 'video');
+        if (urlServidor) {
+            form.videoUrl = urlServidor;
+        }
+    } finally {
+        enviandoVideo.value = false;
     }
 };
 
-const selecionarCategoria = (cat) => {
-    form.categoria = cat;
+const selecionarCategoria = (catId) => {
+    form.categoriaId = catId;
     erros.categoria = false;
 };
 
 const avancarParaEtapa2 = () => {
+    if (enviandoFoto.value || enviandoVideo.value) return;
+
     erros.titulo = !form.titulo.trim();
     erros.descricao = !form.descricao.trim();
-    erros.categoria = !form.categoria;
+    erros.categoria = !form.categoriaId;
     erros.tempo = !form.tempo || form.tempo <= 0;
     erros.foto = !form.fotoUrl;
 
     if (erros.titulo || erros.descricao || erros.categoria || erros.tempo || erros.foto) {
         return;
     }
+    erroApi.value = '';
     etapaAtual.value = 2;
 };
 
 const avancarParaEtapa3 = () => {
-    const temIngredientesInvalidos = form.ingredientes.some(i => !i.nome.trim() || !i.unidadeMedida || i.quantidade === '' || i.quantidade < 0 || i.quantidade > 1000);
+    const temIngredientesInvalidos = form.ingredientes.some(
+        i => !i.nome.trim() || !i.id_unidade_medida || i.quantidade === '' || i.quantidade <= 0 || i.quantidade > 1000
+    );
     erros.ingredientes = temIngredientesInvalidos || form.ingredientes.length === 0;
 
     if (erros.ingredientes) {
         return;
     }
+    erroApi.value = '';
     etapaAtual.value = 3;
 };
 
 const adicionarIngrediente = () => {
-    form.ingredientes.push({ nome: '', unidadeMedida: '', quantidade: 1 });
+    form.ingredientes.push({ id: null, nome: '', id_unidade_medida: '', quantidade: 1 });
 };
 
 const removerIngrediente = (index) => {
@@ -398,7 +740,7 @@ const removerIngrediente = (index) => {
 };
 
 const adicionarPasso = () => {
-    form.passos.push('');
+    form.passos.push({ id: null, metodo_preparo: '' });
 };
 
 const removerPasso = (index) => {
@@ -407,39 +749,120 @@ const removerPasso = (index) => {
     }
 };
 
-const adicionarTag = () => {
-    let t = novaTagInput.value.trim();
+const adicionarTag = (tagSugerida = null) => {
+    let t = (tagSugerida !== null ? tagSugerida : novaTagInput.value).trim();
     if (!t) return;
 
-    t = t.replace(/\s+/g, '');
+    t = t.replace(/^#+/, '').replace(/\s+/g, '');
 
-    if (!t.startsWith('#')) {
-        t = '#' + t;
-    }
-
-    if (t.length > 1 && !form.tags.includes(t)) {
+    if (t.length > 0 && !form.tags.some(existente => existente.toLowerCase() === t.toLowerCase())) {
         form.tags.push(t);
     }
-    novaTagInput.value = '';
+    if (tagSugerida === null) {
+        novaTagInput.value = '';
+    }
 };
 
 const removerTag = (index) => {
     form.tags.splice(index, 1);
 };
 
-const publicarReceita = () => {
-    const temPassosInvalidos = form.passos.some(p => !p.trim());
+const montarPayloadReceita = () => {
+    const ingredientesFormatados = form.ingredientes.map(ing => {
+        const item = {
+            nome: ing.nome.trim(),
+            quantidade: String(ing.quantidade),
+            id_unidade_medida: Number(ing.id_unidade_medida)
+        };
+        if (isModoEdicao.value && ing.id) {
+            item.id = Number(ing.id);
+        }
+        return item;
+    });
+
+    const modoPreparoFormatado = form.passos.map((passo, idx) => {
+        const item = {
+            metodo_preparo: passo.metodo_preparo.trim(),
+            ordem_preparo: idx + 1
+        };
+        if (isModoEdicao.value && passo.id) {
+            item.id = Number(passo.id);
+        }
+        return item;
+    });
+
+    return {
+        titulo: form.titulo.trim(),
+        descricao: form.descricao.trim(),
+        tempo: formatarMinutosParaTempo(form.tempo),
+        foto: form.fotoUrl,
+        video: form.videoUrl || '',
+        id_custo: Number(form.id_custo),
+        id_dificuldade: Number(form.id_dificuldade),
+        id_porcao: Number(form.id_porcao),
+        id_usuario: Number(usuarioLogadoId.value),
+        ingredientes: ingredientesFormatados,
+        modo_preparo: modoPreparoFormatado,
+        categoria: form.categoriaId ? [{ id: Number(form.categoriaId) }] : [],
+        comunidade: form.comunidadeId ? [{ id: Number(form.comunidadeId) }] : [],
+        tags: form.tags.map(tag => ({ nome_tag: tag }))
+    };
+};
+
+const salvarReceita = async () => {
+    const temPassosInvalidos = form.passos.some(p => !p.metodo_preparo.trim());
     erros.passos = temPassosInvalidos || form.passos.length === 0;
 
-    if (erros.passos) {
+    if (erros.passos || enviandoReceita.value) {
         return;
     }
 
-    sucessoPublicacao.value = true;
+    erroApi.value = '';
+
+    if (!usuarioLogadoId.value) {
+        usuarioLogadoId.value = obterIdUsuarioAtual();
+    }
+
+    if (!usuarioLogadoId.value) {
+        erroApi.value = 'Não foi possível identificar o usuário autenticado. Faça login novamente.';
+        return;
+    }
+
+    enviandoReceita.value = true;
+
+    try {
+        const payload = montarPayloadReceita();
+        let res;
+
+        if (isModoEdicao.value) {
+            res = await putReceita(receitaIdEdicao.value, payload);
+            receitaSalvaId.value = receitaIdEdicao.value;
+        } else {
+            res = await postReceita(payload);
+            receitaSalvaId.value =
+                res?.response?.id ||
+                res?.response?.dados?.id ||
+                res?.id ||
+                null;
+        }
+
+        sucessoPublicacao.value = true;
+    } catch (erro) {
+        console.error('Erro ao salvar receita:', erro);
+        erroApi.value = erro.message || (isModoEdicao.value
+            ? 'Erro ao atualizar a receita. Verifique os dados e tente novamente.'
+            : 'Erro ao publicar a receita. Verifique os dados e tente novamente.');
+    } finally {
+        enviandoReceita.value = false;
+    }
 };
 
 const verMinhaReceita = () => {
-    router.push('/home'); 
+    if (receitaSalvaId.value) {
+        router.push(`/receita/${receitaSalvaId.value}`);
+    } else {
+        router.push('/home');
+    }
 };
 
 const irParaFeed = () => {
@@ -450,7 +873,7 @@ const voltarEtapa = () => {
     if (etapaAtual.value > 1) {
         etapaAtual.value--;
     } else {
-        router.push('/home');
+        router.back();
     }
 };
 </script>
@@ -467,6 +890,28 @@ const voltarEtapa = () => {
 .error-upload-box {
     border-color: var(--vermelho) !important;
     background-color: #FFFDFD;
+}
+
+.loading-box {
+    align-items: center;
+    justify-content: center;
+    min-height: 240px;
+}
+
+.loading-text {
+    font-size: 14px;
+    color: var(--cinza);
+    font-weight: 500;
+}
+
+.api-error-banner {
+    background-color: #FDECEA;
+    border: 1px solid #F5C2C7;
+    color: #842029;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
 }
 
 .coluna {
@@ -678,10 +1123,10 @@ const voltarEtapa = () => {
 }
 
 .select-input {
-  appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C827A' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 18px center;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C827A' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 18px center;
 }
 
 .text-input:focus,
@@ -806,6 +1251,28 @@ const voltarEtapa = () => {
     cursor: pointer;
 }
 
+.suggested-tags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.suggested-tag-btn {
+    background-color: #F4F1EB;
+    border: 1px dashed #D8CFC2;
+    border-radius: 12px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: var(--marrom);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.suggested-tag-btn:hover {
+    background-color: #EAE3D5;
+}
+
 .chips-tags-list {
     display: flex;
     gap: 8px;
@@ -888,6 +1355,14 @@ const voltarEtapa = () => {
     font-weight: 600;
     cursor: pointer;
     width: 50%;
+}
+
+.btn-primary:disabled,
+.btn-primary-ingrediente:disabled,
+.btn-secondary:disabled,
+.btn-danger-primary:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
 }
 
 .success-screen-container {

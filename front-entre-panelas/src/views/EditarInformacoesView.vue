@@ -44,7 +44,14 @@
                                 :class="{ 'input-erro': errosCampos.email || erroEmailInvalido }"
                                 @input="tratarMudancaEmail"
                             />
-                            <button type="button" class="botao-alterar-item" @click="solicitarValidacao('email')">Alterar</button>
+                            <button
+                                type="button"
+                                class="botao-alterar-item"
+                                :disabled="enviandoCodigo"
+                                @click="solicitarValidacao('email')"
+                            >
+                                Alterar
+                            </button>
                         </div>
                         <span v-if="erroEmailInvalido" class="texto-erro-input">Por favor, insira um e-mail válido.</span>
                     </div>
@@ -56,14 +63,21 @@
                             <input 
                                 :type="mostrarSenhaTexto ? 'text' : 'password'" 
                                 v-model="dadosAcesso.senha" 
-                                maxlength="15"
-                                :placeholder="senhaOcultaPlaceholder"
+                                maxlength="30"
+                                :placeholder="camposDesbloqueados.senha ? 'Digite a nova senha' : senhaOcultaPlaceholder"
                                 :disabled="!camposDesbloqueados.senha" 
                                 class="input-personalizado" 
                                 :class="{ 'input-erro': errosCampos.senha }"
                                 @input="errosCampos.senha = false"
                             />
-                            <button type="button" class="botao-alterar-item" @click="solicitarValidacao('senha')">Alterar</button>
+                            <button
+                                type="button"
+                                class="botao-alterar-item"
+                                :disabled="enviandoCodigo"
+                                @click="solicitarValidacao('senha')"
+                            >
+                                Alterar
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -87,7 +101,14 @@
                                     :class="{ 'input-erro': errosCampos.dataNascimento || erroIdadeInvalida }"
                                     @change="tratarMudancaData"
                                 />
-                                <button type="button" class="botao-alterar-item" @click.stop="solicitarValidacao('dataNascimento')">Alterar</button>
+                                <button
+                                    type="button"
+                                    class="botao-alterar-item"
+                                    :disabled="enviandoCodigo"
+                                    @click.stop="solicitarValidacao('dataNascimento')"
+                                >
+                                    Alterar
+                                </button>
                             </div>
                             <span v-if="erroIdadeInvalida" class="texto-erro-input">A idade deve estar entre 10 e 140 anos.</span>
                         </div>
@@ -103,13 +124,17 @@
                     </div>
 
                     <p class="aviso-rodape-info">
-                        Para alterar e-mail ou senha, enviaremos um código de confirmação para o e-mail atual antes de concluir a mudança.
+                        Para alterar e-mail, senha ou data de nascimento, enviaremos um código de confirmação para o e-mail atual antes de liberar a edição.
                     </p>
                 </div>
 
+                <p v-if="mensagemErroGeral" class="texto-erro-geral">{{ mensagemErroGeral }}</p>
+
                 <div v-if="passouValidacao" class="acoes-formulario">
                     <button type="button" class="btn-cancelar" @click="voltarPerfil">Cancelar</button>
-                    <button type="button" class="btn-salvar" @click="salvarInformacoes">Salvar</button>
+                    <button type="button" class="btn-salvar" :disabled="salvando" @click="salvarInformacoes">
+                        {{ salvando ? 'Salvando...' : 'Salvar' }}
+                    </button>
                 </div>
             </div>
         </main>
@@ -129,7 +154,9 @@
                         <img src="../../public/icon_email_perfil.png" alt="E-mail" class="icone-modal-email" />
                     </div>
 
-                    <span class="success-subtitle">CONFIRMAR ALTERAÇÃO</span>
+                    <span class="success-subtitle">
+                        {{ etapaModal === 'confirmar_novo_email' ? 'CONFIRMAR NOVO E-MAIL' : 'CONFIRMAR ALTERAÇÃO' }}
+                    </span>
                     <h2 class="success-title">Digite o código</h2>
 
                     <p class="success-desc">
@@ -137,20 +164,22 @@
                         <strong>{{ emailAlvoValidacao }}</strong>
                     </p>
 
-                    <div class="codigo-inputs-container">
+                    <div class="codigo-inputs-container" @paste.prevent="tratarColarCodigo">
                         <input 
                             v-for="(digito, index) in codigoValidacao" 
                             :key="index" 
                             type="text" 
+                            inputmode="numeric"
                             maxlength="1" 
                             v-model="codigoValidacao[index]" 
                             @input="tratarInputCodigo(index, $event)"
+                            @keydown.backspace="tratarBackspaceCodigo(index, $event)"
                             class="input-digito-codigo"
                             :class="{ 'input-digito-erro': erroCodigoValidacao }"
                         />
                     </div>
 
-                    <span v-if="erroCodigoValidacao" class="texto-erro-modal">Por favor, preencha todos os dígitos do código.</span>
+                    <span v-if="erroCodigoValidacao" class="texto-erro-modal">{{ textoErroModal }}</span>
 
                     <span class="expiracao-texto">O código expira em 10 minutos.</span>
 
@@ -159,14 +188,21 @@
                         <button 
                             type="button" 
                             class="link-reenviar" 
-                            :class="{ 'disabled-reenviar': tempoRestanteReenvio > 0 }"
+                            :class="{ 'disabled-reenviar': tempoRestanteReenvio > 0 || enviandoCodigo }"
                             @click="reenviarCodigo"
                         >
                             {{ tempoRestanteReenvio > 0 ? `Reenviar código (${tempoRestanteReenvio}s)` : 'Reenviar código' }}
                         </button>
                     </div>
 
-                    <button type="button" class="btn-confirmar-continuar" @click="confirmarCodigoValidacao">Confirmar e continuar</button>
+                    <button
+                        type="button"
+                        class="btn-confirmar-continuar"
+                        :disabled="validandoCodigo"
+                        @click="confirmarCodigoValidacao"
+                    >
+                        {{ validandoCodigo ? 'Verificando...' : 'Confirmar e continuar' }}
+                    </button>
                     <span class="rodape-aviso-modal">O código será solicitado ao alterar dados de acesso ou nascimento.</span>
                 </div>
             </div>
@@ -175,24 +211,46 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onUnmounted } from 'vue'
+import { reactive, ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import BarraNavegacao from '@/components/BarraNavegacao.vue'
 import { authService } from '@/services/authService'
+import {
+    getBuscarUsuario,
+    putUsuarioLogado,
+    postAlterarEmail,
+    postConfirmarAlteracao,
+    postAlterarSenha
+} from '@/services/usuarios'
+import { postRecuperarSenha, postVerificarCodigoReset } from '@/services/auth'
 
 const router = useRouter()
 
 const modalValidacaoAberto = ref(false)
+const etapaModal = ref('validar_identidade')
 const campoEmValidacao = ref(null)
 const ultimoTempoValidacao = ref(null)
+const ultimoCodigoValidado = ref('')
 const tempoExpiracaoMinutos = 5
+
 const passouValidacao = ref(false)
 const erroCodigoValidacao = ref(false)
+const textoErroModal = ref('Por favor, preencha todos os dígitos do código.')
 const erroEmailInvalido = ref(false)
 const erroIdadeInvalida = ref(false)
-const emailOriginal = 'ana.costa@email.com'
-const emailAlvoValidacao = ref(emailOriginal)
-const emailFoiValidadoNaAlteracao = ref(false)
+const mensagemErroGeral = ref('')
+
+const enviandoCodigo = ref(false)
+const validandoCodigo = ref(false)
+const salvando = ref(false)
+
+const emailOriginal = ref('')
+const dataNascimentoOriginal = ref('')
+const emailAlvoValidacao = ref('')
+const pendenciasSalvarPosEmail = reactive({
+    senha: false,
+    dataNascimento: false
+})
 
 const tempoRestanteReenvio = ref(40)
 let timerReenvio = null
@@ -200,9 +258,9 @@ let timerReenvio = null
 const inputDataRef = ref(null)
 
 const dadosAcesso = reactive({
-    email: emailOriginal,
+    email: '',
     senha: '',
-    dataNascimento: '2009-01-20'
+    dataNascimento: ''
 })
 
 const errosCampos = reactive({
@@ -234,6 +292,49 @@ const dataMaximaPermitida = computed(() => {
     const mes = String(hoje.getMonth() + 1).padStart(2, '0')
     const dia = String(hoje.getDate()).padStart(2, '0')
     return `${ano}-${mes}-${dia}`
+})
+
+const obterIdUsuarioLogado = () => {
+    const user = authService.getUser?.()
+    return user?.id ?? user?.id_usuario ?? user?.usuario?.id ?? null
+}
+
+const formatarDataParaInput = (dataValor) => {
+    if (!dataValor) return ''
+    const texto = String(dataValor)
+    if (texto.includes('T')) return texto.split('T')[0]
+    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) return texto
+    const parsed = new Date(texto)
+    if (Number.isNaN(parsed.getTime())) return ''
+    return parsed.toISOString().split('T')[0]
+}
+
+const carregarDadosUsuario = async () => {
+    const id = obterIdUsuarioLogado()
+    if (!id) {
+        router.push('/')
+        return
+    }
+
+    try {
+        const resposta = await getBuscarUsuario(id)
+        const raw = resposta?.usuario ?? resposta?.data ?? resposta ?? {}
+
+        const email = raw.email ?? ''
+        const nascimento = formatarDataParaInput(raw.data_nascimento ?? raw.dataNascimento)
+
+        emailOriginal.value = email
+        dataNascimentoOriginal.value = nascimento
+        dadosAcesso.email = email
+        dadosAcesso.dataNascimento = nascimento
+        emailAlvoValidacao.value = email
+    } catch (error) {
+        mensagemErroGeral.value = error.message || 'Erro ao carregar suas informações.'
+    }
+}
+
+onMounted(() => {
+    carregarDadosUsuario()
 })
 
 const iniciarTimerReenvio = () => {
@@ -278,7 +379,7 @@ const validarEmailRegex = (email) => {
 
 const validarIdade = (dataStr) => {
     if (!dataStr) return false
-    const nascimento = new Date(dataStr)
+    const nascimento = new Date(`${dataStr}T00:00:00`)
     const hoje = new Date()
     let idade = hoje.getFullYear() - nascimento.getFullYear()
     const m = hoje.getMonth() - nascimento.getMonth()
@@ -291,12 +392,13 @@ const validarIdade = (dataStr) => {
 const tratarMudancaEmail = () => {
     errosCampos.email = false
     erroEmailInvalido.value = false
-    emailFoiValidadoNaAlteracao.value = false
+    mensagemErroGeral.value = ''
 }
 
 const tratarMudancaData = () => {
     errosCampos.dataNascimento = false
     erroIdadeInvalida.value = false
+    mensagemErroGeral.value = ''
     if (!validarIdade(dadosAcesso.dataNascimento)) {
         erroIdadeInvalida.value = true
         errosCampos.dataNascimento = true
@@ -310,31 +412,35 @@ const verificarSePrecisaValidar = () => {
     return diferencaMinutos > tempoExpiracaoMinutos
 }
 
-const solicitarValidacao = (campo) => {
+const enviarCodigoParaEmailAtual = async () => {
+    if (!emailOriginal.value) {
+        throw new Error('E-mail atual não encontrado para enviar o código.')
+    }
+    await postRecuperarSenha({ email: emailOriginal.value })
+}
+
+const solicitarValidacao = async (campo) => {
+    mensagemErroGeral.value = ''
     campoEmValidacao.value = campo
 
-    if (campo === 'email') {
-        if (!validarEmailRegex(dadosAcesso.email)) {
-            erroEmailInvalido.value = true
-            errosCampos.email = true
-            return
-        }
+    if (!verificarSePrecisaValidar()) {
+        desbloquearCampo(campo)
+        return
     }
 
-    if (campo === 'dataNascimento') {
-        if (!validarIdade(dadosAcesso.dataNascimento)) {
-            erroIdadeInvalida.value = true
-            errosCampos.dataNascimento = true
-            return
-        }
-    }
-
-    if (verificarSePrecisaValidar()) {
-        emailAlvoValidacao.value = dadosAcesso.email
+    enviandoCodigo.value = true
+    try {
+        await enviarCodigoParaEmailAtual()
+        etapaModal.value = 'validar_identidade'
+        emailAlvoValidacao.value = emailOriginal.value
+        erroCodigoValidacao.value = false
+        codigoValidacao.value = ['', '', '', '', '', '']
         modalValidacaoAberto.value = true
         iniciarTimerReenvio()
-    } else {
-        desbloquearCampo(campo)
+    } catch (error) {
+        mensagemErroGeral.value = error.message || 'Erro ao enviar o código de verificação para seu e-mail.'
+    } finally {
+        enviandoCodigo.value = false
     }
 }
 
@@ -342,11 +448,8 @@ const desbloquearCampo = (campo) => {
     camposDesbloqueados[campo] = true
     passouValidacao.value = true
     if (campo === 'senha') {
-        dadosAcesso.senha = 'senhaSegura123' 
+        dadosAcesso.senha = ''
         mostrarSenhaTexto.value = true
-    }
-    if (campo === 'email') {
-        emailFoiValidadoNaAlteracao.value = true
     }
 }
 
@@ -359,54 +462,139 @@ const fecharModal = () => {
 
 const tratarInputCodigo = (index, event) => {
     erroCodigoValidacao.value = false
-    const valor = event.target.value
+    const valor = event.target.value.replace(/\D/g, '')
+    codigoValidacao.value[index] = valor
     if (valor && index < 5) {
         const proximoInput = event.target.nextElementSibling
         if (proximoInput) proximoInput.focus()
     }
 }
 
-const reenviarCodigo = () => {
-    if (tempoRestanteReenvio.value > 0) return
-    alert('Novo código enviado para ' + emailAlvoValidacao.value)
-    iniciarTimerReenvio()
+const tratarBackspaceCodigo = (index, event) => {
+    if (!codigoValidacao.value[index] && index > 0) {
+        const inputAnterior = event.target.previousElementSibling
+        if (inputAnterior) inputAnterior.focus()
+    }
 }
 
-const confirmarCodigoValidacao = () => {
+const tratarColarCodigo = (event) => {
+    const texto = event.clipboardData?.getData('text')?.replace(/\D/g, '').slice(0, 6) || ''
+    if (!texto) return
+    erroCodigoValidacao.value = false
+    for (let i = 0; i < 6; i++) {
+        codigoValidacao.value[i] = texto[i] || ''
+    }
+}
+
+const reenviarCodigo = async () => {
+    if (tempoRestanteReenvio.value > 0 || enviandoCodigo.value) return
+
+    enviandoCodigo.value = true
+    erroCodigoValidacao.value = false
+    try {
+        if (etapaModal.value === 'confirmar_novo_email') {
+            const novoEmail = dadosAcesso.email.trim()
+            await postAlterarEmail({ novo_email: novoEmail, email: novoEmail })
+        } else {
+            await enviarCodigoParaEmailAtual()
+        }
+        iniciarTimerReenvio()
+    } catch (error) {
+        textoErroModal.value = error.message || 'Erro ao reenviar o código.'
+        erroCodigoValidacao.value = true
+    } finally {
+        enviandoCodigo.value = false
+    }
+}
+
+const finalizarAlteracoesRestantes = async () => {
+    if (pendenciasSalvarPosEmail.senha) {
+        await postAlterarSenha({
+            nova_senha: dadosAcesso.senha,
+            senha: dadosAcesso.senha,
+            codigo: ultimoCodigoValidado.value
+        })
+        pendenciasSalvarPosEmail.senha = false
+    }
+
+    if (pendenciasSalvarPosEmail.dataNascimento) {
+        await putUsuarioLogado({
+            data_nascimento: dadosAcesso.dataNascimento
+        })
+        pendenciasSalvarPosEmail.dataNascimento = false
+    }
+}
+
+const confirmarCodigoValidacao = async () => {
     const codigoCompleto = codigoValidacao.value.join('')
     if (codigoCompleto.length < 6 || codigoValidacao.value.some(d => d.trim() === '')) {
+        textoErroModal.value = 'Por favor, preencha todos os dígitos do código.'
         erroCodigoValidacao.value = true
         return
     }
 
+    validandoCodigo.value = true
     erroCodigoValidacao.value = false
-    ultimoTempoValidacao.value = new Date().getTime()
-    modalValidacaoAberto.value = false
-    if (campoEmValidacao.value) {
-        desbloquearCampo(campoEmValidacao.value)
+
+    try {
+        if (etapaModal.value === 'confirmar_novo_email') {
+            const novoEmail = dadosAcesso.email.trim()
+            await postConfirmarAlteracao({
+                codigo: codigoCompleto,
+                novo_email: novoEmail
+            })
+
+            const userLocal = authService.getUser?.()
+            if (userLocal && typeof authService.setUser === 'function') {
+                authService.setUser({ ...userLocal, email: novoEmail })
+            }
+
+            await finalizarAlteracoesRestantes()
+            fecharModal()
+            router.push('/perfil')
+            return
+        }
+
+        await postVerificarCodigoReset({
+            email: emailOriginal.value,
+            codigo: codigoCompleto
+        })
+
+        ultimoCodigoValidado.value = codigoCompleto
+        ultimoTempoValidacao.value = new Date().getTime()
+        modalValidacaoAberto.value = false
+        if (campoEmValidacao.value) {
+            desbloquearCampo(campoEmValidacao.value)
+        }
+        codigoValidacao.value = ['', '', '', '', '', '']
+        if (timerReenvio) clearInterval(timerReenvio)
+    } catch (error) {
+        textoErroModal.value = error.message || 'Código inválido ou expirado.'
+        erroCodigoValidacao.value = true
+    } finally {
+        validandoCodigo.value = false
     }
-    codigoValidacao.value = ['', '', '', '', '', '']
-    if (timerReenvio) clearInterval(timerReenvio)
 }
 
-const salvarInformacoes = () => {
+const salvarInformacoes = async () => {
+    mensagemErroGeral.value = ''
     let possuiErro = false
 
+    const emailAlterado = camposDesbloqueados.email && dadosAcesso.email.trim() !== emailOriginal.value
+    const senhaAlterada = camposDesbloqueados.senha
+    const dataAlterada = camposDesbloqueados.dataNascimento && dadosAcesso.dataNascimento !== dataNascimentoOriginal.value
+
     if (camposDesbloqueados.email) {
-        if (!dadosAcesso.email.trim() || !validarEmailRegex(dadosAcesso.email)) {
+        if (!dadosAcesso.email.trim() || !validarEmailRegex(dadosAcesso.email.trim())) {
             errosCampos.email = true
             erroEmailInvalido.value = true
             possuiErro = true
-        } else if (dadosAcesso.email !== emailOriginal && !emailFoiValidadoNaAlteracao.value) {
-            emailAlvoValidacao.value = dadosAcesso.email
-            modalValidacaoAberto.value = true
-            iniciarTimerReenvio()
-            return
         }
     }
 
-    if (camposDesbloqueados.senha && !dadosAcesso.senha.trim()) {
+    if (senhaAlterada && (!dadosAcesso.senha.trim() || dadosAcesso.senha.trim().length < 6)) {
         errosCampos.senha = true
+        mensagemErroGeral.value = 'A nova senha deve ter pelo menos 6 caracteres.'
         possuiErro = true
     }
 
@@ -420,7 +608,52 @@ const salvarInformacoes = () => {
 
     if (possuiErro) return
 
-    router.push('/perfil')
+    if (!emailAlterado && !senhaAlterada && !dataAlterada) {
+        router.push('/perfil')
+        return
+    }
+
+    salvando.value = true
+    try {
+        if (emailAlterado) {
+            const novoEmail = dadosAcesso.email.trim()
+            pendenciasSalvarPosEmail.senha = senhaAlterada
+            pendenciasSalvarPosEmail.dataNascimento = dataAlterada
+
+            await postAlterarEmail({
+                novo_email: novoEmail,
+                email: novoEmail
+            })
+
+            etapaModal.value = 'confirmar_novo_email'
+            emailAlvoValidacao.value = novoEmail
+            erroCodigoValidacao.value = false
+            codigoValidacao.value = ['', '', '', '', '', '']
+            modalValidacaoAberto.value = true
+            iniciarTimerReenvio()
+            return
+        }
+
+        if (senhaAlterada) {
+            await postAlterarSenha({
+                nova_senha: dadosAcesso.senha,
+                senha: dadosAcesso.senha,
+                codigo: ultimoCodigoValidado.value
+            })
+        }
+
+        if (dataAlterada) {
+            await putUsuarioLogado({
+                data_nascimento: dadosAcesso.dataNascimento
+            })
+        }
+
+        router.push('/perfil')
+    } catch (error) {
+        mensagemErroGeral.value = error.message || 'Erro ao salvar as informações.'
+    } finally {
+        salvando.value = false
+    }
 }
 </script>
 
@@ -562,7 +795,7 @@ const salvarInformacoes = () => {
 
 .input-personalizado {
     width: 100%;
-    padding: 12px 14px 12px 46px;
+    padding: 12px 74px 12px 46px;
     border: 1px solid var(--cinza-branco);
     border-radius: 12px;
     font-size: 14px;
@@ -600,10 +833,16 @@ const salvarInformacoes = () => {
     border-color: var(--vermelho) !important;
 }
 
-.texto-erro-input {
+.texto-erro-input,
+.texto-erro-geral {
     font-size: 12px;
     color: var(--vermelho);
     font-weight: 500;
+}
+
+.texto-erro-geral {
+    font-size: 13px;
+    margin-bottom: 12px;
 }
 
 .botao-alterar-item {
@@ -618,8 +857,13 @@ const salvarInformacoes = () => {
     z-index: 2;
 }
 
-.botao-alterar-item:hover {
+.botao-alterar-item:hover:not(:disabled) {
     text-decoration: underline;
+}
+
+.botao-alterar-item:disabled {
+    opacity: 0.6;
+    cursor: wait;
 }
 
 .grid-informacoes-pessoais {
@@ -702,8 +946,13 @@ const salvarInformacoes = () => {
     transition: background-color 0.2s;
 }
 
-.btn-salvar:hover {
+.btn-salvar:hover:not(:disabled) {
     background-color: var(--verde-escuro);
+}
+
+.btn-salvar:disabled {
+    opacity: 0.7;
+    cursor: wait;
 }
 
 .modal-overlay {
@@ -879,8 +1128,13 @@ const salvarInformacoes = () => {
     margin-bottom: 12px;
 }
 
-.btn-confirmar-continuar:hover {
+.btn-confirmar-continuar:hover:not(:disabled) {
     background-color: var(--verde-escuro);
+}
+
+.btn-confirmar-continuar:disabled {
+    opacity: 0.7;
+    cursor: wait;
 }
 
 .rodape-aviso-modal {

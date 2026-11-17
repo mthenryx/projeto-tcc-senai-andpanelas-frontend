@@ -39,7 +39,7 @@
                     <div class="tabs-filter">
                         <button class="tab-pill" :class="{ active: abaAtiva === 'usuarios' }"
                             @click="mudarAba('usuarios')">
-                            Usuários
+                            Pessoas
                         </button>
                         <button class="tab-pill" :class="{ active: abaAtiva === 'receitas' }"
                             @click="mudarAba('receitas')">
@@ -48,10 +48,6 @@
                         <button class="tab-pill" :class="{ active: abaAtiva === 'ingredientes' }"
                             @click="mudarAba('ingredientes')">
                             Ingredientes
-                        </button>
-                        <button class="tab-pill" :class="{ active: abaAtiva === 'comunidades' }"
-                            @click="mudarAba('comunidades')">
-                            Comunidades
                         </button>
                     </div>
 
@@ -296,37 +292,7 @@
                             </div>
                         </section>
                     </div>
-
-                    <!-- ABA 4: COMUNIDADES -->
-                    <div v-else-if="abaAtiva === 'comunidades'" class="tab-content">
-                        <div class="communities-list">
-                            <div v-for="com in comunidadesFiltradas" :key="com.id" class="community-card"
-                                @click="abrirComunidade(com.id)">
-                                <div class="com-icon-box">
-                                    <img v-if="com.fotoUrl" :src="com.fotoUrl" :alt="com.nome" class="com-avatar-img" />
-                                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="9" cy="7" r="4"></circle>
-                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                    </svg>
-                                </div>
-                                <div class="com-info">
-                                    <h4>{{ com.nome }}</h4>
-                                    <p>
-                                        {{ com.membros }} {{ Number(com.membros) === 1 ? 'membro' : 'membros' }}
-                                        <span v-if="com.categoria"> · {{ com.categoria }}</span>
-                                    </p>
-                                </div>
-                            </div>
-                            <div v-if="comunidadesFiltradas.length === 0" class="sem-resultados">
-                                <p>Nenhuma comunidade encontrada{{ termoBusca ? ` com o nome "${termoBusca}"` : '' }}.</p>
-                            </div>
-                        </div>
-                    </div>
-
+                    
                     <div class="banner-geladeira" @click="irParaGeladeira">
                         <div class="geladeira-icon-box">
                             <img src="/icon_cubo_de_gelo.png" alt="Geladeira" class="geladeira-img-icon" />
@@ -337,7 +303,6 @@
                         </div>
                         <span class="chevron-arrow">›</span>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -369,12 +334,10 @@ import {
     deleteSalvarReceita
 } from '@/services/receitas';
 import { getListarCategorias } from '@/services/catalogo';
-import { getListarComunidades } from '@/services/comunidades';
 
 const router = useRouter();
 const usuarioLogadoId = computed(() => authService.getUserId());
 
-// --- Helpers ---
 const MAPA_CUSTO = { 1: 'Econômico', 2: 'Moderado', 3: 'Alto' };
 const MAPA_DIFICULDADE = { 1: 'Fácil', 2: 'Médio', 3: 'Difícil' };
 
@@ -427,7 +390,6 @@ const abaAtiva = ref('usuarios');
 
 const placeholderDinamico = computed(() => {
     if (abaAtiva.value === 'usuarios') return 'Buscar usuários por nome ou @username...';
-    if (abaAtiva.value === 'comunidades') return 'Buscar comunidades pelo nome...';
     if (abaAtiva.value === 'ingredientes') return 'Filtrar sugestões de ingredientes...';
     return 'Buscar receitas pelo nome...';
 });
@@ -755,35 +717,6 @@ const executarBuscaPorIngredientes = async () => {
     }
 };
 
-// --- Aba Comunidades ---
-const comunidades = ref([]);
-
-const carregarComunidades = async () => {
-    try {
-        const res = await getListarComunidades({ limite: 50 });
-        const dados = res?.response?.dados || [];
-        comunidades.value = dados.map(c => ({
-            id: c.id,
-            nome: c.nome,
-            membros: c.qtd_membros ?? 0,
-            categoria: c.categoria_principal || '',
-            fotoUrl: c.foto_url || ''
-        }));
-    } catch (erro) {
-        console.error('Erro ao listar comunidades:', erro);
-    }
-};
-
-const comunidadesFiltradas = computed(() => {
-    if (!termoBusca.value.trim()) return comunidades.value;
-    const busca = termoBusca.value.toLowerCase();
-    return comunidades.value.filter(com => com.nome.toLowerCase().includes(busca));
-});
-
-const abrirComunidade = (id) => {
-    router.push({ name: 'ComunidadeDetalhes', params: { id } });
-};
-
 // --- Controle de Abas e Busca ---
 const mudarAba = (aba) => {
     abaAtiva.value = aba;
@@ -827,8 +760,7 @@ onMounted(async () => {
     carregando.value = true;
     await Promise.all([
         carregarUsuariosIniciais(),
-        carregarDadosReceitas(),
-        carregarComunidades()
+        carregarDadosReceitas()
     ]);
     carregando.value = false;
 });

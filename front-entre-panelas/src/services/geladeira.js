@@ -1,8 +1,9 @@
 import { authService } from './authService'
 
-const url = `${import.meta.env.VITE_API_URL}/usuarios/me/geladeira`
+const BASE_URL = import.meta.env.VITE_API_URL
+const url = `${BASE_URL}/usuarios/me/geladeira`
 
-async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackError } = {}) {
+async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackError, baseUrl = url } = {}) {
   const token = jwt || authService.getToken()
   const headers = {}
 
@@ -12,7 +13,7 @@ async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackErro
   const options = { method, headers }
   if (dados !== undefined) options.body = JSON.stringify(dados)
 
-  const response = await fetch(`${url}${endpoint}`, options)
+  const response = await fetch(`${baseUrl}${endpoint}`, options)
   const data = await response.json().catch(() => null)
 
   if (!response.ok || (data && data.status === false)) {
@@ -53,5 +54,15 @@ export async function deleteIngredienteGeladeira(id, jwt) {
     method: 'DELETE',
     jwt,
     fallbackError: 'Erro ao deletar o ingrediente da geladeira!'
+  })
+}
+
+export async function postCompatibilidadeGeladeira(ingredientes, jwt) {
+  return request('', {
+    method: 'POST',
+    dados: { ingredientes },
+    jwt,
+    baseUrl: `${BASE_URL}/receitas/compatibilidade`,
+    fallbackError: 'Erro ao buscar receitas compatíveis com a geladeira!'
   })
 }

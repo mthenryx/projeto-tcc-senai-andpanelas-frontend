@@ -130,6 +130,16 @@ const router = createRouter({
       name: 'teste',
       component: TesteView,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/receitas/editar/:id',
+      name: 'editar-receita',
+      component: () => import('@/views/CriarReceitaView.vue')
+    },
+    {
+      path: '/comunidades/editar/:id',
+      name: 'editar-comunidade',
+      component: () => import('@/views/CriarComunidadeView.vue')
     }
   ]
 })

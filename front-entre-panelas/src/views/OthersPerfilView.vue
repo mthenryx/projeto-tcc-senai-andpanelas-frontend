@@ -36,22 +36,22 @@
                 </div>
 
                 <div class="detalhes-usuario">
-                    <h1 class="nome-usuario">{{ usuario.nome }}</h1>
-                    <span class="username">@{{ usuario.username }}</span>
-                    <p class="descricao-usuario">{{ usuario.descricao }}</p>
+                    <h1 class="nome-usuario">{{ usuario.nome || 'Carregando...' }}</h1>
+                    <span v-if="usuario.username" class="username">@{{ usuario.username }}</span>
+                    <p v-if="usuario.descricao" class="descricao-usuario">{{ usuario.descricao }}</p>
 
                     <div class="estatisticas-e-acoes">
                         <div class="estatisticas-usuario">
                             <div class="estatistica-item">
-                                <span class="estatistica-valor">{{ usuario.quantidadeReceitas }}</span>
+                                <span class="estatistica-valor">{{ formatarContador(usuario.quantidadeReceitas) }}</span>
                                 <span class="estatistica-label">Receitas</span>
                             </div>
                             <div class="estatistica-item">
-                                <span class="estatistica-valor">{{ usuario.quantidadeSeguidores }}</span>
+                                <span class="estatistica-valor">{{ formatarContador(usuario.quantidadeSeguidores) }}</span>
                                 <span class="estatistica-label">Seguidores</span>
                             </div>
                             <div class="estatistica-item">
-                                <span class="estatistica-valor">{{ usuario.quantidadeSeguindo }}</span>
+                                <span class="estatistica-valor">{{ formatarContador(usuario.quantidadeSeguindo) }}</span>
                                 <span class="estatistica-label">Seguindo</span>
                             </div>
                         </div>
@@ -60,6 +60,7 @@
                             <button 
                                 class="botao-acao botao-seguir" 
                                 :class="{ 'seguindo': usuario.seguindo }"
+                                :disabled="processandoSeguir"
                                 @click="toggleSeguir"
                             >
                                 {{ usuario.seguindo ? 'Seguindo' : 'Seguir' }}
@@ -119,38 +120,56 @@
             </div>
 
             <div class="aba-conteudo">
-                <div v-if="abaAtiva === 'receitas'" class="lista-grid">
-                    <RecipeCard 
-                        v-for="receita in receitasCriadas" 
-                        :key="receita.id" 
-                        v-bind="receita"
-                        @update:salvo="(val) => receita.salvo = val"
-                    />
-                </div>
+                <p v-if="carregando" class="estado-vazio">Carregando perfil...</p>
 
-                <div v-if="abaAtiva === 'salvos'" class="lista-grid">
-                    <RecipeCard 
-                        v-for="receita in receitasSalvas" 
-                        :key="receita.id" 
-                        v-bind="receita"
-                        @update:salvo="(val) => receita.salvo = val"
-                    />
-                </div>
+                <template v-else>
+                    <div v-if="abaAtiva === 'receitas'" class="lista-grid">
+                        <p v-if="receitasCriadas.length === 0" class="estado-vazio">
+                            Este usuário ainda não publicou nenhuma receita.
+                        </p>
+                        <RecipeCard 
+                            v-for="receita in receitasCriadas" 
+                            :key="receita.id" 
+                            v-bind="receita"
+                            @toggle-save="({ id, salvo }) => alternarSalvarReceita(id, salvo)"
+                        />
+                    </div>
 
-                <div v-if="abaAtiva === 'comunidades'" class="comunidades-grid">
-                    <div 
-                        v-for="comunidade in comunidades" 
-                        :key="comunidade.id" 
-                        class="comunidade-card"
-                        @click="irParaComunidade(comunidade.id)"
-                    >
-                        <div class="comunidade-banner" :style="{ background: comunidade.gradiente }"></div>
-                        <div class="comunidade-info">
-                            <h3 class="comunidade-nome">{{ comunidade.nome }}</h3>
-                            <span class="comunidade-membros">{{ comunidade.membros }} membros</span>
+                    <div v-if="abaAtiva === 'salvos'" class="lista-grid">
+                        <p v-if="receitasSalvas.length === 0" class="estado-vazio">
+                            Nenhuma receita salva encontrada.
+                        </p>
+                        <RecipeCard 
+                            v-for="receita in receitasSalvas" 
+                            :key="receita.id" 
+                            v-bind="receita"
+                            @toggle-save="({ id, salvo }) => alternarSalvarReceita(id, salvo)"
+                        />
+                    </div>
+
+                    <div v-if="abaAtiva === 'comunidades'" class="comunidades-grid">
+                        <p v-if="comunidades.length === 0" class="estado-vazio">
+                            Este usuário ainda não participa de nenhuma comunidade.
+                        </p>
+                        <div 
+                            v-for="comunidade in comunidades" 
+                            :key="comunidade.id" 
+                            class="comunidade-card"
+                            @click="irParaComunidade(comunidade.id)"
+                        >
+                            <div 
+                                class="comunidade-banner" 
+                                :style="comunidade.bannerUrl 
+                                    ? { backgroundImage: `url(${comunidade.bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } 
+                                    : { background: comunidade.gradiente }"
+                            ></div>
+                            <div class="comunidade-info">
+                                <h3 class="comunidade-nome">{{ comunidade.nome }}</h3>
+                                <span class="comunidade-membros">{{ formatarContador(comunidade.membros) }} membros</span>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </template>
             </div>
         </main>
 
@@ -171,58 +190,190 @@ import BarraNavegacao from '@/components/BarraNavegacao.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import RecipeCard from '@/components/RecipeCard.vue'
 import ReportModal from '@/components/ReportModal.vue'
+import { authService } from '@/services/authService'
+import {
+    getBuscarUsuario,
+    getReceitasUsuario,
+    getReceitasSalvasUsuario,
+    getComunidadesUsuario,
+    postSeguirUsuario,
+    postDeixarSeguirUsuario
+} from '@/services/usuarios'
+import { postSalvarReceita, deleteDesalvarReceita } from '@/services/interacoes'
 
 const route = useRoute()
 const router = useRouter()
 
-const usuarioId = computed(() => route.query.id)
+const usuarioId = computed(() => route.query.id ?? route.params.id)
 
 const abaAtiva = ref('receitas')
 const modalDenunciaAberta = ref(false)
-const usuario = ref({})
+const carregando = ref(true)
+const processandoSeguir = ref(false)
 
-const usuariosMock = [
-    {
-        id: 1,
-        nome: 'Ana Costa',
-        username: 'anacosta',
-        descricao: 'Chef caseira apaixonada por comida brasileira 🍲 | Receitas saudáveis e afetivas',
-        fotoUrl: '',
-        bannerUrl: '',
-        quantidadeReceitas: 47,
-        quantidadeSeguidores: '1.2k',
-        quantidadeSeguindo: 389,
-        seguindo: false
-    },
-    {
-        id: 2,
-        nome: 'Pedro Souza',
-        username: 'pedrosouza',
-        descricao: 'Especialista em massas e molhos artesanais 🍝',
-        fotoUrl: '',
-        bannerUrl: '',
-        quantidadeReceitas: 12,
-        quantidadeSeguidores: '540',
-        quantidadeSeguindo: 120,
-        seguindo: true
-    },
-    {
-        id: 3,
-        nome: 'Beatriz Alves',
-        username: 'bialves',
-        descricao: 'Confeitaria descomplicada e sobremesas incríveis 🎂',
-        fotoUrl: '',
-        bannerUrl: '',
-        quantidadeReceitas: 31,
-        quantidadeSeguidores: '2.8k',
-        quantidadeSeguindo: 450,
-        seguindo: false
-    }
+const usuario = ref({
+    id: null,
+    nome: '',
+    username: '',
+    descricao: '',
+    fotoUrl: '',
+    bannerUrl: '',
+    quantidadeReceitas: 0,
+    quantidadeSeguidores: 0,
+    quantidadeSeguindo: 0,
+    seguindo: false
+})
+
+const receitasCriadas = ref([])
+const receitasSalvas = ref([])
+const comunidades = ref([])
+
+const gradientesComunidade = [
+    'linear-gradient(135deg, #a8caba 0%, #52a388 100%)',
+    'linear-gradient(135deg, #f4ddb4 0%, #f1ae2b 100%)',
+    'linear-gradient(135deg, #f6d5c4 0%, #d97c54 100%)',
+    'linear-gradient(135deg, #d7e3fc 0%, #6c8ebf 100%)'
 ]
 
-const carregarDadosUsuario = (id) => {
-    const usuarioEncontrado = usuariosMock.find(u => Number(u.id) === Number(id))
-    usuario.value = usuarioEncontrado || usuariosMock[0]
+const obterIdUsuarioLogado = () => {
+    const user = authService.getUser?.()
+    return user?.id ?? user?.id_usuario ?? user?.usuario?.id ?? null
+}
+
+const extrairLista = (resposta, chaves = []) => {
+    if (Array.isArray(resposta)) return resposta
+    if (!resposta || typeof resposta !== 'object') return []
+    for (const chave of chaves) {
+        if (Array.isArray(resposta[chave])) return resposta[chave]
+    }
+    if (resposta.data && typeof resposta.data === 'object') {
+        if (Array.isArray(resposta.data)) return resposta.data
+        for (const chave of chaves) {
+            if (Array.isArray(resposta.data[chave])) return resposta.data[chave]
+        }
+    }
+    return []
+}
+
+const gerarIniciais = (nome = '') => {
+    const partes = String(nome).trim().split(/\s+/).filter(Boolean)
+    if (partes.length === 0) return 'U'
+    if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase()
+    return `${partes[0][0]}${partes[partes.length - 1][0]}`.toUpperCase()
+}
+
+const formatarTempo = (tempo) => {
+    if (tempo === null || tempo === undefined || tempo === '') return '0min'
+    if (typeof tempo === 'number') return `${tempo}min`
+    return String(tempo)
+}
+
+const formatarPorcoes = (porcoes) => {
+    if (porcoes === null || porcoes === undefined || porcoes === '') return '1 porção'
+    if (typeof porcoes === 'number') return `${porcoes} ${porcoes === 1 ? 'porção' : 'porções'}`
+    return String(porcoes)
+}
+
+const formatarContador = (valor) => {
+    if (typeof valor === 'string') return valor
+    const numero = Number(valor) || 0
+    if (numero >= 1000) {
+        return `${(numero / 1000).toFixed(1).replace(/\.0$/, '')}k`
+    }
+    return numero
+}
+
+const normalizarReceita = (item) => {
+    const autorObj = item.autor || item.usuario || {}
+    const autorNome = autorObj.nome_completo ?? autorObj.nome ?? item.autor_nome ?? item.autorNome ?? usuario.value.nome ?? 'Chef'
+
+    return {
+        id: item.id ?? item.id_receita,
+        imagemUrl: item.imagem_url ?? item.imagemUrl ?? item.foto_url ?? item.imagem ?? '',
+        titulo: item.titulo ?? item.nome ?? 'Receita',
+        tempo: formatarTempo(item.tempo_preparo ?? item.tempo ?? item.tempoPreparo),
+        porcoes: formatarPorcoes(item.porcoes ?? item.rendimento),
+        custo: item.custo ?? item.nivel_custo ?? 'Econômico',
+        curtidas: Number(item.curtidas ?? item.total_curtidas ?? item.quantidade_curtidas ?? 0),
+        comentarios: Number(item.comentarios ?? item.total_comentarios ?? item.quantidade_comentarios ?? 0),
+        autorNome,
+        authorIniciais: gerarIniciais(autorNome),
+        autorFotoUrl: autorObj.foto_perfil ?? autorObj.foto_url ?? item.autor_foto_url ?? item.autorFotoUrl ?? '',
+        dificuldade: item.dificuldade ?? 'Fácil',
+        salvo: Boolean(item.salvo ?? item.is_salvo ?? false)
+    }
+}
+
+const normalizarComunidade = (item, index) => {
+    const dados = item.comunidade || item
+    const id = dados.id ?? dados.id_comunidade ?? index
+    return {
+        id,
+        nome: dados.nome ?? dados.titulo ?? 'Comunidade',
+        membros: dados.membros ?? dados.total_membros ?? dados.quantidade_membros ?? 0,
+        bannerUrl: dados.foto_capa ?? dados.banner_url ?? dados.imagem_url ?? '',
+        gradiente: gradientesComunidade[Number(id) % gradientesComunidade.length]
+    }
+}
+
+const carregarDadosUsuario = async (targetId) => {
+    if (!targetId) return
+
+    const meuId = obterIdUsuarioLogado()
+    if (meuId && Number(targetId) === Number(meuId)) {
+        router.replace('/perfil')
+        return
+    }
+
+    carregando.value = true
+    const queryParams = meuId ? { idUserLogado: meuId } : {}
+
+    try {
+        const [resUsuario, resReceitas, resSalvas, resComunidades] = await Promise.allSettled([
+            getBuscarUsuario(targetId),
+            getReceitasUsuario(targetId, queryParams),
+            getReceitasSalvasUsuario(targetId, queryParams),
+            getComunidadesUsuario(targetId)
+        ])
+
+        if (resUsuario.status === 'fulfilled' && resUsuario.value) {
+            const raw = resUsuario.value.usuario ?? resUsuario.value.data ?? resUsuario.value
+            usuario.value = {
+                id: raw.id ?? raw.id_usuario ?? targetId,
+                nome: raw.nome_completo ?? raw.nome ?? '',
+                username: raw.nome_usuario ?? raw.username ?? '',
+                descricao: raw.bio ?? raw.descricao ?? '',
+                fotoUrl: raw.foto_perfil ?? raw.foto_url ?? raw.fotoUrl ?? '',
+                bannerUrl: raw.foto_capa ?? raw.banner_url ?? raw.bannerUrl ?? '',
+                quantidadeReceitas: raw.total_receitas ?? raw.quantidade_receitas ?? raw.quantidadeReceitas ?? 0,
+                quantidadeSeguidores: Number(raw.total_seguidores ?? raw.quantidade_seguidores ?? raw.quantidadeSeguidores ?? 0),
+                quantidadeSeguindo: Number(raw.total_seguindo ?? raw.quantidade_seguindo ?? raw.quantidadeSeguindo ?? 0),
+                seguindo: Boolean(raw.seguindo ?? raw.is_seguindo ?? false)
+            }
+        }
+
+        if (resReceitas.status === 'fulfilled') {
+            const lista = extrairLista(resReceitas.value, ['receitas', 'items', 'resultados'])
+            receitasCriadas.value = lista.map(normalizarReceita)
+            if (!usuario.value.quantidadeReceitas && receitasCriadas.value.length > 0) {
+                usuario.value.quantidadeReceitas = receitasCriadas.value.length
+            }
+        }
+
+        if (resSalvas.status === 'fulfilled') {
+            const lista = extrairLista(resSalvas.value, ['receitas', 'salvas', 'receitas_salvas', 'items'])
+            receitasSalvas.value = lista.map(normalizarReceita)
+        }
+
+        if (resComunidades.status === 'fulfilled') {
+            const lista = extrairLista(resComunidades.value, ['comunidades', 'items'])
+            comunidades.value = lista.map((c, idx) => normalizarComunidade(c, idx))
+        }
+    } catch (error) {
+        console.error('Erro ao carregar perfil do usuário:', error)
+    } finally {
+        carregando.value = false
+    }
 }
 
 onMounted(() => {
@@ -231,102 +382,75 @@ onMounted(() => {
 
 watch(usuarioId, (novoId) => {
     if (novoId) {
+        abaAtiva.value = 'receitas'
         carregarDadosUsuario(novoId)
     }
 })
 
-const toggleSeguir = () => {
-    usuario.value.seguindo = !usuario.value.seguindo
+const toggleSeguir = async () => {
+    if (processandoSeguir.value || !usuarioId.value) return
+
+    const estavaSeguindo = usuario.value.seguindo
+    processandoSeguir.value = true
+
+    usuario.value.seguindo = !estavaSeguindo
+    if (typeof usuario.value.quantidadeSeguidores === 'number') {
+        usuario.value.quantidadeSeguidores = Math.max(
+            0,
+            usuario.value.quantidadeSeguidores + (estavaSeguindo ? -1 : 1)
+        )
+    }
+
+    try {
+        if (estavaSeguindo) {
+            await postDeixarSeguirUsuario(usuarioId.value)
+        } else {
+            await postSeguirUsuario(usuarioId.value)
+        }
+    } catch (error) {
+        console.error('Erro ao alterar status de seguidor:', error)
+        usuario.value.seguindo = estavaSeguindo
+        if (typeof usuario.value.quantidadeSeguidores === 'number') {
+            usuario.value.quantidadeSeguidores = Math.max(
+                0,
+                usuario.value.quantidadeSeguidores + (estavaSeguindo ? 1 : -1)
+            )
+        }
+    } finally {
+        processandoSeguir.value = false
+    }
+}
+
+const alternarSalvarReceita = async (receitaId, novoEstado) => {
+    const atualizarEstadoLocal = (estado) => {
+        const naCriadas = receitasCriadas.value.find(r => Number(r.id) === Number(receitaId))
+        if (naCriadas) naCriadas.salvo = estado
+
+        const naSalvas = receitasSalvas.value.find(r => Number(r.id) === Number(receitaId))
+        if (naSalvas) naSalvas.salvo = estado
+    }
+
+    atualizarEstadoLocal(novoEstado)
+
+    try {
+        if (novoEstado) {
+            await postSalvarReceita(receitaId)
+        } else {
+            await deleteDesalvarReceita(receitaId)
+        }
+    } catch (error) {
+        console.error('Erro ao salvar/desalvar receita:', error)
+        atualizarEstadoLocal(!novoEstado)
+    }
 }
 
 const abrirModalDenuncia = () => {
     modalDenunciaAberta.value = true
 }
 
-const tratarEnvioDenuncia = (dadosDenuncia) => {
-    console.log('Denúncia enviada:', dadosDenuncia)
+const tratarEnvioDenuncia = () => {
+    modalDenunciaAberta.value = false
 }
-
-const receitasCriadas = ref([
-    {
-        id: 1,
-        imagemUrl: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=800&q=80',
-        titulo: 'Frango ao Limão Siciliano',
-        tempo: '40min',
-        porcoes: '4 porções',
-        custo: 'Econômico',
-        curtidas: 342,
-        comentarios: 28,
-        autorNome: 'Ana Costa',
-        authorIniciais: 'AC',
-        autorFotoUrl: '',
-        dificuldade: 'Fácil',
-        salvo: false
-    },
-    {
-        id: 2,
-        imagemUrl: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80',
-        titulo: 'Macarrão ao Pesto Caseiro',
-        tempo: '25min',
-        porcoes: '2 porções',
-        custo: 'Econômico',
-        curtidas: 185,
-        comentarios: 12,
-        autorNome: 'Ana Costa',
-        authorIniciais: 'AC',
-        autorFotoUrl: '',
-        dificuldade: 'Fácil',
-        salvo: true
-    }
-])
-
-const receitasSalvas = ref([
-    {
-        id: 3,
-        imagemUrl: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=800&q=80',
-        titulo: 'Bolo de Cenoura com Brigadeiro',
-        tempo: '60min',
-        porcoes: '12 porções',
-        custo: 'Econômico',
-        curtidas: 891,
-        comentarios: 67,
-        autorNome: 'Pedro Souza',
-        authorIniciais: 'PS',
-        autorFotoUrl: '',
-        dificuldade: 'Fácil',
-        salvo: true
-    },
-    {
-        id: 4,
-        imagemUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80',
-        titulo: 'Sopa de camarão',
-        tempo: '90min',
-        porcoes: '2 porções',
-        custo: 'Econômico',
-        curtidas: 891,
-        comentarios: 67,
-        autorNome: 'Beatriz Alves',
-        authorIniciais: 'BA',
-        autorFotoUrl: '',
-        dificuldade: 'Fácil',
-        salvo: true
-    }
-])
-
-const comunidades = ref([
-    {
-        id: 1,
-        nome: 'Bolos & Confeitaria',
-        membros: '28.7k',
-        gradiente: 'linear-gradient(135deg, #a8caba 0%, #52a388 100%)'
-    },
-    {
-        id: 2,
-        nome: 'Cozinha Brasileira',
-        membros: '45.6k',
-        gradiente: 'linear-gradient(135deg, #f4ddb4 0%, #f1ae2b 100%)'
-    }
-])
 
 const voltarPaginaAnterior = () => {
     router.back()
@@ -505,7 +629,7 @@ const irParaComunidade = (id) => {
     border-radius: 20px;
 }
 
-.botao-seguir:hover {
+.botao-seguir:hover:not(:disabled) {
     background-color: rgba(114, 188, 165, 0.1);
 }
 
@@ -513,6 +637,11 @@ const irParaComunidade = (id) => {
     background-color: rgba(114, 188, 165, 0.15);
     color: var(--verde-escuro);
     border-color: var(--verde);
+}
+
+.botao-seguir:disabled {
+    opacity: 0.6;
+    cursor: wait;
 }
 
 .botao-denunciar {
@@ -584,6 +713,15 @@ const irParaComunidade = (id) => {
     padding: 24px 40px;
 }
 
+.estado-vazio {
+    text-align: center;
+    color: var(--cinza);
+    font-size: 14px;
+    padding: 32px 16px;
+    width: 100%;
+    grid-column: 1 / -1;
+}
+
 .lista-grid {
     width: 100%;
     align-self: center;
@@ -599,7 +737,6 @@ const irParaComunidade = (id) => {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
-
 }
 
 .comunidade-card {

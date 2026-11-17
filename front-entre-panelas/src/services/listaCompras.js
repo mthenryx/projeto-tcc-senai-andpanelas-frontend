@@ -16,7 +16,9 @@ async function request(endpoint, { method = 'GET', dados, jwt, fallbackError } =
   const data = await response.json().catch(() => null)
 
   if (!response.ok || (data && data.status === false)) {
-    throw new Error(data?.message || fallbackError)
+    const error = new Error(data?.message || fallbackError)
+    error.status = response.status
+    throw error
   }
 
   return data ?? true

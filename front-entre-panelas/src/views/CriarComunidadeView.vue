@@ -21,7 +21,17 @@
 
             <div class="conteudo">
 
-                <div class="form-container" v-if="!sucessoCriacao">
+                <div v-if="carregandoInicial" class="form-container loading-box">
+                    <p class="loading-text">
+                        {{ modoEdicao ? 'Carregando dados da comunidade...' : 'Preparando formulário...' }}
+                    </p>
+                </div>
+
+                <div class="form-container" v-else-if="!sucessoCriacao">
+
+                    <div v-if="erroApi" class="api-error-banner">
+                        {{ erroApi }}
+                    </div>
 
                     <div class="secao-form-bloco">
                         <h3 class="section-title-sm">Identidade Visual</h3>
@@ -41,7 +51,9 @@
                                 </div>
                                 <div v-else class="preview-container-capa">
                                     <img :src="previewCapa" alt="Capa" class="preview-media-capa" />
-                                    <span class="change-overlay">Alterar capa</span>
+                                    <span class="change-overlay">
+                                        {{ enviandoCapa ? 'Enviando capa...' : 'Alterar capa' }}
+                                    </span>
                                 </div>
                             </div>
 
@@ -62,7 +74,7 @@
 
                         <div class="avatar-label-container">
                             <strong>Ícone / Foto de Perfil</strong>
-                            <p>Quadrado mín. 400 x 400px</p>
+                            <p>{{ enviandoAvatar ? 'Enviando foto de perfil...' : 'Quadrado mín. 400 x 400px' }}</p>
                         </div>
                     </div>
 
@@ -95,17 +107,40 @@
 
                         <div class="input-group">
                             <label class="input-label">Categoria principal <span class="required">*</span></label>
-                            <div class="categories-chips-row">
-                                <button type="button" v-for="cat in categoriasDisponiveis" :key="cat" class="cat-chip"
-                                    :class="{ active: form.categoria === cat }" @click="form.categoria = cat">
-                                    {{ cat }}
+                            <div class="categories-chips-row" v-if="categoriasDisponiveis.length > 0">
+                                <button
+                                    type="button"
+                                    v-for="cat in categoriasDisponiveis"
+                                    :key="cat.id || cat.nome"
+                                    class="cat-chip"
+                                    :class="{ active: form.categoria === cat.nome, 'error-border': erros.categoria }"
+                                    @click="selecionarCategoria(cat.nome)"
+                                >
+                                    {{ cat.nome }}
                                 </button>
                             </div>
+                            <p v-else class="section-subtitle" style="margin-top: 2px;">
+                                Nenhuma categoria cadastrada ainda. Adicione a primeira abaixo:
+                            </p>
+
                             <div class="outra-categoria-row">
-                                <input type="text" v-model="novaCategoriaInput" class="text-input flex-1" maxlength="50"
-                                    placeholder="Outra categoria..." @keyup.enter="adicionarCategoriaPersonalizada" />
-                                <button type="button" class="btn-add-cat-btn" @click="adicionarCategoriaPersonalizada">
-                                    +
+                                <input
+                                    type="text"
+                                    v-model="novaCategoriaInput"
+                                    class="text-input flex-1"
+                                    :class="{ 'error-input': erros.categoria }"
+                                    maxlength="50"
+                                    :disabled="adicionandoCategoria"
+                                    placeholder="Outra categoria..."
+                                    @keyup.enter.prevent="adicionarCategoriaPersonalizada"
+                                />
+                                <button
+                                    type="button"
+                                    class="btn-add-cat-btn"
+                                    :disabled="adicionandoCategoria || !novaCategoriaInput.trim()"
+                                    @click="adicionarCategoriaPersonalizada"
+                                >
+                                    {{ adicionandoCategoria ? '...' : '+' }}
                                 </button>
                             </div>
                         </div>
@@ -123,11 +158,22 @@
                     </div>
 
                     <div class="navigation-buttons-row">
-                        <button type="button" class="btn-secondary" @click="voltarParaComunidades">
+                        <button type="button" class="btn-secondary" :disabled="salvando" @click="voltarParaComunidades">
                             Cancelar
                         </button>
-                        <button type="button" class="btn-primary" @click="validarECriarComunidade">
-                            {{ modoEdicao ? 'Salvar alterações' : 'Criar Comunidade' }}
+                        <button
+                            type="button"
+                            class="btn-primary"
+                            :disabled="salvando || enviandoCapa || enviandoAvatar"
+                            @click="validarECriarComunidade"
+                        >
+                            {{
+                                enviandoCapa || enviandoAvatar
+                                    ? 'Aguarde o envio da imagem...'
+                                    : (salvando
+                                        ? (modoEdicao ? 'Salvando...' : 'Criando...')
+                                        : (modoEdicao ? 'Salvar alterações' : 'Criar Comunidade'))
+                            }}
                         </button>
                     </div>
 
@@ -138,13 +184,16 @@
                         <img src="/icon_ok.png" alt="Sucesso" class="success-ok-icon" />
                     </div>
 
-                    <h2 class="success-title">{{ modoEdicao ? 'Comunidade atualizada' : 'Comunidade criada!' }}</h2>
+                    <h2 class="success-title">{{ modoEdicao ? 'Comunidade atualizada!' : 'Comunidade criada!' }}</h2>
                     <p class="success-desc">
                         {{ modoEdicao ? 'As alterações da sua comunidade foram salvas com sucesso.' : 'A sua comunidade foi criada com sucesso e já está aberta para receber membros e receitas culinárias! 🎉' }}
                     </p>
 
                     <div class="success-actions">
-                        <button type="button" class="btn-primary" @click="voltarParaComunidades">
+                        <button v-if="comunidadeSalvaId" type="button" class="btn-primary" @click="verComunidadeSalva">
+                            Ver comunidade →
+                        </button>
+                        <button type="button" class="btn-secondary" style="width: 100%;" @click="voltarParaComunidades">
                             Ir para comunidades
                         </button>
                     </div>
@@ -156,9 +205,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
+import {
+    postComunidade,
+    putComunidade,
+    getBuscarComunidade,
+    getListarCategoriasComunidade,
+    postCategoriaComunidade,
+    obterIdUsuarioLogado
+} from '@/services/comunidades';
 
 const route = useRoute();
 const router = useRouter();
@@ -166,50 +223,37 @@ const router = useRouter();
 const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const uploadPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
 
-const modoEdicao = ref(false);
-const comunidadeId = ref(null);
+const LIMITE_CATEGORIAS_EXIBIDAS = 16;
 
-onMounted(() => {
-    if (route.query.id) {
-        modoEdicao.value = true;
-        comunidadeId.value = route.query.id;
-        carregarDadosComunidadeEdicao(route.query.id);
-    }
+const comunidadeIdEdicao = computed(() => {
+    const idParam = route.params.id || route.query.id;
+    return idParam ? Number(idParam) : null;
 });
-
-const carregarDadosComunidadeEdicao = (id) => {
-    form.nome = 'Veganos Criativos';
-    form.descricao = 'Receitas plant-based deliciosas para mostrar que vegano não come só salada! 🌱';
-    form.categoria = 'Vegano & Vegetariano';
-    previewCapa.value = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1200';
-    previewAvatar.value = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=150';
-    form.banner_url = previewCapa.value;
-    form.foto_url = previewAvatar.value;
-};
+const modoEdicao = computed(() => Boolean(comunidadeIdEdicao.value));
 
 const sucessoCriacao = ref(false);
+const carregandoInicial = ref(false);
+const salvando = ref(false);
+const adicionandoCategoria = ref(false);
+const enviandoCapa = ref(false);
+const enviandoAvatar = ref(false);
+const erroApi = ref('');
+const usuarioLogadoId = ref(null);
+const comunidadeSalvaId = ref(null);
 
 const fileCapaRef = ref(null);
 const fileAvatarRef = ref(null);
 const previewCapa = ref(null);
 const previewAvatar = ref(null);
 
-const categoriasDisponiveis = ref([
-    'Confeitaria & Doces',
-    'Culinária Brasileira',
-    'Vegano & Vegetariano',
-    'Fitness & Saudável',
-    'Massas & Risotos',
-    'Bebidas & Drinks',
-    'Churrasco'
-]);
-
+const todasCategoriasApi = ref([]);
+const categoriasDisponiveis = ref([]);
 const novaCategoriaInput = ref('');
 
 const form = reactive({
     nome: '',
     descricao: '',
-    categoria: 'Confeitaria & Doces',
+    categoria: '',
     banner_url: '',
     foto_url: ''
 });
@@ -217,8 +261,161 @@ const form = reactive({
 const erros = reactive({
     nome: false,
     descricao: false,
+    categoria: false,
     capa: false,
     avatar: false
+});
+
+const extrairLista = (res) => {
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.response?.dados)) return res.response.dados;
+    if (Array.isArray(res?.response)) return res.response;
+    if (Array.isArray(res?.dados)) return res.dados;
+    return [];
+};
+
+const normalizarCategoria = (item) => ({
+    id: item?.id ? Number(item.id) : null,
+    nome: String(
+        item?.categoria_principal ||
+        item?.categoria ||
+        item?.nome ||
+        item?.nome_categoria ||
+        ''
+    ).trim()
+});
+
+const carregarCategorias = async () => {
+    try {
+        const res = await getListarCategoriasComunidade();
+        const lista = extrairLista(res)
+            .map(normalizarCategoria)
+            .filter(c => c.nome.length > 0);
+
+        todasCategoriasApi.value = lista;
+        categoriasDisponiveis.value = lista.slice(0, LIMITE_CATEGORIAS_EXIBIDAS);
+
+        if (!modoEdicao.value && !form.categoria && categoriasDisponiveis.value.length > 0) {
+            form.categoria = categoriasDisponiveis.value[0].nome;
+        }
+    } catch (erro) {
+        console.error('Erro ao carregar categorias de comunidade:', erro);
+        todasCategoriasApi.value = [];
+        categoriasDisponiveis.value = [];
+    }
+};
+
+const carregarDadosComunidadeEdicao = async (id) => {
+    erroApi.value = '';
+    try {
+        if (!usuarioLogadoId.value) {
+            router.replace('/login');
+            return;
+        }
+
+        const res = await getBuscarComunidade(id);
+        const dados = res?.response?.dados || res?.response || res?.dados || res;
+
+        if (!dados || !dados.nome) {
+            throw new Error('Comunidade não encontrada.');
+        }
+
+        const criadorId = Number(
+            dados.criador_id ||
+            dados.id_usuario ||
+            dados.id_criador ||
+            dados.criador?.id ||
+            0
+        );
+        if (!criadorId || criadorId !== Number(usuarioLogadoId.value)) {
+            router.replace({ name: 'comunidade-detalhes', params: { id } });
+            return;
+        }
+
+        form.nome = dados.nome || '';
+        form.descricao = dados.descricao || '';
+
+        const categoriaAtual =
+            dados.categoria_principal ||
+            dados.categoria?.categoria_principal ||
+            dados.categoria?.categoria ||
+            dados.categoria?.nome ||
+            (typeof dados.categoria === 'string' ? dados.categoria : '') ||
+            categoriasDisponiveis.value[0]?.nome ||
+            '';
+
+        if (categoriaAtual) {
+            const jaVisivel = categoriasDisponiveis.value.some(
+                c => c.nome.toLowerCase() === categoriaAtual.toLowerCase()
+            );
+            if (!jaVisivel) {
+                const existenteNaApi = todasCategoriasApi.value.find(
+                    c => c.nome.toLowerCase() === categoriaAtual.toLowerCase()
+                );
+                const itemCategoria = existenteNaApi || {
+                    id: dados.id_categoria ? Number(dados.id_categoria) : null,
+                    nome: categoriaAtual
+                };
+                categoriasDisponiveis.value = [itemCategoria, ...categoriasDisponiveis.value].slice(
+                    0,
+                    LIMITE_CATEGORIAS_EXIBIDAS
+                );
+            }
+        }
+        form.categoria = categoriaAtual;
+
+        const banner = dados.banner_url || dados.banner || dados.foto_capa || '';
+        const foto = dados.foto_url || dados.foto || dados.icone || '';
+
+        form.banner_url = banner;
+        form.foto_url = foto;
+        previewCapa.value = banner || null;
+        previewAvatar.value = foto || null;
+    } catch (erro) {
+        console.error('Erro ao carregar comunidade para edição:', erro);
+        erroApi.value = erro.message || 'Erro ao carregar os dados da comunidade.';
+    }
+};
+
+const resetarFormulario = () => {
+    form.nome = '';
+    form.descricao = '';
+    form.categoria = categoriasDisponiveis.value[0]?.nome || '';
+    form.banner_url = '';
+    form.foto_url = '';
+    previewCapa.value = null;
+    previewAvatar.value = null;
+    sucessoCriacao.value = false;
+    erroApi.value = '';
+};
+
+onMounted(async () => {
+    carregandoInicial.value = true;
+    try {
+        usuarioLogadoId.value = await obterIdUsuarioLogado();
+        await carregarCategorias();
+
+        if (modoEdicao.value) {
+            await carregarDadosComunidadeEdicao(comunidadeIdEdicao.value);
+        }
+    } finally {
+        carregandoInicial.value = false;
+    }
+});
+
+watch(comunidadeIdEdicao, async (novoId) => {
+    if (novoId) {
+        sucessoCriacao.value = false;
+        carregandoInicial.value = true;
+        try {
+            await carregarDadosComunidadeEdicao(novoId);
+        } finally {
+            carregandoInicial.value = false;
+        }
+    } else {
+        resetarFormulario();
+    }
 });
 
 const dispararInputCapa = () => { fileCapaRef.value.click(); };
@@ -241,6 +438,7 @@ const enviarParaCloudinary = async (arquivo, tipo) => {
         throw new Error('Falha no upload');
     } catch (error) {
         console.error('Erro no upload para o Cloudinary:', error);
+        alert('Erro ao enviar a imagem para a nuvem. Tente novamente.');
         return null;
     }
 };
@@ -250,10 +448,15 @@ const tratarUploadCapa = async (event) => {
     if (!arquivo) return;
     previewCapa.value = URL.createObjectURL(arquivo);
     erros.capa = false;
+    enviandoCapa.value = true;
 
-    const urlServidor = await enviarParaCloudinary(arquivo, 'image');
-    if (urlServidor) {
-        form.banner_url = urlServidor;
+    try {
+        const urlServidor = await enviarParaCloudinary(arquivo, 'image');
+        if (urlServidor) {
+            form.banner_url = urlServidor;
+        }
+    } finally {
+        enviandoCapa.value = false;
     }
 };
 
@@ -262,42 +465,153 @@ const tratarUploadAvatar = async (event) => {
     if (!arquivo) return;
     previewAvatar.value = URL.createObjectURL(arquivo);
     erros.avatar = false;
+    enviandoAvatar.value = true;
 
-    const urlServidor = await enviarParaCloudinary(arquivo, 'image');
-    if (urlServidor) {
-        form.foto_url = urlServidor;
+    try {
+        const urlServidor = await enviarParaCloudinary(arquivo, 'image');
+        if (urlServidor) {
+            form.foto_url = urlServidor;
+        }
+    } finally {
+        enviandoAvatar.value = false;
     }
 };
 
-const adicionarCategoriaPersonalizada = () => {
-    const catNome = novaCategoriaInput.value.trim();
-    if (!catNome) return;
-    if (catNome.length > 50) return;
+const selecionarCategoria = (nomeCategoria) => {
+    form.categoria = nomeCategoria;
+    erros.categoria = false;
+};
 
-    const jaExiste = categoriasDisponiveis.value.some(
-        c => c.toLowerCase() === catNome.toLowerCase()
+const adicionarCategoriaPersonalizada = async () => {
+    const catNome = novaCategoriaInput.value.trim();
+    if (!catNome || catNome.length > 50 || adicionandoCategoria.value) return;
+
+    erroApi.value = '';
+    erros.categoria = false;
+
+    // Se já existe na lista da API (mesmo além das 16 primeiras), apenas traz para as 16 visíveis e seleciona
+    const existenteNaApi = todasCategoriasApi.value.find(
+        c => c.nome.toLowerCase() === catNome.toLowerCase()
     );
 
-    if (!jaExiste) {
-        categoriasDisponiveis.value.push(catNome);
-    }
-
-    form.categoria = catNome;
-    novaCategoriaInput.value = '';
-};
-
-const validarECriarComunidade = () => {
-    erros.nome = !form.nome.trim();
-    erros.descricao = !form.descricao.trim();
-
-    erros.capa = !form.banner_url;
-    erros.avatar = !form.foto_url;
-
-    if (erros.nome || erros.descricao || erros.capa || erros.avatar) {
+    if (existenteNaApi) {
+        const jaVisivel = categoriasDisponiveis.value.some(
+            c => c.nome.toLowerCase() === existenteNaApi.nome.toLowerCase()
+        );
+        if (!jaVisivel) {
+            categoriasDisponiveis.value = [existenteNaApi, ...categoriasDisponiveis.value].slice(
+                0,
+                LIMITE_CATEGORIAS_EXIBIDAS
+            );
+        }
+        form.categoria = existenteNaApi.nome;
+        novaCategoriaInput.value = '';
         return;
     }
 
-    sucessoCriacao.value = true;
+    adicionandoCategoria.value = true;
+    try {
+        const res = await postCategoriaComunidade({
+            categoria_principal: catNome
+        });
+
+        const dadosCriados = res?.response?.dados || res?.response || res?.dados || res || {};
+        const novaCategoria = {
+            id: dadosCriados?.id ? Number(dadosCriados.id) : null,
+            nome: String(
+                dadosCriados?.categoria_principal ||
+                dadosCriados?.categoria ||
+                dadosCriados?.nome ||
+                catNome
+            ).trim()
+        };
+
+        todasCategoriasApi.value.unshift(novaCategoria);
+        categoriasDisponiveis.value = [novaCategoria, ...categoriasDisponiveis.value].slice(
+            0,
+            LIMITE_CATEGORIAS_EXIBIDAS
+        );
+
+        form.categoria = novaCategoria.nome;
+        novaCategoriaInput.value = '';
+    } catch (erro) {
+        console.error('Erro ao cadastrar categoria de comunidade:', erro);
+        erroApi.value = erro.message || 'Não foi possível cadastrar a nova categoria.';
+    } finally {
+        adicionandoCategoria.value = false;
+    }
+};
+
+const validarECriarComunidade = async () => {
+    if (salvando.value || enviandoCapa.value || enviandoAvatar.value) return;
+
+    erros.nome = !form.nome.trim();
+    erros.descricao = !form.descricao.trim();
+    erros.categoria = !form.categoria.trim();
+    erros.capa = !form.banner_url;
+    erros.avatar = !form.foto_url;
+
+    if (erros.nome || erros.descricao || erros.categoria || erros.capa || erros.avatar) {
+        return;
+    }
+
+    erroApi.value = '';
+
+    if (!usuarioLogadoId.value) {
+        usuarioLogadoId.value = await obterIdUsuarioLogado();
+    }
+
+    if (!usuarioLogadoId.value) {
+        erroApi.value = 'Não foi possível identificar o usuário autenticado. Faça login novamente.';
+        return;
+    }
+
+    const categoriaEncontrada = todasCategoriasApi.value.find(
+        c => c.nome.toLowerCase() === form.categoria.trim().toLowerCase()
+    );
+
+    const payload = {
+        nome: form.nome.trim(),
+        descricao: form.descricao.trim(),
+        categoria: form.categoria.trim(),
+        ...(categoriaEncontrada?.id ? { id_categoria: Number(categoriaEncontrada.id) } : {}),
+        banner_url: form.banner_url,
+        foto_url: form.foto_url,
+        id_usuario: Number(usuarioLogadoId.value)
+    };
+
+    salvando.value = true;
+
+    try {
+        if (modoEdicao.value) {
+            await putComunidade(comunidadeIdEdicao.value, payload);
+            comunidadeSalvaId.value = comunidadeIdEdicao.value;
+        } else {
+            const res = await postComunidade(payload);
+            comunidadeSalvaId.value =
+                res?.response?.id ||
+                res?.response?.dados?.id ||
+                res?.id ||
+                null;
+        }
+
+        sucessoCriacao.value = true;
+    } catch (erro) {
+        console.error('Erro ao salvar comunidade:', erro);
+        erroApi.value = erro.message || (modoEdicao.value
+            ? 'Erro ao atualizar a comunidade.'
+            : 'Erro ao criar a comunidade.');
+    } finally {
+        salvando.value = false;
+    }
+};
+
+const verComunidadeSalva = () => {
+    if (comunidadeSalvaId.value) {
+        router.push({ name: 'comunidade-detalhes', params: { id: comunidadeSalvaId.value } });
+    } else {
+        voltarParaComunidades();
+    }
 };
 
 const voltarParaComunidades = () => {
@@ -312,6 +626,28 @@ const voltarParaComunidades = () => {
     min-height: 100vh;
     background-color: var(--cinza-claro);
     font-family: "Inter", sans-serif;
+}
+
+.loading-box {
+    align-items: center;
+    justify-content: center;
+    min-height: 240px;
+}
+
+.loading-text {
+    font-size: 14px;
+    color: var(--cinza);
+    font-weight: 500;
+}
+
+.api-error-banner {
+    background-color: #FDECEA;
+    border: 1px solid #F5C2C7;
+    color: #842029;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
 }
 
 .coluna {
@@ -690,8 +1026,13 @@ const voltarParaComunidades = () => {
     transition: background-color 0.2s;
 }
 
-.btn-add-cat-btn:hover {
+.btn-add-cat-btn:hover:not(:disabled) {
     background-color: var(--verde-escuro);
+}
+
+.btn-add-cat-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .privacy-box {
@@ -745,6 +1086,12 @@ const voltarParaComunidades = () => {
 
 .btn-primary:hover {
     background-color: var(--verde-escuro);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
 }
 
 .btn-secondary {

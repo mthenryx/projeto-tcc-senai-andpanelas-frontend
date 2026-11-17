@@ -6,16 +6,9 @@
             <div class="conteudo">
                 <header class="header-normal">
                     <div class="header-topo-lista none">
-                        <button class="back-btn" @click="voltar" aria-label="Voltar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="19" y1="12" x2="5" y2="12"></line>
-                                <polyline points="12 19 5 12 12 5"></polyline>
-                            </svg>
-                        </button>
                         <div class="header-titles">
                             <div class="title-with-icon">
-                                <img src="../../public/icon_carrinho_lista.png" alt="Carrinho de mercado" class="cart-emoji">
+                                <img src="/icon_carrinho_lista.png" alt="Carrinho de mercado" class="cart-emoji">
                                 <h2>Lista de Compras</h2>
                             </div>
                             <p>{{ totalComprados }} de {{ itensLista.length }} itens comprados</p>
@@ -23,7 +16,12 @@
                         <div class="header-actions">
                             <div class="copiar-wrapper">
                                 <span v-if="mensagemCopiado" class="feedback-copiado">Copiado com sucesso</span>
-                                <button class="icon-action-btn copie" title="Copiar lista completa" @click="copiarListaCompleta">
+                                <button
+                                    class="icon-action-btn copie"
+                                    title="Copiar lista completa"
+                                    :disabled="itensLista.length === 0"
+                                    @click="copiarListaCompleta"
+                                >
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
                                         <polyline points="16 6 12 2 8 6"></polyline>
@@ -31,7 +29,12 @@
                                     </svg>
                                 </button>
                             </div>
-                            <button class="icon-action-btn delete" title="Limpar lista" @click="limparListaCompleta">
+                            <button
+                                class="icon-action-btn delete"
+                                title="Limpar lista"
+                                :disabled="itensLista.length === 0 || limpandoLista"
+                                @click="limparListaCompleta"
+                            >
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polyline points="3 6 5 6 21 6"></polyline>
                                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -44,7 +47,12 @@
                         <div class="progress-bar-fill" :style="{ width: progressoPorcentagem + '%' }"></div>
                     </div>
                 </header>
+
                 <div class="lista-container">
+                    <div v-if="erroApi" class="api-error-banner">
+                        {{ erroApi }}
+                    </div>
+
                     <div class="chips-receitas-row">
                         <button 
                             class="tab-pill exibir-tudo-btn" 
@@ -60,9 +68,10 @@
                             class="recipe-chip-item"
                             :class="{ 'active': receitaSelecionadaId === rec.id }"
                             @click="clicarReceitaTopo(rec)"
+                            :title="receitaSelecionadaId === rec.id ? 'Clique novamente para abrir a receita' : 'Filtrar itens desta receita'"
                         >
-                            <img :src="rec.imagemUrl" :alt="rec.titulo" class="recipe-chip-img" />
-                            <span class="recipe-chip-name">{{ rec.titulo }}...</span>
+                            <img :src="rec.imagemUrl || '/icon_carrinho_lista.png'" :alt="rec.titulo" class="recipe-chip-img" />
+                            <span class="recipe-chip-name">{{ rec.titulo }}</span>
                         </div>
                         <button class="add-recipe-chip-btn" @click="irParaBuscarReceita">
                             + Adicionar receita
@@ -104,10 +113,10 @@
                             maxlength="35"
                         />
                         <div class="select-wrapper" :class="{ 'input-erro': erroUnidade }">
-                            <select v-model="novaUnidadeMedida" class="select-field" @change="erroUnidade = false">
+                            <select v-model="novaUnidadeMedidaId" class="select-field" @change="erroUnidade = false">
                                 <option disabled value="">Unidade medida</option>
-                                <option v-for="unidade in unidadesMedidaSimuladas" :key="unidade" :value="unidade">
-                                    {{ unidade }}
+                                <option v-for="unidade in unidadesMedida" :key="unidade.id" :value="unidade.id">
+                                    {{ unidade.nome }}
                                 </option>
                             </select>
                         </div>
@@ -124,7 +133,11 @@
                         <button class="add-manual-btn" @click="adicionarItemManual">+</button>
                     </div>
 
-                    <div v-if="itensFiltrados.length > 0" class="categorias-container">
+                    <div v-if="carregandoLista" class="empty-state-container">
+                        <p class="empty-desc">Carregando sua lista de compras...</p>
+                    </div>
+
+                    <div v-else-if="itensFiltrados.length > 0" class="categorias-container">
                         <div v-for="grupo in itensAgrupadosPorCategoria" :key="grupo.categoria" class="categoria-section">
                             <div class="categoria-header">
                                 <span class="cat-icon">{{ grupo.icone }}</span>
@@ -153,7 +166,14 @@
 
                                     <div class="item-right">
                                         <span class="item-quantidade">{{ item.quantidade }}</span>
-                                        <button class="remove-item-btn" @click="removerItem(item.id)">×</button>
+                                        <button
+                                            class="remove-item-btn"
+                                            :disabled="removendoIds[item.id]"
+                                            @click="removerItem(item)"
+                                            aria-label="Remover item"
+                                        >
+                                            ×
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -170,7 +190,7 @@
 
                     <div class="banner-chefinho" @click="irParaChefinho">
                         <div class="chefinho-avatar">
-                            <img src="../../public/icon chefinho.png" alt="Chefinho IA" />
+                            <img src="/icon chefinho.png" alt="Chefinho IA" />
                         </div>
                         <div class="chefinho-text">
                             <h5>Dica do Chefinho</h5>
@@ -185,51 +205,86 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
+import { authService } from '@/services/authService';
+import {
+    getListaComprasReceitas,
+    getListaComprasDaReceita,
+    putItemListaCompras,
+    deleteItemListaCompras
+} from '@/services/listaCompras';
 
 const router = useRouter();
+const STORAGE_MANUAIS_KEY = 'entrepanelas_lista_compras_manuais';
+
+// Unidades de medida cadastradas no banco (tbl_unidade_medida)
+const UNIDADES_MEDIDA = [
+    { id: 1, nome: 'g' },
+    { id: 2, nome: 'kg' },
+    { id: 3, nome: 'ml' },
+    { id: 4, nome: 'L' },
+    { id: 5, nome: 'un' }
+];
 
 const abaFiltro = ref('todos');
 const receitaSelecionadaId = ref(null);
 const cliqueContadorReceita = ref({});
 const novoItemNome = ref('');
 const novaQuantidade = ref('');
-const novaUnidadeMedida = ref('');
+const novaUnidadeMedidaId = ref('');
 const mensagemCopiado = ref(false);
+
+const carregandoLista = ref(false);
+const limpandoLista = ref(false);
+const erroApi = ref('');
+const atualizandoIds = reactive({});
+const removendoIds = reactive({});
 
 const erroNome = ref(false);
 const erroQtd = ref(false);
 const erroUnidade = ref(false);
 
-const unidadesMedidaSimuladas = ref([
-    'g', 'kg', 'ml', 'l', 'unidades', 'col. de sopa', 'col. de chá', 'xícara', 'pitada', 'lata', 'maço'
-]);
+const unidadesMedida = ref(UNIDADES_MEDIDA);
+const receitasVinculadas = ref([]);
+const itensLista = ref([]);
 
-const receitasVinculadas = ref([
-    { id: 101, titulo: 'Frango ao Limão', imagemUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200' },
-    { id: 102, titulo: 'Bolo de Cenoura', imagemUrl: 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=200' },
-    { id: 103, titulo: 'Risoto de Cogumelos', imagemUrl: 'https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=200' }
-]);
+const extrairLista = (res) => {
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.response?.dados)) return res.response.dados;
+    if (Array.isArray(res?.response)) return res.response;
+    if (Array.isArray(res?.dados)) return res.dados;
+    return [];
+};
 
-const itensLista = ref([
-    { id: 1, receitaId: 101, nome: 'Filé de frango', quantidade: '600g', categoria: 'Carnes', icone: '🥩', comprado: false, receitaOrigem: 'Frango ao Limão Siciliano' },
-    { id: 2, receitaId: 101, nome: 'Limão siciliano', quantidade: '3 unidades', categoria: 'Frutas & Verduras', icone: '🥦', comprado: false, receitaOrigem: 'Frango ao Limão Siciliano' },
-    { id: 3, receitaId: 102, nome: 'Cenoura', quantidade: '3 médias', categoria: 'Frutas & Verduras', icone: '🥦', comprado: false, receitaOrigem: 'Bolo de Cenoura com Brigadeiro' },
-    { id: 4, receitaId: null, nome: 'Alho', quantidade: '1 cabeça', categoria: 'Frutas & Verduras', icone: '🥦', comprado: true, receitaOrigem: '' },
-    { id: 5, receitaId: 101, nome: 'Tomilho fresco', quantidade: '2 ramos', categoria: 'Temperos & Ervas', icone: '🌿', comprado: false, receitaOrigem: 'Frango ao Limão Siciliano' },
-    { id: 6, receitaId: null, nome: 'Azeite extra virgem', quantidade: '1 garrafa', categoria: 'Temperos & Ervas', icone: '🌿', comprado: false, receitaOrigem: '' },
-    { id: 7, receitaId: 101, nome: 'Manteiga', quantidade: '2 col. de sopa', categoria: 'Laticínios', icone: '🧀', comprado: true, receitaOrigem: 'Frango ao Limão Siciliano' },
-    { id: 8, receitaId: 102, nome: 'Leite condensado', quantidade: '2 latas', categoria: 'Mercearia', icone: '🛒', comprado: false, receitaOrigem: 'Bolo de Cenoura com Brigadeiro' }
-]);
+const mapearUnidadeMedida = (idUnidade) => {
+    const idNum = Number(idUnidade);
+    const encontrada = UNIDADES_MEDIDA.find(u => u.id === idNum);
+    return encontrada ? encontrada.nome : '';
+};
+
+const formatarQuantidadeItem = (quantidade, idUnidadeMedida) => {
+    const qtdStr = String(quantidade ?? '').trim();
+    if (!qtdStr) return '1 un';
+    if (/^\d+([.,]\d+)?$/.test(qtdStr)) {
+        const unidade = mapearUnidadeMedida(idUnidadeMedida);
+        return unidade ? `${qtdStr} ${unidade}` : qtdStr;
+    }
+    return qtdStr;
+};
 
 const classificarCategoria = (nomeIngrediente) => {
-    const nome = (nomeIngrediente || '').toLowerCase();
-    const carnes = ['frango', 'carne', 'filé', 'bife', 'porco', 'peixe', 'camarão', 'linguiça', 'presunto', ' bacon'];
-    const hortifruti = ['limão', 'cenoura', 'alho', 'tomilho', 'cebola', 'batata', 'tomate', 'alface', 'banana', 'maçã', 'ervas', 'salsinha', 'cebolinha'];
-    const temperos = ['azeite', 'sal', 'pimenta', 'orégano', 'cominho', 'colorau', 'tempero'];
-    const laticinios = ['manteiga', 'leite', 'queijo', 'requeijão', 'creme de leite', 'iogurte'];
+    const nome = (nomeIngrediente || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+
+    const carnes = ['frango', 'carne', 'file', 'bife', 'porco', 'peixe', 'camarao', 'linguica', 'presunto', 'bacon', 'costela', 'alcatra', 'patinho'];
+    const hortifruti = ['limao', 'cenoura', 'alho', 'tomilho', 'cebola', 'batata', 'tomate', 'alface', 'banana', 'maca', 'ervas', 'salsinha', 'cebolinha', 'pimentao', 'abobrinha', 'brocolis', 'laranja', 'morango'];
+    const temperos = ['azeite', 'sal', 'pimenta', 'oregano', 'cominho', 'colorau', 'tempero', 'vinagre', 'paprica', 'canela', 'manjericao'];
+    const laticinios = ['manteiga', 'leite', 'queijo', 'requeijao', 'creme de leite', 'iogurte', 'mussarela', 'parmesao', 'cheddar'];
 
     if (carnes.some(c => nome.includes(c))) return { categoria: 'Carnes', icone: '🥩' };
     if (hortifruti.some(h => nome.includes(h))) return { categoria: 'Frutas & Verduras', icone: '🥦' };
@@ -237,6 +292,112 @@ const classificarCategoria = (nomeIngrediente) => {
     if (laticinios.some(l => nome.includes(l))) return { categoria: 'Laticínios', icone: '🧀' };
     return { categoria: 'Mercearia', icone: '🛒' };
 };
+
+const lerItensManuaisLocais = () => {
+    try {
+        const salvo = localStorage.getItem(STORAGE_MANUAIS_KEY);
+        const parsed = salvo ? JSON.parse(salvo) : [];
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+};
+
+const salvarItensManuaisLocais = () => {
+    try {
+        const manuais = itensLista.value.filter(i => i.ehManual);
+        localStorage.setItem(STORAGE_MANUAIS_KEY, JSON.stringify(manuais));
+    } catch {
+        // ignora erro de storage
+    }
+};
+
+const carregarListaCompras = async () => {
+    const token = authService.getToken?.();
+    if (!token) {
+        router.replace('/login');
+        return;
+    }
+
+    carregandoLista.value = true;
+    erroApi.value = '';
+
+    const manuaisLocais = lerItensManuaisLocais();
+
+    try {
+        let receitasApi = [];
+        try {
+            const resReceitas = await getListaComprasReceitas();
+            receitasApi = extrairLista(resReceitas);
+        } catch (erroReceitas) {
+            if (erroReceitas?.status === 401) {
+                router.replace('/login');
+                return;
+            }
+            if (erroReceitas?.status === 404) {
+                receitasApi = [];
+            } else {
+                throw erroReceitas;
+            }
+        }
+
+        const receitasNormalizadas = receitasApi
+            .map(rec => ({
+                id: Number(rec.id),
+                titulo: String(rec.titulo || 'Receita').trim(),
+                imagemUrl: rec.foto || rec.imagem_url || ''
+            }))
+            .filter(rec => Boolean(rec.id));
+
+        receitasVinculadas.value = receitasNormalizadas;
+
+        const gruposDeItens = await Promise.all(
+            receitasNormalizadas.map(async (rec) => {
+                try {
+                    const resItens = await getListaComprasDaReceita(rec.id, { status: 'Todos' });
+                    const listaItens = extrairLista(resItens);
+
+                    return listaItens.map((item) => {
+                        const nomeItem = String(item.nome || item.nome_ingrediente || '').trim();
+                        const classif = classificarCategoria(nomeItem);
+                        const comprado =
+                            Number(item.id_status) === 1 ||
+                            String(item.status || '').toLowerCase() === 'comprado';
+
+                        return {
+                            id: Number(item.id),
+                            receitaId: rec.id,
+                            nome: nomeItem,
+                            quantidade: formatarQuantidadeItem(item.quantidade, item.id_unidade_medida),
+                            id_unidade_medida: item.id_unidade_medida ? Number(item.id_unidade_medida) : null,
+                            categoria: classif.categoria,
+                            icone: classif.icone,
+                            comprado,
+                            receitaOrigem: rec.titulo,
+                            ehManual: false
+                        };
+                    });
+                } catch (erroItens) {
+                    if (erroItens?.status === 404) return [];
+                    throw erroItens;
+                }
+            })
+        );
+
+        itensLista.value = [...gruposDeItens.flat(), ...manuaisLocais];
+    } catch (erro) {
+        if (erro?.status === 401) {
+            router.replace('/login');
+            return;
+        }
+        erroApi.value = erro.message || 'Erro ao carregar sua lista de compras.';
+        itensLista.value = [...manuaisLocais];
+    } finally {
+        carregandoLista.value = false;
+    }
+};
+
+onMounted(carregarListaCompras);
 
 const validarQuantidade = () => {
     if (novaQuantidade.value > 1000) novaQuantidade.value = 1000;
@@ -317,52 +478,118 @@ const clicarReceitaTopo = (rec) => {
     }
 };
 
-const toggleComprado = (item) => {
-    item.comprado = !item.comprado;
+const toggleComprado = async (item) => {
+    if (atualizandoIds[item.id]) return;
+
+    const estadoAnterior = item.comprado;
+    const novoEstado = !estadoAnterior;
+    item.comprado = novoEstado;
+
+    if (item.ehManual) {
+        salvarItensManuaisLocais();
+        return;
+    }
+
+    erroApi.value = '';
+    atualizandoIds[item.id] = true;
+
+    try {
+        await putItemListaCompras(item.id, {
+            id_status: novoEstado ? 1 : 2
+        });
+    } catch (erro) {
+        item.comprado = estadoAnterior;
+        erroApi.value = erro.message || 'Erro ao atualizar o status do item.';
+    } finally {
+        delete atualizandoIds[item.id];
+    }
 };
 
 const adicionarItemManual = () => {
     erroNome.value = !novoItemNome.value.trim();
-    erroUnidade.value = !novaUnidadeMedida.value;
+    erroUnidade.value = !novaUnidadeMedidaId.value;
     erroQtd.value = !novaQuantidade.value;
 
     if (erroNome.value || erroUnidade.value || erroQtd.value) return;
 
-    const qtdStr = `${novaQuantidade.value} ${novaUnidadeMedida.value}`;
+    const unidadeSelecionada = UNIDADES_MEDIDA.find(
+        u => u.id === Number(novaUnidadeMedidaId.value)
+    );
+    const nomeUnidade = unidadeSelecionada ? unidadeSelecionada.nome : '';
+    const qtdStr = `${novaQuantidade.value} ${nomeUnidade}`.trim();
     const classif = classificarCategoria(novoItemNome.value);
 
     itensLista.value.push({
-        id: Date.now(),
+        id: `manual-${Date.now()}`,
         receitaId: null,
         nome: novoItemNome.value.trim(),
         quantidade: qtdStr,
+        id_unidade_medida: unidadeSelecionada ? unidadeSelecionada.id : null,
         categoria: classif.categoria,
         icone: classif.icone,
         comprado: false,
-        receitaOrigem: 'Adicionado manualmente'
+        receitaOrigem: 'Adicionado manualmente',
+        ehManual: true
     });
+
+    salvarItensManuaisLocais();
 
     novoItemNome.value = '';
     novaQuantidade.value = '';
-    novaUnidadeMedida.value = '';
+    novaUnidadeMedidaId.value = '';
 };
 
-const removerItem = (id) => {
-    const itemRemovido = itensLista.value.find(i => i.id === id);
-    itensLista.value = itensLista.value.filter(i => i.id !== id);
+const removerItem = async (item) => {
+    if (!item || removendoIds[item.id]) return;
 
-    if (itemRemovido && itemRemovido.receitaId) {
-        const aindaTem = itensLista.value.some(i => i.receitaId === itemRemovido.receitaId);
-        if (!aindaTem && receitaSelecionadaId.value === itemRemovido.receitaId) {
-            receitaSelecionadaId.value = null;
+    erroApi.value = '';
+    removendoIds[item.id] = true;
+
+    try {
+        if (!item.ehManual) {
+            await deleteItemListaCompras(item.id);
         }
+
+        itensLista.value = itensLista.value.filter(i => i.id !== item.id);
+
+        if (item.ehManual) {
+            salvarItensManuaisLocais();
+        }
+
+        if (item.receitaId) {
+            const aindaTem = itensLista.value.some(i => i.receitaId === item.receitaId);
+            if (!aindaTem && receitaSelecionadaId.value === item.receitaId) {
+                receitaSelecionadaId.value = null;
+            }
+        }
+    } catch (erro) {
+        erroApi.value = erro.message || 'Erro ao remover o item da lista de compras.';
+    } finally {
+        delete removendoIds[item.id];
     }
 };
 
-const limparListaCompleta = () => {
-    itensLista.value = [];
-    receitaSelecionadaId.value = null;
-    cliqueContadorReceita.value = {};
+const limparListaCompleta = async () => {
+    if (itensLista.value.length === 0 || limpandoLista.value) return;
+
+    erroApi.value = '';
+    limpandoLista.value = true;
+
+    try {
+        const itensBanco = itensLista.value.filter(i => !i.ehManual && i.id);
+        await Promise.all(itensBanco.map(i => deleteItemListaCompras(i.id)));
+
+        itensLista.value = [];
+        receitasVinculadas.value = [];
+        receitaSelecionadaId.value = null;
+        cliqueContadorReceita.value = {};
+        localStorage.removeItem(STORAGE_MANUAIS_KEY);
+    } catch (erro) {
+        erroApi.value = erro.message || 'Erro ao limpar a lista de compras.';
+        await carregarListaCompras();
+    } finally {
+        limpandoLista.value = false;
+    }
 };
 
 const copiarListaCompleta = () => {
@@ -395,7 +622,6 @@ const copiarListaCompleta = () => {
     });
 };
 
-const voltar = () => { router.back(); };
 const irParaBuscarReceita = () => { router.push('/buscar-receita'); };
 const irParaChefinho = () => { router.push('/chefinho'); };
 </script>
@@ -433,6 +659,16 @@ const irParaChefinho = () => { router.push('/chefinho'); };
     gap: 20px;
     align-self: center;
     padding: 24px 20px 60px 20px;
+}
+
+.api-error-banner {
+    background-color: #FDECEA;
+    border: 1px solid #F5C2C7;
+    color: #842029;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
 }
 
 header.header-normal {
@@ -524,13 +760,18 @@ header.header-normal {
     transition: 0.3s;
 }
 
-.icon-action-btn.delete:hover {
+.icon-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.icon-action-btn.delete:hover:not(:disabled) {
     background-color: var(--vermelho);
     color: white;
     border-color: var(--vermelho);
 }
 
-.icon-action-btn.copie:hover {
+.icon-action-btn.copie:hover:not(:disabled) {
     background-color: var(--verde);
     color: white;
     border-color: var(--verde-escuro);
@@ -602,6 +843,9 @@ header.header-normal {
     font-size: 12px;
     font-weight: 600;
     color: var(--marrom);
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .add-recipe-chip-btn {
@@ -682,7 +926,6 @@ header.header-normal {
 .select-wrapper::after {
     content: "▼";
     position: absolute;
-
     right: 16px;
     top: 50%;
     transform: translateY(-50%);
@@ -836,8 +1079,13 @@ header.header-normal {
     cursor: pointer;
 }
 
-.remove-item-btn:hover {
+.remove-item-btn:hover:not(:disabled) {
     color: var(--vermelho);
+}
+
+.remove-item-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 .empty-state-container {

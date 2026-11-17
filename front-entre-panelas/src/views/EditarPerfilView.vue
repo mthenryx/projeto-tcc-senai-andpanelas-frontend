@@ -28,7 +28,7 @@
                     </button>
                 </div>
 
-                <div class="card-formulario">
+                <form class="card-formulario" @submit.prevent="salvarPerfil">
                     <div class="secao-capa-grupo">
                         <span class="label-secao">Imagem de capa</span>
                         <div 
@@ -52,9 +52,14 @@
                                 </div>
                             </div>
 
-                            <button type="button" class="botao-alterar-capa" @click="dispararInputBanner">
+                            <button
+                                type="button"
+                                class="botao-alterar-capa"
+                                :disabled="enviandoMidia"
+                                @click="dispararInputBanner"
+                            >
                                 <img src="../../public/icon_paisagem.png" alt="Ícone Imagem" class="icone-img-capa" />
-                                <span>Alterar capa</span>
+                                <span>{{ enviandoMidia ? 'Enviando...' : 'Alterar capa' }}</span>
                             </button>
                         </div>
                     </div>
@@ -78,7 +83,7 @@
                     <div class="campos-grid">
                         <div class="campo-grupo">
                             <label>Nome de exibição</label>
-                            <input type="text" v-model="form.nomeCompleto" maxlength="150" required/>
+                            <input type="text" v-model="form.nomeCompleto" maxlength="150" required />
                         </div>
 
                         <div class="campo-grupo">
@@ -93,22 +98,27 @@
                         <span class="bio-helper">Sua bio aparecerá abaixo do nome no perfil.</span>
                     </div>
 
+                    <p v-if="mensagemErro" class="mensagem-feedback-erro">{{ mensagemErro }}</p>
+
                     <div class="acoes-formulario">
                         <button type="button" class="btn-cancelar" @click="voltarPerfil">Cancelar</button>
-                        <button type="button" class="btn-salvar" @click="salvarPerfil">Salvar</button>
+                        <button type="submit" class="btn-salvar" :disabled="salvando || enviandoMidia">
+                            {{ salvando ? 'Salvando...' : 'Salvar' }}
+                        </button>
                     </div>
-                </div>
+                </form>
             </div>
         </main>
     </div>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import BarraNavegacao from '@/components/BarraNavegacao.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import { authService } from '@/services/authService'
+import { getBuscarUsuario, putUsuarioLogado } from '@/services/usuarios'
 
 const router = useRouter()
 
@@ -117,21 +127,54 @@ const uploadPreset = import.meta.env.VITE_CLOUDINARY_PRESET
 
 const inputFotoRef = ref(null)
 const inputBannerRef = ref(null)
+const salvando = ref(false)
+const enviandoMidia = ref(false)
+const mensagemErro = ref('')
 
 const form = reactive({
-    nomeCompleto: 'Ana Costa',
-    nomeUsuario: 'anacosta',
-    descricao: 'Chef caseira apaixonada por comida brasileira.',
+    nomeCompleto: '',
+    nomeUsuario: '',
+    descricao: '',
     fotoPerfilUrl: '',
     bannerUrl: ''
 })
 
+const obterIdUsuarioLogado = () => {
+    const user = authService.getUser?.()
+    return user?.id ?? user?.id_usuario ?? user?.usuario?.id ?? null
+}
+
+const carregarDadosAtuais = async () => {
+    const id = obterIdUsuarioLogado()
+    if (!id) {
+        router.push('/')
+        return
+    }
+
+    try {
+        const resposta = await getBuscarUsuario(id)
+        const raw = resposta?.usuario ?? resposta?.data ?? resposta ?? {}
+
+        form.nomeCompleto = raw.nome_completo ?? raw.nome ?? ''
+        form.nomeUsuario = raw.nome_usuario ?? raw.username ?? ''
+        form.descricao = raw.bio ?? raw.descricao ?? ''
+        form.fotoPerfilUrl = raw.foto_perfil ?? raw.foto_url ?? raw.fotoUrl ?? ''
+        form.bannerUrl = raw.foto_capa ?? raw.banner_url ?? raw.bannerUrl ?? ''
+    } catch (error) {
+        mensagemErro.value = error.message || 'Não foi possível carregar os dados do seu perfil.'
+    }
+}
+
+onMounted(() => {
+    carregarDadosAtuais()
+})
+
 const dispararInputFoto = () => {
-    inputFotoRef.value.click()
+    if (!enviandoMidia.value) inputFotoRef.value.click()
 }
 
 const dispararInputBanner = () => {
-    inputBannerRef.value.click()
+    if (!enviandoMidia.value) inputBannerRef.value.click()
 }
 
 const uploadParaCloudinary = async (file) => {
@@ -148,19 +191,22 @@ const uploadParaCloudinary = async (file) => {
     if (data.secure_url) {
         return data.secure_url
     }
-    throw new Error('Falha no upload para o Cloudinary')
+    throw new Error('Falha no upload da imagem.')
 }
 
 const handleFotoChange = async (event) => {
     const file = event.target.files[0]
     if (!file) return
 
+    mensagemErro.value = ''
+    enviandoMidia.value = true
     try {
         const url = await uploadParaCloudinary(file)
         form.fotoPerfilUrl = url
     } catch (error) {
-        console.error('Erro ao enviar foto de perfil:', error)
-        alert('Erro ao carregar a foto. Tente novamente.')
+        mensagemErro.value = error.message || 'Erro ao carregar a foto. Tente novamente.'
+    } finally {
+        enviandoMidia.value = false
     }
 }
 
@@ -168,12 +214,15 @@ const handleBannerChange = async (event) => {
     const file = event.target.files[0]
     if (!file) return
 
+    mensagemErro.value = ''
+    enviandoMidia.value = true
     try {
         const url = await uploadParaCloudinary(file)
         form.bannerUrl = url
     } catch (error) {
-        console.error('Erro ao enviar banner:', error)
-        alert('Erro ao carregar o banner. Tente novamente.')
+        mensagemErro.value = error.message || 'Erro ao carregar o banner. Tente novamente.'
+    } finally {
+        enviandoMidia.value = false
     }
 }
 
@@ -186,9 +235,41 @@ const sairDaConta = () => {
     router.push('/')
 }
 
-const salvarPerfil = () => {
-    console.log('Dados salvos:', form)
-    router.push('/perfil')
+const salvarPerfil = async () => {
+    mensagemErro.value = ''
+
+    const nomeLimpo = form.nomeCompleto.trim()
+    const usernameLimpo = form.nomeUsuario.trim().replace(/^@+/, '')
+
+    if (!nomeLimpo || !usernameLimpo) {
+        mensagemErro.value = 'Preencha o nome de exibição e o nome de usuário.'
+        return
+    }
+
+    salvando.value = true
+    try {
+        const payload = {
+            nome_completo: nomeLimpo,
+            nome_usuario: usernameLimpo,
+            bio: form.descricao.trim(),
+            foto_perfil: form.fotoPerfilUrl || null,
+            foto_capa: form.bannerUrl || null
+        }
+
+        const resposta = await putUsuarioLogado(payload)
+        const usuarioAtualizado = resposta?.usuario ?? resposta?.data ?? payload
+
+        const userLocal = authService.getUser?.()
+        if (userLocal && typeof authService.setUser === 'function') {
+            authService.setUser({ ...userLocal, ...usuarioAtualizado })
+        }
+
+        router.push('/perfil')
+    } catch (error) {
+        mensagemErro.value = error.message || 'Erro ao atualizar o perfil.'
+    } finally {
+        salvando.value = false
+    }
 }
 </script>
 
@@ -360,8 +441,13 @@ const salvarPerfil = () => {
     transition: background-color 0.2s;
 }
 
-.botao-alterar-capa:hover {
+.botao-alterar-capa:hover:not(:disabled) {
     background-color: var(--cinza-claro);
+}
+
+.botao-alterar-capa:disabled {
+    opacity: 0.7;
+    cursor: wait;
 }
 
 .icone-img-capa {
@@ -416,6 +502,13 @@ const salvarPerfil = () => {
     color: var(--cinza);
 }
 
+.mensagem-feedback-erro {
+    font-size: 13px;
+    color: var(--vermelho);
+    font-weight: 500;
+    margin: 0;
+}
+
 .acoes-formulario {
     display: flex;
     justify-content: flex-end;
@@ -452,8 +545,13 @@ const salvarPerfil = () => {
     transition: background-color 0.2s;
 }
 
-.btn-salvar:hover {
+.btn-salvar:hover:not(:disabled) {
     background-color: var(--verde-escuro);
+}
+
+.btn-salvar:disabled {
+    opacity: 0.7;
+    cursor: wait;
 }
 
 .header-titles {

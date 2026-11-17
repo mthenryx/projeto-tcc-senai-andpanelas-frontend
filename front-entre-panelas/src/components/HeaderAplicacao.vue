@@ -61,7 +61,7 @@ onMounted(async () => {
         const dadosApi = res?.response?.dados || res?.dados || null
         if (dadosApi) {
             preencherUsuario(dadosApi)
-            authService.setUser({ ...(userLocal || {}), ...dadosApi })
+            authService.setUser({ ...userLocal, ...dadosApi })
         }
     } catch {
         // Mantém os dados locais caso a requisição falhe

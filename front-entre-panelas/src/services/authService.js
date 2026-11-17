@@ -59,7 +59,7 @@ export const authService = {
         const perfilRes = await getUsuarioLogado(token)
         const perfil = perfilRes?.response?.dados || perfilRes?.dados || null
         if (perfil) {
-          dadosUsuario = { ...(dadosUsuario || {}), ...perfil }
+          dadosUsuario = { ...dadosUsuario, ...perfil }
         }
       } catch {
         // Fallback para extração via payload do JWT caso /usuarios/me falhe
@@ -69,7 +69,7 @@ export const authService = {
     if (!dadosUsuario?.id) {
       const idToken = extrairIdDoToken(token)
       if (idToken) {
-        dadosUsuario = { ...(dadosUsuario || {}), id: idToken }
+        dadosUsuario = { ...dadosUsuario, id: idToken }
       }
     }
 
