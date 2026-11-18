@@ -755,6 +755,7 @@ onUnmounted(() => {
     color: #a89f91;
     text-align: center;
     padding-top: 20px;
+    padding-bottom: 20px;
 }
 
 .sidebar-chevron {

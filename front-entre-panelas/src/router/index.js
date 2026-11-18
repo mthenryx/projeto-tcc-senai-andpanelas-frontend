@@ -126,12 +126,6 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/teste',
-      name: 'teste',
-      component: TesteView,
-      meta: { requiresAuth: true }
-    },
-    {
       path: '/receitas/editar/:id',
       name: 'editar-receita',
       component: () => import('@/views/CriarReceitaView.vue')
