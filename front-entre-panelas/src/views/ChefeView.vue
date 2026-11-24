@@ -140,6 +140,7 @@ import ChatMessage from '@/components/ChatMessage.vue';
 import authService from '@/services/authService';
 import { getUsuarioLogado } from '@/services/usuarios';
 import {
+    getStatusChefinho,
     getListarConversasChefinho,
     postCriarConversaChefinho,
     getBuscarConversaChefinho,
@@ -221,10 +222,8 @@ const obterIdUsuarioLogado = async () => {
 
 const verificarStatusChefinho = async () => {
     try {
-        const chefinhoBaseUrl = import.meta.env.VITE_CHEFINHO_API_URL || 'http://localhost:3001/v1/chefinho';
-        const response = await fetch(`${chefinhoBaseUrl}/status`);
-        const data = await response.json().catch(() => null);
-        statusOnline.value = response.status === 200 && Boolean(data?.success);
+        const data = await getStatusChefinho();
+        statusOnline.value = Boolean(data?.response?.online);
     } catch {
         statusOnline.value = false;
     }
@@ -258,24 +257,12 @@ const rolarParaBaixo = async () => {
     }
 };
 
-const montarHistoricoCronologico = () => {
-    return mensagensAtuais.value
-        .filter((msg) => !msg.padrao && !msg.digitando && msg.texto)
-        .slice(-10)
-        .map((msg) => ({
-            papel: msg.remetente === 'user' ? 'user' : 'agente',
-            mensagem: msg.texto.slice(0, 3000)
-        }));
-};
-
 const enviarMensagem = async (textoParaEnviar) => {
     const textoLimpo = textoParaEnviar?.trim();
     if (!textoLimpo || enviandoMensagem.value) return;
 
     erroApi.value = '';
     enviandoMensagem.value = true;
-
-    const historicoConversa = montarHistoricoCronologico();
 
     mensagensAtuais.value.push({
         remetente: 'user',
@@ -321,14 +308,14 @@ const enviarMensagem = async (textoParaEnviar) => {
         }
 
         const resMensagem = await postMensagemChefinho(conversaAtualId.value, {
-            historico_conversa: historicoConversa,
-            pergunta_atual: textoLimpo
+            mensagem: textoLimpo
         });
 
         const textoResposta =
-            resMensagem?.response?.resposta_chefinho?.conteudo ||
-            resMensagem?.resposta_chefinho?.conteudo ||
+            resMensagem?.response?.mensagem ||
+            resMensagem?.mensagem ||
             'Não recebi uma resposta do Chefinho no momento.';
+        statusOnline.value = true;
 
         mensagensAtuais.value.pop();
         mensagensAtuais.value.push({
@@ -360,7 +347,7 @@ const carregarConversa = async (id) => {
 
         if (Array.isArray(mensagensApi) && mensagensApi.length > 0) {
             mensagensAtuais.value = mensagensApi.map((msg) => ({
-                remetente: msg.tipo_remetente === 'usuario' ? 'user' : 'chefinho',
+                remetente: ['user', 'usuario'].includes(msg.tipo_remetente) ? 'user' : 'chefinho',
                 texto: msg.conteudo
             }));
         } else {

@@ -23,20 +23,20 @@ async function request(endpoint, { method = 'GET', dados, jwt, fallbackError } =
 }
 
 export async function getListarCategorias() {
-  return request('/categorias', {
+  return request('/categoria', {
     fallbackError: 'Erro ao listar as categorias!'
   })
 }
 
 export async function getListarTags(params = {}) {
   const query = new URLSearchParams(params).toString()
-  return request(`/tags${query ? `?${query}` : ''}`, {
+  return request(`/tag${query ? `?${query}` : ''}`, {
     fallbackError: 'Erro ao listar as tags!'
   })
 }
 
 export async function postTag(dados, jwt) {
-  return request('/tags', {
+  return request('/tag', {
     method: 'POST',
     dados,
     jwt,
@@ -45,13 +45,13 @@ export async function postTag(dados, jwt) {
 }
 
 export async function getListarCategoriasComunidades() {
-  return request('/categorias-comunidades', {
+  return request('/categoria_principal', {
     fallbackError: 'Erro ao listar as categorias de comunidades!'
   })
 }
 
 export async function postCategoriaComunidade(dados, jwt) {
-  return request('/categorias-comunidades', {
+  return request('/categoria_principal', {
     method: 'POST',
     dados,
     jwt,

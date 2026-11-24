@@ -159,6 +159,8 @@ const extrairLista = (res) => {
     if (!res) return [];
     if (Array.isArray(res)) return res;
     if (Array.isArray(res?.response?.dados)) return res.response.dados;
+    if (Array.isArray(res?.response?.comunidade)) return res.response.comunidade;
+    if (Array.isArray(res?.response?.comunidades)) return res.response.comunidades;
     if (Array.isArray(res?.response)) return res.response;
     if (Array.isArray(res?.dados)) return res.dados;
     return [];

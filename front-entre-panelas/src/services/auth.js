@@ -12,7 +12,7 @@ async function request(endpoint, dados, fallbackError) {
   const data = await response.json().catch(() => null)
 
   if (!response.ok || (data && data.status === false)) {
-    throw new Error(data?.message || fallbackError)
+    throw new Error(data?.field || data?.message || fallbackError)
   }
 
   return data

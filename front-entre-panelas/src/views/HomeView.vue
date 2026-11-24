@@ -230,6 +230,16 @@ const gerarIniciais = (nome) => {
     return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
 };
 
+const extrairListaReceitas = (res) => {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.response)) return res.response;
+    if (Array.isArray(res?.response?.dados)) return res.response.dados;
+    if (Array.isArray(res?.response?.receitas)) return res.response.receitas;
+    if (Array.isArray(res?.dados)) return res.dados;
+    if (Array.isArray(res?.receitas)) return res.receitas;
+    return [];
+};
+
 const normalizarReceita = (rec) => {
     if (!rec) return null;
     const autorNome = rec.usuario?.nome || rec.autor_nome || 'Chef Entre Panelas';
@@ -241,7 +251,7 @@ const normalizarReceita = (rec) => {
         titulo: rec.titulo || 'Receita sem título',
         descricao: rec.descricao || '',
         tempo: formatarTempo(rec.tempo),
-        porcoes: formatarPorcoes(rec.id_porcao ?? rec.porcoes),
+        porcoes: formatarPorcoes(rec.id_porcao ?? rec.porcao ?? rec.porcoes),
         custo: MAPA_CUSTO[rec.id_custo] || rec.custo || 'Econômico',
         dificuldade: MAPA_DIFICULDADE[rec.id_dificuldade] || rec.dificuldade || 'Fácil',
         curtidas: Number(rec.qtd_curtidas ?? rec.qtd_curtida ?? 0),
@@ -348,7 +358,7 @@ const receitasSeguindo = computed(() => {
 const carregarFeedReceitas = async () => {
     try {
         const res = await getListarReceitas({ limite: 50, ordenar_por: 'recente' });
-        const dados = res?.response?.dados || [];
+        const dados = extrairListaReceitas(res);
         todasReceitasFeed.value = dados.map(normalizarReceita).filter(Boolean);
     } catch (erro) {
         console.error('Erro ao carregar feed de receitas:', erro);
@@ -382,7 +392,7 @@ const carregarCategoriasPopulares = async () => {
 
                 const mapaUnico = new Map();
                 respostas.forEach(res => {
-                    const lista = res?.response?.dados || [];
+                    const lista = extrairListaReceitas(res);
                     lista.forEach(item => {
                         if (!mapaUnico.has(item.id)) {
                             mapaUnico.set(item.id, normalizarReceita(item));
@@ -424,7 +434,7 @@ const verTodasCategoria = async (grupoCategoria) => {
 
         const mapaUnico = new Map();
         respostas.forEach(res => {
-            const lista = res?.response?.dados || [];
+            const lista = extrairListaReceitas(res);
             lista.forEach(item => {
                 if (!mapaUnico.has(item.id)) {
                     mapaUnico.set(item.id, normalizarReceita(item));

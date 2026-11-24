@@ -411,8 +411,15 @@ const extrairLista = (res) => {
     if (!res) return [];
     if (Array.isArray(res)) return res;
     if (Array.isArray(res?.response?.dados)) return res.response.dados;
+    if (Array.isArray(res?.response?.categoria)) return res.response.categoria;
+    if (Array.isArray(res?.response?.tag)) return res.response.tag;
+    if (Array.isArray(res?.response?.comunidade)) return res.response.comunidade;
+    if (Array.isArray(res?.response?.categoriaPrincipal)) return res.response.categoriaPrincipal;
     if (Array.isArray(res?.response)) return res.response;
     if (Array.isArray(res?.dados)) return res.dados;
+    if (Array.isArray(res?.categoria)) return res.categoria;
+    if (Array.isArray(res?.tag)) return res.tag;
+    if (Array.isArray(res?.comunidade)) return res.comunidade;
     if (Array.isArray(res?.categorias)) return res.categorias;
     if (Array.isArray(res?.tags)) return res.tags;
     if (Array.isArray(res?.comunidades)) return res.comunidades;
@@ -844,6 +851,10 @@ const salvarReceita = async () => {
                 res?.response?.dados?.id ||
                 res?.id ||
                 null;
+
+            if (!receitaSalvaId.value) {
+                throw new Error('A API não retornou o ID da receita criada. Verifique a resposta do servidor antes de considerar a publicação concluída.');
+            }
         }
 
         sucessoPublicacao.value = true;

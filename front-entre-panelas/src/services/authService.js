@@ -27,22 +27,6 @@ export const authService = {
       throw new Error('Preencha todos os campos!')
     }
 
-    // [TEMP DEV BYPASS] Remover antes do deploy
-    if (email === '09matheushenry@gmail.com' && senha === 'Matheus@2009') {
-      const payloadFalso = btoa(JSON.stringify({ id: 1, id_usuario: 1, sub: 1 }))
-      const tokenFalso = `header.${payloadFalso}.signature`
-      const usuarioFalso = {
-        id: 1,
-        nome: 'Matheus Henry',
-        email: '09matheushenry@gmail.com'
-      }
-
-      this.setToken(tokenFalso)
-      this.setUser(usuarioFalso)
-      return usuarioFalso
-    }
-    // [/TEMP DEV BYPASS]
-
     const resultado = await postLogin({ email, senha })
     const { token, usuario } = resultado?.response || {}
 

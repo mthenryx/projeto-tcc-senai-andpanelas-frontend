@@ -10,21 +10,29 @@ async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackErro
   if (dados !== undefined) headers['Content-Type'] = 'application/json'
   if (token) headers['Authorization'] = `Bearer ${token}`
 
-  const options = { method, headers }
+  const options = { method, headers, ...(method === 'GET' ? { cache: 'no-store' } : {}) }
   if (dados !== undefined) options.body = JSON.stringify(dados)
 
   const response = await fetch(`${baseUrl}${endpoint}`, options)
   const data = await response.json().catch(() => null)
 
   if (!response.ok || (data && data.status === false)) {
-    throw new Error(data?.message || fallbackError)
+    const detalhe = data?.field ? ` Campo: ${data.field}.` : ''
+    const mensagem = data?.message || fallbackError || 'Não foi possível concluir a requisição.'
+    const erro = new Error(`${mensagem}${detalhe}`)
+    erro.status = response.status
+    erro.resposta = data
+    throw erro
   }
 
   return data ?? true
 }
 
 export async function obterIdUsuarioLogado() {
-  const usuarioLocal = authService.getUsuario?.()
+  const idAutenticado = authService.getUserId?.()
+  if (idAutenticado) return Number(idAutenticado)
+
+  const usuarioLocal = authService.getUser?.() || authService.getUsuario?.()
   if (usuarioLocal?.id) return Number(usuarioLocal.id)
 
   try {
@@ -70,23 +78,32 @@ export async function obterIdUsuarioLogado() {
 }
 
 export async function getListarComunidades(params = {}) {
-  const query = new URLSearchParams(params).toString()
+  const parametros = { ...params }
+  const idUsuario = authService.getUserId?.()
+  if (idUsuario && !parametros.idUser) parametros.idUser = idUsuario
+  const query = new URLSearchParams(parametros).toString()
   return request(`${query ? `?${query}` : ''}`, {
     fallbackError: 'Erro ao listar as comunidades!'
   })
 }
 
 export async function postComunidade(dados, jwt) {
-  return request('', {
+  const idUsuario = Number(dados?.id_usuario || authService.getUserId?.())
+  if (!idUsuario) throw new Error('Não foi possível identificar o usuário logado para criar a comunidade.')
+
+  const { id_usuario, ...comunidade } = dados
+  return request(`/${idUsuario}`, {
     method: 'POST',
-    dados,
+    dados: comunidade,
     jwt,
     fallbackError: 'Erro ao criar uma nova comunidade!'
   })
 }
 
 export async function getBuscarComunidade(id) {
-  return request(`/${id}`, {
+  const idUsuario = authService.getUserId?.()
+  const query = idUsuario ? `?idUser=${encodeURIComponent(idUsuario)}` : ''
+  return request(`/${id}${query}`, {
     fallbackError: `Erro ao buscar a comunidade: ${id}`
   })
 }
@@ -109,7 +126,10 @@ export async function deleteComunidade(id, jwt) {
 }
 
 export async function postEntrarComunidade(id, jwt) {
-  return request(`/${id}/entrar`, {
+  const idUsuario = authService.getUserId?.()
+  if (!idUsuario) throw new Error('Não foi possível identificar o usuário logado.')
+
+  return request(`/${idUsuario}/${id}/entrar`, {
     method: 'POST',
     jwt,
     fallbackError: 'Erro ao entrar na comunidade!'
@@ -117,7 +137,10 @@ export async function postEntrarComunidade(id, jwt) {
 }
 
 export async function deleteSairComunidade(id, jwt) {
-  return request(`/${id}/sair`, {
+  const idUsuario = authService.getUserId?.()
+  if (!idUsuario) throw new Error('Não foi possível identificar o usuário logado.')
+
+  return request(`/${idUsuario}/${id}/sair`, {
     method: 'DELETE',
     jwt,
     fallbackError: 'Erro ao sair da comunidade!'
@@ -134,7 +157,7 @@ export async function getReceitasDaComunidade(id, params = {}) {
 export async function getListarCategoriasComunidade(params = {}) {
   const query = new URLSearchParams(params).toString()
   return request(`${query ? `?${query}` : ''}`, {
-    baseUrl: `${BASE_URL}/categoria-comunidades`,
+    baseUrl: `${BASE_URL}/categoria_principal`,
     fallbackError: 'Erro ao listar as categorias de comunidade!'
   })
 }
@@ -144,7 +167,7 @@ export async function postCategoriaComunidade(dados, jwt) {
     method: 'POST',
     dados,
     jwt,
-    baseUrl: `${BASE_URL}/categoria-comunidades`,
+    baseUrl: `${BASE_URL}/categoria_principal`,
     fallbackError: 'Erro ao cadastrar a categoria da comunidade!'
   })
 }

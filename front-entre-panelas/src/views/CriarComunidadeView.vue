@@ -270,8 +270,11 @@ const extrairLista = (res) => {
     if (!res) return [];
     if (Array.isArray(res)) return res;
     if (Array.isArray(res?.response?.dados)) return res.response.dados;
+    if (Array.isArray(res?.response?.categoriaPrincipal)) return res.response.categoriaPrincipal;
+    if (Array.isArray(res?.response?.categoria_principal)) return res.response.categoria_principal;
     if (Array.isArray(res?.response)) return res.response;
     if (Array.isArray(res?.dados)) return res.dados;
+    if (Array.isArray(res?.categoriaPrincipal)) return res.categoriaPrincipal;
     return [];
 };
 
@@ -354,7 +357,7 @@ const carregarDadosComunidadeEdicao = async (id) => {
                     c => c.nome.toLowerCase() === categoriaAtual.toLowerCase()
                 );
                 const itemCategoria = existenteNaApi || {
-                    id: dados.id_categoria ? Number(dados.id_categoria) : null,
+                    id: (dados.id_categoria_principal || dados.id_categoria) ? Number(dados.id_categoria_principal || dados.id_categoria) : null,
                     nome: categoriaAtual
                 };
                 categoriasDisponiveis.value = [itemCategoria, ...categoriasDisponiveis.value].slice(
@@ -570,11 +573,16 @@ const validarECriarComunidade = async () => {
         c => c.nome.toLowerCase() === form.categoria.trim().toLowerCase()
     );
 
+    if (!categoriaEncontrada?.id) {
+        erroApi.value = 'A categoria selecionada não possui um ID válido. Escolha uma categoria cadastrada ou cadastre uma nova antes de publicar.';
+        return;
+    }
+
     const payload = {
         nome: form.nome.trim(),
         descricao: form.descricao.trim(),
         categoria: form.categoria.trim(),
-        ...(categoriaEncontrada?.id ? { id_categoria: Number(categoriaEncontrada.id) } : {}),
+        ...(categoriaEncontrada?.id ? { id_categoria_principal: Number(categoriaEncontrada.id) } : {}),
         banner_url: form.banner_url,
         foto_url: form.foto_url,
         id_usuario: Number(usuarioLogadoId.value)
@@ -593,6 +601,10 @@ const validarECriarComunidade = async () => {
                 res?.response?.dados?.id ||
                 res?.id ||
                 null;
+
+            if (!comunidadeSalvaId.value) {
+                throw new Error('A API não retornou o ID da comunidade criada. Verifique a resposta do servidor antes de considerar a publicação concluída.');
+            }
         }
 
         sucessoCriacao.value = true;

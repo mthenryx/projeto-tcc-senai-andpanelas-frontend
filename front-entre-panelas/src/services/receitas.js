@@ -10,14 +10,19 @@ async function request(fullUrl, { method = 'GET', dados, jwt, fallbackError } = 
   if (dados !== undefined) headers['Content-Type'] = 'application/json'
   if (token) headers['Authorization'] = `Bearer ${token}`
 
-  const options = { method, headers }
+  const options = { method, headers, ...(method === 'GET' ? { cache: 'no-store' } : {}) }
   if (dados !== undefined) options.body = JSON.stringify(dados)
 
   const response = await fetch(fullUrl, options)
   const data = await response.json().catch(() => null)
 
   if (!response.ok || (data && data.status === false)) {
-    throw new Error(data?.message || fallbackError)
+    const detalhe = data?.field ? ` Campo: ${data.field}.` : ''
+    const mensagem = data?.message || fallbackError || 'Não foi possível concluir a requisição.'
+    const erro = new Error(`${mensagem}${detalhe}`)
+    erro.status = response.status
+    erro.resposta = data
+    throw erro
   }
 
   return data ?? true
@@ -40,14 +45,23 @@ export async function postReceita(dados, jwt) {
 }
 
 export async function getReceitasDaSemana() {
-  return request(`${url}/semana`, {
+  return request(`${url}/populares/semana`, {
     fallbackError: 'Erro ao listar as receitas da semana!'
   })
 }
 
 export async function getBuscarReceitasPorCategoria(params = {}) {
-  const query = new URLSearchParams(params).toString()
-  return request(`${url}/busca/categoria${query ? `?${query}` : ''}`, {
+  const parametros = { ...params }
+  const idCategoria = parametros.id_categoria ?? parametros.idCategoria
+  delete parametros.id_categoria
+  delete parametros.idCategoria
+
+  if (!idCategoria) {
+    throw new Error('Informe a categoria para buscar receitas.')
+  }
+
+  const query = new URLSearchParams(parametros).toString()
+  return request(`${url}/busca/categoria/${encodeURIComponent(idCategoria)}${query ? `?${query}` : ''}`, {
     fallbackError: 'Erro ao buscar receitas por categoria!'
   })
 }

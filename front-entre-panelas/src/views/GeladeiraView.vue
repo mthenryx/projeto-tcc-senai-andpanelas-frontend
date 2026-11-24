@@ -187,7 +187,7 @@ import {
     getListarGeladeira,
     postIngredienteGeladeira,
     deleteIngredienteGeladeira,
-    postCompatibilidadeGeladeira
+    getCompatibilidadeGeladeira
 } from '@/services/geladeira'
 
 const router = useRouter()
@@ -241,6 +241,7 @@ const extrairLista = (res) => {
     if (!res) return []
     if (Array.isArray(res)) return res
     if (Array.isArray(res?.response?.dados)) return res.response.dados
+    if (Array.isArray(res?.response?.receitas)) return res.response.receitas
     if (Array.isArray(res?.response)) return res.response
     if (Array.isArray(res?.dados)) return res.dados
     return []
@@ -366,7 +367,7 @@ const normalizarReceitaCompativel = async (item) => {
     const autorNome = recCompleta?.usuario?.nome || recCompleta?.autor_nome || 'Chef'
     const porcaoNum = Number(recCompleta?.id_porcao || recCompleta?.porcoes || 1)
     const tiposRefeicao = classificarTiposRefeicao(recCompleta?.categorias || recCompleta?.categoria)
-    const percentual = Math.round(Number(item?.compatibilidade_percentual ?? recCompleta?.compatibilidade_percentual ?? 0))
+    const percentual = Math.round(Number(item?.compatibilidade_percentual ?? item?.compatibilidade ?? recCompleta?.compatibilidade_percentual ?? recCompleta?.compatibilidade ?? 0))
 
     return {
         id,
@@ -516,13 +517,7 @@ const buscarReceitasCompativeis = async () => {
     buscandoReceitas.value = true
 
     try {
-        const payloadIngredientes = ingredientesGeladeira.value.map(item => ({
-            nome: item.nome,
-            quantidade: String(item.quantidade ?? 1),
-            id_unidade_medida: Number(item.id_unidade_medida || 5)
-        }))
-
-        const res = await postCompatibilidadeGeladeira(payloadIngredientes)
+        const res = await getCompatibilidadeGeladeira()
         const listaBruta = extrairLista(res)
 
         const normalizadas = await Promise.all(listaBruta.map(normalizarReceitaCompativel))
