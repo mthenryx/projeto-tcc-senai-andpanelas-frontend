@@ -386,7 +386,7 @@ const normalizarReceitaCompativel = async (item) => {
         autorNome,
         authorIniciais: obterIniciais(autorNome),
         dificuldade: mapearDificuldade(recCompleta?.id_dificuldade),
-        salvo: Boolean(recCompleta?.eh_salva_pelo_usuario ?? recCompleta?.salvo),
+        salvo: Boolean(recCompleta?.salvo_pelo_usuario ?? recCompleta?.eh_salva_pelo_usuario ?? recCompleta?.salvo),
         tiposRefeicao,
         compatibilidade: `${percentual}%`,
         compatibilidadeValor: percentual,

@@ -367,7 +367,7 @@ const carregarDadosUsuario = async (targetId) => {
         }
 
         if (resComunidades.status === 'fulfilled') {
-            const lista = extrairLista(resComunidades.value, ['comunidades', 'items'])
+            const lista = extrairLista(resComunidades.value, ['comunidade', 'comunidades', 'items'])
             comunidades.value = lista.map((c, idx) => normalizarComunidade(c, idx))
         }
     } catch (error) {

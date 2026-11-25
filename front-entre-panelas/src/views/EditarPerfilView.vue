@@ -153,7 +153,7 @@ const carregarDadosAtuais = async () => {
 
     try {
         const resposta = await getBuscarUsuario(id)
-        const raw = resposta?.usuario ?? resposta?.data ?? resposta ?? {}
+        const raw = resposta?.response?.usuario ?? resposta?.usuario ?? resposta?.data ?? resposta ?? {}
 
         form.nomeCompleto = raw.nome_completo ?? raw.nome ?? ''
         form.nomeUsuario = raw.nome_usuario ?? raw.username ?? ''
@@ -249,15 +249,15 @@ const salvarPerfil = async () => {
     salvando.value = true
     try {
         const payload = {
-            nome_completo: nomeLimpo,
-            nome_usuario: usernameLimpo,
-            bio: form.descricao.trim(),
+            nome: nomeLimpo,
+            username: usernameLimpo,
+            descricao: form.descricao.trim(),
             foto_perfil: form.fotoPerfilUrl || null,
-            foto_capa: form.bannerUrl || null
+            banner_url: form.bannerUrl || null
         }
 
         const resposta = await putUsuarioLogado(payload)
-        const usuarioAtualizado = resposta?.usuario ?? resposta?.data ?? payload
+        const usuarioAtualizado = resposta?.response ?? resposta?.usuario ?? resposta?.data ?? payload
 
         const userLocal = authService.getUser?.()
         if (userLocal && typeof authService.setUser === 'function') {

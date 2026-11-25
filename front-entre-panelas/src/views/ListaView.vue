@@ -254,6 +254,8 @@ const extrairLista = (res) => {
     if (!res) return [];
     if (Array.isArray(res)) return res;
     if (Array.isArray(res?.response?.dados)) return res.response.dados;
+    if (Array.isArray(res?.response?.receitas)) return res.response.receitas;
+    if (Array.isArray(res?.response?.ingredientes)) return res.response.ingredientes;
     if (Array.isArray(res?.response)) return res.response;
     if (Array.isArray(res?.dados)) return res.dados;
     return [];

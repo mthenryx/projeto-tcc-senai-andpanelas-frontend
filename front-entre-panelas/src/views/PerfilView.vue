@@ -274,7 +274,7 @@ const normalizarReceita = (item, salvoPadrao = false) => {
         authorIniciais: gerarIniciais(autorNome),
         autorFotoUrl: autorObj.foto_perfil ?? autorObj.foto_url ?? item.autor_foto_url ?? item.autorFotoUrl ?? '',
         dificuldade: item.dificuldade ?? 'Fácil',
-        salvo: Boolean(item.salvo ?? item.is_salvo ?? salvoPadrao)
+        salvo: Boolean(item.salvo_pelo_usuario ?? item.salvo ?? item.is_salvo ?? salvoPadrao)
     }
 }
 
@@ -336,7 +336,7 @@ const carregarPerfilCompleto = async () => {
         }
 
         if (resComunidades.status === 'fulfilled') {
-            const lista = extrairLista(resComunidades.value, ['comunidades', 'items'])
+            const lista = extrairLista(resComunidades.value, ['comunidade', 'comunidades', 'items'])
             comunidades.value = lista.map((c, idx) => normalizarComunidade(c, idx))
         }
     } catch (error) {

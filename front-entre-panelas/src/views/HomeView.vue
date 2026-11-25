@@ -260,7 +260,7 @@ const normalizarReceita = (rec) => {
         autorNome,
         authorIniciais: gerarIniciais(autorNome),
         autorFotoUrl: rec.usuario?.foto_perfil || '',
-        salvo: Boolean(rec.eh_salva_pelo_usuario),
+        salvo: Boolean(rec.salvo_pelo_usuario ?? rec.eh_salva_pelo_usuario),
         categorias: Array.isArray(rec.categorias) ? rec.categorias : []
     };
 };

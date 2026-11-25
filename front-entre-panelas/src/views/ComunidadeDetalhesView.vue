@@ -264,7 +264,7 @@ const normalizarReceita = (rec) => ({
     custo: rec.custo || 'Econômico',
     curtidas: Number(rec.curtidas ?? rec.total_curtidas ?? 0),
     comentarios: Number(rec.comentarios ?? rec.total_comentarios ?? 0),
-    salvo: Boolean(rec.salvo),
+    salvo: Boolean(rec.salvo_pelo_usuario ?? rec.salvo),
     imagem_url: rec.imagem_url || rec.foto || ''
 });
 

@@ -318,7 +318,7 @@ const carregarDadosUsuario = async () => {
 
     try {
         const resposta = await getBuscarUsuario(id)
-        const raw = resposta?.usuario ?? resposta?.data ?? resposta ?? {}
+        const raw = resposta?.response?.usuario ?? resposta?.usuario ?? resposta?.data ?? resposta ?? {}
 
         const email = raw.email ?? ''
         const nascimento = formatarDataParaInput(raw.data_nascimento ?? raw.dataNascimento)

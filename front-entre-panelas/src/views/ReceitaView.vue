@@ -530,9 +530,9 @@ const carregarReceita = async (idReceita) => {
             authorIniciais: gerarIniciais(autorNome),
             autorFotoUrl: dados.usuario?.foto_perfil || '',
             seguindo: jaSegueAutor,
-            curtido: Boolean(dados.eh_curtida_pelo_usuario),
+            curtido: Boolean(dados.curtida_pelo_usuario ?? dados.eh_curtida_pelo_usuario),
             curtidas: Number(dados.qtd_curtidas ?? dados.qtd_curtida ?? 0),
-            salvo: Boolean(dados.eh_salva_pelo_usuario),
+            salvo: Boolean(dados.salvo_pelo_usuario ?? dados.eh_salva_pelo_usuario),
             tags: tagsNormalizadas,
             ingredientes: ingredientesFormatados,
             passos: passosFormatados
@@ -542,7 +542,7 @@ const carregarReceita = async (idReceita) => {
             comentarios.value = dados.comentarios.map(formatarComentarioApi);
         } else {
             const comRes = await getComentariosReceita(idReceita).catch(() => null);
-            const listaCom = comRes?.response?.dados || [];
+            const listaCom = comRes?.response?.comentarios || comRes?.response?.dados || [];
             comentarios.value = listaCom.map(formatarComentarioApi);
         }
     } catch (erro) {
@@ -732,7 +732,7 @@ const adicionarComentario = async () => {
     try {
         await postComentarioReceita(receita.value.id, { comentario: texto });
         const comRes = await getComentariosReceita(receita.value.id);
-        const listaCom = comRes?.response?.dados || [];
+        const listaCom = comRes?.response?.comentarios || comRes?.response?.dados || [];
         comentarios.value = listaCom.map(formatarComentarioApi);
     } catch (erro) {
         console.error('Erro ao comentar:', erro);
