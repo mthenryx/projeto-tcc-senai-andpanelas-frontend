@@ -74,9 +74,11 @@ export async function getBuscarReceitasPorNome(params = {}) {
 }
 
 export async function postBuscarReceitasPorIngredientes(dados) {
-  return request(`${url}/busca/ingredientes`, {
-    method: 'POST',
-    dados,
+  const params = new URLSearchParams()
+  const ingredientes = dados?.ingredientes || []
+  ingredientes.forEach((item) => params.append('ingredientes', typeof item === 'string' ? item : item.nome))
+
+  return request(`${url}/ingrediente/buscar?${params.toString()}`, {
     fallbackError: 'Erro ao buscar receitas pelos ingredientes!'
   })
 }
@@ -162,7 +164,7 @@ export async function postCompatibilidadeReceitas(dados, jwt) {
 }
 
 export async function getBuscasEmAlta() {
-  return request(`${BASE_URL}/em-alta`, {
+  return request(`${BASE_URL}/em_alta`, {
     fallbackError: 'Erro ao obter as buscas em alta!'
   })
 }

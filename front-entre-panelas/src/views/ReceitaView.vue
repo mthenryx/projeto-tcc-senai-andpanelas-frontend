@@ -466,7 +466,7 @@ const carregarReceita = async (idReceita) => {
     carregando.value = true;
     try {
         const res = await getBuscarReceita(idReceita);
-        const dados = res?.response?.dados || res?.dados;
+        const dados = Array.isArray(res?.response) ? res.response[0] : (res?.response?.dados || res?.dados);
         if (!dados) return;
 
         const autorNome = dados.usuario?.nome || 'Chef Entre Panelas';

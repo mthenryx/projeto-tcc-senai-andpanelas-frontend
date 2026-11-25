@@ -252,6 +252,7 @@ const extrairLista = (resposta, chaves = []) => {
             if (Array.isArray(resposta.data[chave])) return resposta.data[chave]
         }
     }
+    if (resposta.response && typeof resposta.response === 'object') return extrairLista(resposta.response, chaves)
     return []
 }
 
@@ -337,7 +338,7 @@ const carregarDadosUsuario = async (targetId) => {
         ])
 
         if (resUsuario.status === 'fulfilled' && resUsuario.value) {
-            const raw = resUsuario.value.usuario ?? resUsuario.value.data ?? resUsuario.value
+            const raw = resUsuario.value.response?.usuario ?? resUsuario.value.usuario ?? resUsuario.value.data ?? resUsuario.value
             usuario.value = {
                 id: raw.id ?? raw.id_usuario ?? targetId,
                 nome: raw.nome_completo ?? raw.nome ?? '',

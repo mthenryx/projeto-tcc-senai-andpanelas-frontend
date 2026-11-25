@@ -72,6 +72,10 @@
                             Carregando ingredientes salvos...
                         </div>
 
+                        <div v-else-if="ingredientesGeladeira.length === 0" class="estado-info-texto">
+                            Não tem itens na sua geladeira
+                        </div>
+
                         <div v-else-if="ingredientesGeladeira.length > 0" class="lista-ativos-container">
                             <div class="cabecalho-ativos">
                                 <span class="contador-geladeira">Na geladeira ({{ ingredientesGeladeira.length }})</span>
@@ -276,7 +280,7 @@ const carregarGeladeira = async () => {
             router.replace('/login')
             return
         }
-        if (msg.includes('não encontrado') || msg.includes('nenhum')) {
+        if (msg.includes('não encontrado') || msg.includes('não foram encontrados') || msg.includes('nenhum')) {
             ingredientesGeladeira.value = []
         } else {
             erroApi.value = erro.message || 'Erro ao carregar os ingredientes da geladeira.'
@@ -543,7 +547,7 @@ const buscarReceitasCompativeis = async () => {
 
 const irParaReceita = (id) => {
     if (id) {
-        router.push({ name: 'ReceitaDetalhes', params: { id } })
+        router.push({ name: 'receita', params: { id } })
     }
 }
 

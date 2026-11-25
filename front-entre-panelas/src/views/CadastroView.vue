@@ -179,7 +179,7 @@
 import { reactive, ref, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import BannerEsquerdo from '@/components/BannerEsquerdo.vue'
-import { postRegistro, postVerificarEmail } from '@/services/auth'
+import { postRegistro, postVerificarEmail, postReenviarCodigo } from '@/services/auth'
 import { authService } from '@/services/authService'
 
 const router = useRouter()
@@ -208,6 +208,7 @@ const codigo = reactive(['', '', '', '', '', ''])
 const codigoInputRefs = ref([])
 const tempoRestante = ref(45)
 let timerInterval = null
+let idUsuarioCadastro = null
 
 const form = reactive({
   nomeCompleto: '',
@@ -333,7 +334,8 @@ const handleSubmit = async () => {
   enviandoCadastro.value = true
 
   try {
-    await postRegistro(montarPayloadRegistro())
+    const resRegistro = await postRegistro(montarPayloadRegistro())
+    idUsuarioCadastro = resRegistro?.response?.id ?? null
     erroModal.value = ''
     sucessoModal.value = ''
     exibirModal.value = true
@@ -388,8 +390,7 @@ const verificarCodigo = async () => {
   verificandoCodigo.value = true
 
   try {
-    await postVerificarEmail({
-      email: form.email.trim(),
+    await postVerificarEmail(idUsuarioCadastro, {
       codigo: codigoCompleto
     })
 
@@ -410,7 +411,7 @@ const reenviarCodigo = async () => {
   sucessoModal.value = ''
 
   try {
-    await postRegistro(montarPayloadRegistro())
+    await postReenviarCodigo(idUsuarioCadastro)
     sucessoModal.value = 'Novo código enviado para o seu e-mail!'
     iniciarTimer(60)
   } catch (error) {

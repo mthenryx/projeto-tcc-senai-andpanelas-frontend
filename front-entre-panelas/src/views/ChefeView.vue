@@ -223,7 +223,7 @@ const obterIdUsuarioLogado = async () => {
 const verificarStatusChefinho = async () => {
     try {
         const data = await getStatusChefinho();
-        statusOnline.value = Boolean(data?.response?.online);
+        statusOnline.value = data?.success === true;
     } catch {
         statusOnline.value = false;
     }

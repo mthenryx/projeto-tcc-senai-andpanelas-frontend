@@ -283,7 +283,7 @@ const carregarDetalhesComunidade = async (idParam) => {
             getReceitasDaComunidade(id, { limite: 50 }).catch(() => null)
         ]);
 
-        const dados = comRes?.response?.dados || comRes?.response || comRes?.dados || comRes;
+        const dados = comRes?.response?.comunidade?.[0] || comRes?.response?.dados || comRes?.response || comRes?.dados || comRes;
 
         if (!dados || !dados.nome) {
             throw new Error('Comunidade não encontrada.');
@@ -358,7 +358,7 @@ const voltar = () => {
 };
 
 const irParaReceita = (id) => {
-    router.push({ name: 'ReceitaDetalhes', params: { id } });
+    router.push({ name: 'receita', params: { id } });
 };
 
 const obterIniciais = (nome) => {

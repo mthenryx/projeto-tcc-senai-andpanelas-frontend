@@ -1,7 +1,7 @@
 import { authService } from './authService'
 
 const BASE_URL = import.meta.env.VITE_API_URL
-const url = `${BASE_URL}/usuarios/me/geladeira`
+const url = `${BASE_URL}/geladeira/me/usuario`
 
 function obterIdUsuario(jwt) {
   const idUsuario = authService.getUserId?.()
@@ -31,9 +31,9 @@ async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackErro
 }
 
 export async function getListarGeladeira(params = {}, jwt) {
-  const idUsuario = obterIdUsuario(jwt)
+  obterIdUsuario(jwt)
   const query = new URLSearchParams(params).toString()
-  return request(`/${idUsuario}${query ? `?${query}` : ''}`, {
+  return request(`${query ? `?${query}` : ''}`, {
     jwt,
     fallbackError: 'Erro ao listar os ingredientes da geladeira!'
   })
@@ -67,8 +67,8 @@ export async function deleteIngredienteGeladeira(id, jwt) {
 }
 
 export async function getCompatibilidadeGeladeira(jwt) {
-  const idUsuario = obterIdUsuario(jwt)
-  return request(`/receitas/compatibilidade/${idUsuario}`, {
+  obterIdUsuario(jwt)
+  return request('/receitas/compatibilidade', {
     jwt,
     fallbackError: 'Erro ao buscar receitas compatíveis com a geladeira!'
   })

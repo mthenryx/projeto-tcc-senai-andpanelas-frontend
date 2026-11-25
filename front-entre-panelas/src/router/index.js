@@ -137,15 +137,13 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to) => {
   const isLogged = authService.isAuthenticated()
 
   if (to.meta.requiresAuth && !isLogged) {
-    next({ name: 'login' })
+    return { name: 'login' }
   } else if (to.name === 'login' && isLogged) {
-    next({ name: 'home' })
-  } else {
-    next()
+    return { name: 'home' }
   }
 })
 

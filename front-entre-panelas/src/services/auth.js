@@ -22,8 +22,12 @@ export async function postRegistro(dados) {
   return request('/registro', dados, 'Erro ao realizar o registro!')
 }
 
-export async function postVerificarEmail(dados) {
-  return request('/verificar-email', dados, 'Erro ao verificar o e-mail!')
+export async function postVerificarEmail(idUsuario, dados) {
+  return request(`/${idUsuario}/verificar-email/`, dados, 'Erro ao verificar o e-mail!')
+}
+
+export async function postReenviarCodigo(idUsuario) {
+  return request(`/${idUsuario}/reenviar-codigo`, {}, 'Erro ao reenviar o código!')
 }
 
 export async function postLogin(dados) {

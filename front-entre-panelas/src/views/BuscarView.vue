@@ -453,14 +453,14 @@ const buscarUsuariosNaApi = async () => {
     carregando.value = true;
     try {
         if (termoLimpo.startsWith('@') && termoLimpo.length > 1) {
-            const res = await getBuscarUsuarioPorUsername({ username: termoLimpo.slice(1) });
-            const dados = res?.response?.dados || [];
+            const res = await getBuscarUsuarioPorUsername({ nome: termoLimpo.slice(1) });
+            const dados = res?.response?.usuarios || res?.response?.receitas || res?.response?.dados || [];
             resultadosBuscaUsuarios.value = dados
                 .filter(u => Number(u.id) !== Number(usuarioLogadoId.value))
                 .map(normalizarUsuario);
         } else {
             const res = await getListarUsuarios({ busca: termoLimpo, limite: 30 });
-            const dados = res?.response?.dados || [];
+            const dados = res?.response?.usuarios || res?.response?.receitas || res?.response?.dados || [];
             resultadosBuscaUsuarios.value = dados
                 .filter(u => Number(u.id) !== Number(usuarioLogadoId.value))
                 .map(normalizarUsuario);
@@ -578,7 +578,7 @@ const buscarReceitasPorNomeApi = async (nome) => {
 
     try {
         const res = await getBuscarReceitasPorNome({ nome: query, limite: 30 });
-        const dados = res?.response?.dados || [];
+        const dados = res?.response?.usuarios || res?.response?.receitas || res?.response?.dados || [];
         resultadosReceitas.value = dados.map(normalizarReceita).filter(Boolean);
     } catch (erro) {
         console.error('Erro ao buscar receitas por nome:', erro);
@@ -595,7 +595,7 @@ const buscarPorCategoria = async (cat) => {
 
     try {
         const res = await getBuscarReceitasPorCategoria({ id_categoria: cat.id, limite: 30 });
-        const dados = res?.response?.dados || [];
+        const dados = res?.response?.usuarios || res?.response?.receitas || res?.response?.dados || [];
         resultadosReceitas.value = dados.map(normalizarReceita).filter(Boolean);
     } catch (erro) {
         console.error('Erro ao buscar receitas por categoria:', erro);
@@ -701,7 +701,7 @@ const executarBuscaPorIngredientes = async () => {
             ingredientes: ingredientesSelecionados.value.map(item => ({ nome: item.nome }))
         };
         const res = await postBuscarReceitasPorIngredientes(payload);
-        const receitasBase = res?.response?.receitas_base || [];
+        const receitasBase = res?.response?.receitas_base || res?.response?.receitas || [];
 
         resultadosIngredientes.value = receitasBase
             .map(item => ({

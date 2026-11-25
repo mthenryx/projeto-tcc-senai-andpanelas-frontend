@@ -112,14 +112,14 @@ export async function postDeixarSeguirUsuario(id, jwt) {
 
 export async function getSeguidoresUsuario(id, params = {}) {
   const query = new URLSearchParams(params).toString()
-  return request(`/${id}/seguidores${query ? `?${query}` : ''}`, {
+  return request(`/seguidores/${id}${query ? `?${query}` : ''}`, {
     fallbackError: `Erro ao listar os seguidores do usuário: ${id}`
   })
 }
 
 export async function getSeguindoUsuario(id, params = {}) {
   const query = new URLSearchParams(params).toString()
-  return request(`/${id}/seguindo${query ? `?${query}` : ''}`, {
+  return request(`/seguindos/${id}${query ? `?${query}` : ''}`, {
     fallbackError: `Erro ao listar os usuários seguidos pelo usuário: ${id}`
   })
 }
@@ -133,13 +133,13 @@ export async function getReceitasUsuario(idUsuario, params = {}) {
 
 export async function getReceitasSalvasUsuario(idUsuario, params = {}) {
   const query = new URLSearchParams(params).toString()
-  return request(`/${idUsuario}/receitas/salvas${query ? `?${query}` : ''}`, {
+  return request(`/receitas/salvas/${idUsuario}${query ? `?${query}` : ''}`, {
     fallbackError: `Erro ao listar as receitas salvas do usuário: ${idUsuario}`
   })
 }
 
 export async function getComunidadesUsuario(idUsuario) {
-  return request(`/${idUsuario}/comunidades`, {
+  return request(`/comunidades/${idUsuario}`, {
     fallbackError: `Erro ao listar as comunidades do usuário: ${idUsuario}`
   })
 }

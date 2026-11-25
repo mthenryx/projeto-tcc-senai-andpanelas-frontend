@@ -1,6 +1,6 @@
 import { authService } from './authService'
 
-const url = `${import.meta.env.VITE_API_URL}/comentarios`
+const url = `${import.meta.env.VITE_API_URL}/receitas/comentarios`
 
 async function request(endpoint, { method = 'GET', dados, jwt, fallbackError } = {}) {
   const token = jwt || authService.getToken()

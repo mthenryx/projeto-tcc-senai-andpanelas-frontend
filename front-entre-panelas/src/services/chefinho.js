@@ -2,8 +2,9 @@ import { authService } from './authService'
 
 const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 const API_ROOT = API_URL.replace(/\/v1\/entrepanelas\/?$/, '')
+const CHEFINHO_URL = import.meta.env.VITE_CHEFINHO_URL || 'http://localhost:3001'
 const url = `${API_ROOT}/v1/chefinho/conversas`
-const urlStatus = `${API_ROOT}/v1/chefinho/status`
+const urlStatus = `${CHEFINHO_URL}/v1/chefinho/status`
 const urlSugestao = `${API_URL}/receitas/busca/sugestao`
 
 function adicionarUsuarioNaQuery(params = {}) {
@@ -36,10 +37,14 @@ async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackErro
 }
 
 export async function getStatusChefinho() {
-  return request('', {
-    baseUrl: urlStatus,
-    fallbackError: 'Não foi possível verificar o status do Chefinho.'
-  })
+  const response = await fetch(urlStatus)
+  const data = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    throw new Error('Não foi possível verificar o status do Chefinho.')
+  }
+
+  return data
 }
 
 export async function getListarConversasChefinho(params = {}, jwt) {

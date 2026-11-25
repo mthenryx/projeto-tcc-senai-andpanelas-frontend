@@ -466,7 +466,7 @@ const clicarReceitaTopo = (rec) => {
     if (receitaSelecionadaId.value === id) {
         cliqueContadorReceita.value[id] = (cliqueContadorReceita.value[id] || 1) + 1;
         if (cliqueContadorReceita.value[id] >= 2) {
-            router.push({ name: 'ReceitaDetalhes', params: { id } });
+            router.push({ name: 'receita', params: { id } });
             return;
         }
     } else {

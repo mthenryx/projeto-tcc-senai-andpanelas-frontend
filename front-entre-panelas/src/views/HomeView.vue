@@ -253,7 +253,7 @@ const normalizarReceita = (rec) => {
         tempo: formatarTempo(rec.tempo),
         porcoes: formatarPorcoes(rec.id_porcao ?? rec.porcao ?? rec.porcoes),
         custo: MAPA_CUSTO[rec.id_custo] || rec.custo || 'Econômico',
-        dificuldade: MAPA_DIFICULDADE[rec.id_dificuldade] || rec.dificuldade || 'Fácil',
+        dificuldade: MAPA_DIFICULDADE[rec.id_dificuldade] || (typeof rec.dificuldade === 'string' ? rec.dificuldade : 'Fácil'),
         curtidas: Number(rec.qtd_curtidas ?? rec.qtd_curtida ?? 0),
         comentarios: Array.isArray(rec.comentarios) ? rec.comentarios.length : Number(rec.qtd_comentarios ?? 0),
         autorId,
@@ -279,6 +279,7 @@ const tabs = [
 ];
 
 const listaDeUsuarios = ref([]);
+const isModalOpen = ref(false);
 const idsUsuariosSeguidos = ref(new Set());
 
 const usuariosSeguidos = computed(() => {

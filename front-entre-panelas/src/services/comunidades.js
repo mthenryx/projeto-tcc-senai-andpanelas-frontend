@@ -84,7 +84,7 @@ export async function getListarComunidades(params = {}) {
   const query = new URLSearchParams(parametros).toString()
   return request(`${query ? `?${query}` : ''}`, {
     fallbackError: 'Erro ao listar as comunidades!'
-  })
+  }).catch((erro) => (erro.status === 404 ? { response: { comunidade: [] } } : Promise.reject(erro)))
 }
 
 export async function postComunidade(dados, jwt) {
@@ -92,7 +92,7 @@ export async function postComunidade(dados, jwt) {
   if (!idUsuario) throw new Error('Não foi possível identificar o usuário logado para criar a comunidade.')
 
   const { id_usuario, ...comunidade } = dados
-  return request(`/${idUsuario}`, {
+  return request('', {
     method: 'POST',
     dados: comunidade,
     jwt,
@@ -129,7 +129,7 @@ export async function postEntrarComunidade(id, jwt) {
   const idUsuario = authService.getUserId?.()
   if (!idUsuario) throw new Error('Não foi possível identificar o usuário logado.')
 
-  return request(`/${idUsuario}/${id}/entrar`, {
+  return request(`/${id}/entrar`, {
     method: 'POST',
     jwt,
     fallbackError: 'Erro ao entrar na comunidade!'
@@ -140,7 +140,7 @@ export async function deleteSairComunidade(id, jwt) {
   const idUsuario = authService.getUserId?.()
   if (!idUsuario) throw new Error('Não foi possível identificar o usuário logado.')
 
-  return request(`/${idUsuario}/${id}/sair`, {
+  return request(`/${id}/sair`, {
     method: 'DELETE',
     jwt,
     fallbackError: 'Erro ao sair da comunidade!'
