@@ -51,7 +51,7 @@ defineEmits(['click']);
 const dificuldadeClass = computed(() => {
     const diff = props.dificuldade.toLowerCase().trim();
     if (diff.includes('fácil') || diff.includes('facil')) return 'badge-facil';
-    if (diff.includes('médio') || diff.includes('medio')) return 'badge-medio';
+    if (diff.includes('médio') || diff.includes('medio') || diff.includes('média') || diff.includes('media')) return 'badge-medio';
     return 'badge-dificil';
 });
 </script>

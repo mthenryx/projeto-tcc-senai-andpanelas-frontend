@@ -318,7 +318,7 @@ const carregarDadosComunidadeEdicao = async (id) => {
         }
 
         const res = await getBuscarComunidade(id);
-        const dados = res?.response?.dados || res?.response || res?.dados || res;
+        const dados = res?.response?.comunidade?.[0] || res?.response?.dados || res?.response || res?.dados || res;
 
         if (!dados || !dados.nome) {
             throw new Error('Comunidade não encontrada.');

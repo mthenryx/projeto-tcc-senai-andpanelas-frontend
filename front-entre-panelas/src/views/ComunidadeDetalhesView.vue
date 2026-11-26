@@ -182,6 +182,7 @@ import RecipeCard from '@/components/RecipeCard.vue';
 import {
     getBuscarComunidade,
     getReceitasDaComunidade,
+    getMembrosComunidade,
     postEntrarComunidade,
     deleteSairComunidade,
     deleteComunidade,
@@ -235,9 +236,24 @@ const membrosRestantesCount = computed(() => {
 const extrairLista = (res) => {
     if (!res) return [];
     if (Array.isArray(res)) return res;
-    if (Array.isArray(res?.response?.dados)) return res.response.dados;
-    if (Array.isArray(res?.response)) return res.response;
-    if (Array.isArray(res?.dados)) return res.dados;
+
+    const candidatos = [
+        res?.response?.receitas,
+        res?.response?.dados?.receitas,
+        res?.response?.dados,
+        res?.response?.items,
+        res?.response?.resultados,
+        res?.receitas,
+        res?.dados?.receitas,
+        res?.dados,
+        res?.data?.receitas,
+        res?.data?.response?.receitas,
+        res?.data
+    ];
+    const lista = candidatos.find(Array.isArray);
+    if (lista) return lista;
+    if (res?.response && typeof res.response === 'object') return extrairLista(res.response);
+    if (res?.data && typeof res.data === 'object') return extrairLista(res.data);
     return [];
 };
 
@@ -260,10 +276,10 @@ const normalizarReceita = (rec) => ({
     dificuldade: rec.dificuldade || rec.nivel_dificuldade || 'Fácil',
     autor_nome: rec.autor_nome || rec.nome_usuario || rec.usuario?.nome || rec.autor || 'Chef',
     tempo: formatarTempoReceita(rec.tempo),
-    porcoes: rec.porcoes || rec.quantidade_porcoes || rec.id_porcao || 1,
+    porcoes: rec.porcao ?? rec.porcoes ?? rec.quantidade_porcoes ?? rec.id_porcao ?? 1,
     custo: rec.custo || 'Econômico',
-    curtidas: Number(rec.curtidas ?? rec.total_curtidas ?? 0),
-    comentarios: Number(rec.comentarios ?? rec.total_comentarios ?? 0),
+    curtidas: Number(rec.qtd_curtidas ?? rec.curtidas ?? rec.total_curtidas ?? 0),
+    comentarios: Array.isArray(rec.comentarios) ? rec.comentarios.length : Number(rec.qtd_comentarios ?? rec.total_comentarios ?? 0),
     salvo: Boolean(rec.salvo_pelo_usuario ?? rec.salvo),
     imagem_url: rec.imagem_url || rec.foto || ''
 });
@@ -278,9 +294,10 @@ const carregarDetalhesComunidade = async (idParam) => {
     try {
         usuarioAtualId.value = await obterIdUsuarioLogado();
 
-        const [comRes, recRes] = await Promise.all([
+        const [comRes, recRes, membrosRes] = await Promise.all([
             getBuscarComunidade(id),
-            getReceitasDaComunidade(id, { limite: 50 }).catch(() => null)
+            getReceitasDaComunidade(id, { limite: 50 }).catch(() => null),
+            getMembrosComunidade(id).catch(() => null)
         ]);
 
         const dados = comRes?.response?.comunidade?.[0] || comRes?.response?.dados || comRes?.response || comRes?.dados || comRes;
@@ -289,14 +306,12 @@ const carregarDetalhesComunidade = async (idParam) => {
             throw new Error('Comunidade não encontrada.');
         }
 
-        const listaParticipantesRaw = Array.isArray(dados.participantes)
-            ? dados.participantes
-            : (Array.isArray(dados.membros) ? dados.membros : []);
+        const listaParticipantesRaw = Array.isArray(membrosRes?.response) ? membrosRes.response : extrairLista(membrosRes);
 
         const participantesNormalizados = listaParticipantesRaw.map(m => ({
             id: Number(m.id || m.id_usuario),
             nome: m.nome || 'Membro',
-            foto_url: m.foto_url || m.foto || '',
+            foto_url: m.foto_perfil || m.foto_url || m.foto || '',
             quantidade_receitas: Number(m.quantidade_receitas ?? m.total_receitas ?? 0)
         }));
 
@@ -317,8 +332,8 @@ const carregarDetalhesComunidade = async (idParam) => {
             descricao: dados.descricao || '',
             banner_url: dados.banner_url || dados.banner || dados.foto_capa || dados.foto_url || BANNER_FALLBACK,
             foto_url: dados.foto_url || dados.foto || dados.icone || '',
-            quantidade_pessoas: dados.quantidade_pessoas ?? dados.total_membros ?? participantesNormalizados.length,
-            quantidade_receitas: dados.quantidade_receitas ?? dados.total_receitas ?? listaReceitas.length,
+            quantidade_pessoas: Number(dados.qtd_membros ?? dados.quantidade_pessoas ?? dados.total_membros ?? participantesNormalizados.length ?? 0),
+            quantidade_receitas: Number(dados.qtd_receitas ?? dados.quantidade_receitas ?? dados.total_receitas ?? listaReceitas.length ?? 0),
             criador_id: criadorId,
             participantes: participantesNormalizados
         };

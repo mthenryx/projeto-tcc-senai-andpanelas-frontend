@@ -1,4 +1,6 @@
 import { authService } from '@/services/authService'
+import { fetchComTimeout } from '@/services/apiFetch'
+import { postRedefinirSenha } from '@/services/auth'
 
 const url = `${import.meta.env.VITE_API_URL}/usuarios`
 
@@ -19,11 +21,15 @@ async function request(endpoint, { method = 'GET', dados, jwt, fallbackError } =
     options.body = JSON.stringify(dados)
   }
 
-  const response = await fetch(`${url}${endpoint}`, options)
+  const response = await fetchComTimeout(`${url}${endpoint}`, options)
   const data = await response.json().catch(() => null)
 
   if (!response.ok || (data && data.status === false)) {
-    throw new Error(data?.message || fallbackError)
+    const detalhe = data?.field ? ` Campo: ${data.field}.` : ''
+    const erro = new Error(`${data?.message || fallbackError}${detalhe}`)
+    erro.status = response.status
+    erro.resposta = data
+    throw erro
   }
 
   return data
@@ -65,37 +71,15 @@ export async function putUsuarioLogado(dados, jwt) {
   })
 }
 
-export async function postAlterarEmail(dados, jwt) {
-  return request('/me/alterar-email', {
-    method: 'POST',
-    dados,
-    jwt,
-    fallbackError: 'Erro ao solicitar a alteração de e-mail!'
-  })
-}
-
-export async function postConfirmarAlteracao(dados, jwt) {
-  return request('/me/confirmar-alteracao', {
-    method: 'POST',
-    dados,
-    jwt,
-    fallbackError: 'Erro ao confirmar a alteração!'
-  })
-}
-
-export const postConfirmarAlteracaoEmail = postConfirmarAlteracao
-
-export async function postAlterarSenha(dados, jwt) {
-  return request('/me/alterar-senha', {
-    method: 'POST',
-    dados,
-    jwt,
-    fallbackError: 'Erro ao alterar a senha!'
-  })
+// A API atual valida a troca de senha pelo fluxo de código de recuperação.
+// Reutiliza o endpoint real em vez de chamar /usuarios/me/alterar-senha,
+// que não existe no backend.
+export async function postAlterarSenha(dados) {
+  return postRedefinirSenha(dados)
 }
 
 export async function postSeguirUsuario(id, jwt) {
-  return request(`/${id}/seguir`, {
+  return request(`/seguir/${encodeURIComponent(id)}`, {
     method: 'POST',
     jwt,
     fallbackError: `Erro ao seguir o usuário: ${id}`
@@ -103,8 +87,8 @@ export async function postSeguirUsuario(id, jwt) {
 }
 
 export async function postDeixarSeguirUsuario(id, jwt) {
-  return request(`/${id}/deixar-seguir`, {
-    method: 'POST',
+  return request(`/deixar-seguir/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
     jwt,
     fallbackError: `Erro ao deixar de seguir o usuário: ${id}`
   })

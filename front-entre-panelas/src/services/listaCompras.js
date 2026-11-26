@@ -56,6 +56,18 @@ export async function putItemListaCompras(id, dados, jwt) {
   })
 }
 
-export async function deleteItemListaCompras() {
-  throw new Error('A API ainda não disponibiliza a exclusão de itens individuais da lista de compras.')
+export async function deleteItemListaCompras(id, jwt) {
+  return request(`/item/${id}`, {
+    method: 'DELETE',
+    jwt,
+    fallbackError: 'Erro ao remover o item da lista de compras!'
+  })
+}
+
+export async function deleteTodosListaCompras(jwt) {
+  return request('/todos', {
+    method: 'DELETE',
+    jwt,
+    fallbackError: 'Erro ao limpar a lista de compras!'
+  })
 }

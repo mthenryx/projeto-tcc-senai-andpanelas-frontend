@@ -42,11 +42,11 @@ const usuario = ref({
 
 const preencherUsuario = (dados) => {
     if (!dados) return
-    const nome = dados.nome || 'Usuário'
+    const nome = dados.nome_completo || dados.nome || 'Usuário'
     usuario.value = {
         nome,
         iniciais: gerarIniciais(nome),
-        fotoUrl: dados.foto_perfil || dados.fotoUrl || ''
+        fotoUrl: dados.foto_perfil || dados.foto_url || dados.fotoUrl || ''
     }
 }
 
@@ -58,7 +58,7 @@ onMounted(async () => {
 
     try {
         const res = await getUsuarioLogado()
-        const dadosApi = res?.response?.dados || res?.dados || null
+        const dadosApi = res?.response?.usuario || res?.response?.dados || res?.usuario || res?.dados || null
         if (dadosApi) {
             preencherUsuario(dadosApi)
             authService.setUser({ ...userLocal, ...dadosApi })
@@ -98,7 +98,32 @@ onMounted(async () => {
 
 .avatar-perfil-link {
     padding: 0;
-    overflow: visible;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    flex: 0 0 42px;
+    overflow: hidden;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-perfil-link :deep(.user-avatar-component) {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+.avatar-perfil-link :deep(.avatar-img) {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
 }
 
 @media (max-width: 480px) {
@@ -119,6 +144,13 @@ onMounted(async () => {
     .botao-acao {
         width: 36px;
         height: 36px;
+    }
+
+    .avatar-perfil-link {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        flex-basis: 36px;
     }
 
     .icone-busca {

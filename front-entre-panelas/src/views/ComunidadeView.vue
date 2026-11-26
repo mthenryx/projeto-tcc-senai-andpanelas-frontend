@@ -174,8 +174,8 @@ const normalizarComunidade = (item) => {
         ? participantes.some(p => Number(p.id || p.id_usuario) === Number(usuarioAtualId.value))
         : false;
 
-    const qtdMembros = item.quantidade_pessoas ?? item.total_membros ?? item.membros_count ?? participantes.length ?? 0;
-    const qtdReceitas = item.quantidade_receitas ?? item.total_receitas ?? item.receitas_count ?? 0;
+    const qtdMembros = item.qtd_membros ?? item.quantidade_pessoas ?? item.total_membros ?? item.membros_count ?? participantes.length ?? 0;
+    const qtdReceitas = item.qtd_receitas ?? item.quantidade_receitas ?? item.total_receitas ?? item.receitas_count ?? 0;
 
     return {
         id: Number(item.id),

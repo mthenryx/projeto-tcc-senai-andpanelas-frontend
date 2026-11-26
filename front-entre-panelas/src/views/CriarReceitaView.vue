@@ -534,7 +534,7 @@ const preencherFormularioParaEdicao = async (id) => {
         }
 
         const res = await getBuscarReceita(id);
-        const receita = res?.response?.dados || res?.response || res?.dados || res;
+        const receita = Array.isArray(res?.response) ? res.response[0] : (res?.response?.dados || res?.response || res?.dados || res);
 
         if (!receita || !receita.titulo) {
             throw new Error('Não foi possível carregar os dados desta receita.');

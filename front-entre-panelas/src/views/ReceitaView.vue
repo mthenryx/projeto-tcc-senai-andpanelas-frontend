@@ -38,6 +38,9 @@
                             </div>
 
                             <p class="recipe-description">{{ receita.descricao }}</p>
+                            <p v-if="ehSugestaoChefinho" class="chefinho-preview-note">
+                                Sugestão do Chefinho · ainda não publicada no Entre Panelas
+                            </p>
 
                             <div class="author-row">
                                 <div class="author-info-left" @click="abrirPerfilAutor">
@@ -64,7 +67,7 @@
                                 </button>
                             </div>
 
-                            <button v-if="!ehUsuarioAtual" class="report-link-btn" @click="abrirModalDenuncia">
+                            <button v-if="!ehUsuarioAtual && !ehSugestaoChefinho" class="report-link-btn" @click="abrirModalDenuncia">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round">
@@ -119,7 +122,20 @@
                             </span>
                         </div>
 
-                        <div class="action-buttons-row">
+                        <div v-if="ehSugestaoChefinho" class="action-buttons-row">
+                            <button class="interact-btn primary-action chefinho-like-btn"
+                                :disabled="salvandoSugestaoChefinho" @click="salvarSugestaoChefinho">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M7 10v12"></path>
+                                    <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.5l4.1-7.1A2 2 0 0 1 15 5.88Z"></path>
+                                </svg>
+                                <span>{{ salvandoSugestaoChefinho ? 'Publicando...' : 'Gostei' }}</span>
+                            </button>
+                        </div>
+                        <p v-if="erroSalvarSugestao" class="chefinho-save-error" role="alert">{{ erroSalvarSugestao }}</p>
+
+                        <div v-if="!ehSugestaoChefinho" class="action-buttons-row">
                             <button class="interact-btn" :class="{ 'liked': receita.curtido }" @click="toggleCurtir">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                     :fill="receita.curtido ? 'currentColor' : 'none'" stroke="currentColor"
@@ -207,7 +223,7 @@
                                 </div>
                             </div>
 
-                            <button class="add-all-list-btn" @click="adicionarTudoLista">
+                            <button v-if="!ehSugestaoChefinho" class="add-all-list-btn" @click="adicionarTudoLista">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round">
@@ -227,7 +243,7 @@
                             </div>
                         </div>
 
-                        <div class="comments-section">
+                        <div v-if="!ehSugestaoChefinho" class="comments-section">
                             <div class="comments-header">
                                 <h3>Comentários ({{ comentarios.length }})</h3>
                             </div>
@@ -340,7 +356,8 @@ import {
     postSalvarReceita,
     deleteSalvarReceita,
     getComentariosReceita,
-    postComentarioReceita
+    postComentarioReceita,
+    postSalvarSugestaoChefinho
 } from '@/services/receitas';
 import { putComentario, deleteComentario } from '@/services/comentarios';
 import {
@@ -417,6 +434,10 @@ const receita = ref({
 });
 
 const comentarios = ref([]);
+const ehSugestaoChefinho = ref(false);
+const salvandoSugestaoChefinho = ref(false);
+const erroSalvarSugestao = ref('');
+const CHAVE_SUGESTAO_CHEFINHO = 'entre-panelas:receita-sugestao-chefinho';
 
 const formatarComentarioApi = (c) => {
     const autorNome = c.usuario?.nome || 'Usuário';
@@ -463,6 +484,8 @@ const carregarUsuarioAtual = async () => {
 };
 
 const carregarReceita = async (idReceita) => {
+    ehSugestaoChefinho.value = false;
+    erroSalvarSugestao.value = '';
     carregando.value = true;
     try {
         const res = await getBuscarReceita(idReceita);
@@ -500,18 +523,22 @@ const carregarReceita = async (idReceita) => {
         }
 
         let categoriaPrincipal = '';
-        if (Array.isArray(dados.categorias) && dados.categorias.length > 0) {
-            const primeira = dados.categorias[0];
+        const categoriasRecebidas = Array.isArray(dados.categorias)
+            ? dados.categorias
+            : (Array.isArray(dados.categoria) ? dados.categoria : []);
+        if (categoriasRecebidas.length > 0) {
+            const primeira = categoriasRecebidas[0];
             categoriaPrincipal = typeof primeira === 'string'
                 ? primeira
                 : (primeira?.categoria || primeira?.nome || '');
         }
 
-        const tagsNormalizadas = Array.isArray(dados.tags)
+        const tagsRecebidas = Array.isArray(dados.tags)
             ? dados.tags
-                .map(t => (typeof t === 'string' ? t : (t?.nome_tag || t?.nome || '')))
-                .filter(Boolean)
-            : [];
+            : (Array.isArray(dados.tag) ? dados.tag : []);
+        const tagsNormalizadas = tagsRecebidas
+            .map(t => (typeof t === 'string' ? t : (t?.nome_tag || t?.nome || '')))
+            .filter(Boolean);
 
         receita.value = {
             id: dados.id,
@@ -521,9 +548,13 @@ const carregarReceita = async (idReceita) => {
             imagemUrl: dados.foto || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
             videoUrl: dados.video || '',
             tempo: formatarTempo(dados.tempo),
-            dificuldade: MAPA_DIFICULDADE[dados.id_dificuldade] || 'Fácil',
-            custo: MAPA_CUSTO[dados.id_custo] || 'Econômico',
-            porcoes: formatarPorcoes(dados.id_porcao),
+            dificuldade: (typeof dados.dificuldade === 'string'
+                ? dados.dificuldade
+                : (dados.dificuldade?.[0]?.dificuldade || MAPA_DIFICULDADE[dados.id_dificuldade])) || 'Fácil',
+            custo: (typeof dados.custo === 'string'
+                ? dados.custo
+                : (dados.custo?.[0]?.tipo_custo || MAPA_CUSTO[dados.id_custo])) || 'Econômico',
+            porcoes: formatarPorcoes(dados.porcao?.[0]?.numero_porcao ?? dados.porcao ?? dados.id_porcao),
             autorId: autorId !== null ? Number(autorId) : null,
             autorNome,
             autorUsername: dados.usuario?.username || 'chef',
@@ -552,17 +583,85 @@ const carregarReceita = async (idReceita) => {
     }
 };
 
-onMounted(async () => {
-    await carregarUsuarioAtual();
+const carregarSugestaoChefinho = () => {
+    carregando.value = true;
+    erroSalvarSugestao.value = '';
+    try {
+        const salvo = sessionStorage.getItem(CHAVE_SUGESTAO_CHEFINHO);
+        const sugestao = salvo ? JSON.parse(salvo) : null;
+        if (!sugestao || typeof sugestao.titulo !== 'string' || !Array.isArray(sugestao.ingredientes) || !Array.isArray(sugestao.modo_preparo)) {
+            throw new Error('A sugestão do Chefinho não está mais disponível. Faça a busca novamente.');
+        }
+
+        const ingredientesFormatados = sugestao.ingredientes.map((item) => {
+            const unidadeRecebida = String(item.id_unidade_medida ?? '').trim();
+            const unidade = MAPA_UNIDADE[Number(unidadeRecebida)] || unidadeRecebida;
+            return {
+                nome: String(item.nome || 'Ingrediente'),
+                quantidade: `${String(item.quantidade ?? '').trim()}${unidade ? ` ${unidade}` : ''}`.trim()
+            };
+        });
+
+        const passosFormatados = [...sugestao.modo_preparo]
+            .sort((a, b) => Number(a.ordem_preparo || 0) - Number(b.ordem_preparo || 0))
+            .map(etapa => String(etapa.metodo_preparo || '').trim())
+            .filter(Boolean);
+
+        const tagsNormalizadas = Array.isArray(sugestao.tags)
+            ? sugestao.tags.map(tag => String(tag).replace(/^#/, '').trim()).filter(Boolean)
+            : [];
+
+        receita.value = {
+            id: null,
+            titulo: sugestao.titulo.trim(),
+            descricao: sugestao.descricao || '',
+            categoria: Array.isArray(sugestao.categorias) ? (sugestao.categorias[0] || '') : '',
+            imagemUrl: sugestao.foto || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
+            videoUrl: sugestao.video || '',
+            tempo: formatarTempo(sugestao.tempo),
+            dificuldade: sugestao.dificuldade || 'Fácil',
+            custo: sugestao.custo || 'Econômico',
+            porcoes: formatarPorcoes(sugestao.porcao),
+            autorId: CHEFINHO_ID,
+            autorNome: 'Chefinho IA',
+            autorUsername: 'chefinho',
+            authorIniciais: gerarIniciais('Chefinho IA'),
+            autorFotoUrl: '/iconPaginas/chefe_icon_cinza.png',
+            seguindo: false,
+            curtido: false,
+            curtidas: 0,
+            salvo: false,
+            tags: tagsNormalizadas,
+            ingredientes: ingredientesFormatados,
+            passos: passosFormatados
+        };
+        comentarios.value = [];
+        ehSugestaoChefinho.value = true;
+    } catch (erro) {
+        console.error('Erro ao carregar sugestão do Chefinho:', erro);
+        router.replace({ name: 'buscar-receita' });
+    } finally {
+        carregando.value = false;
+    }
+};
+
+const carregarRotaReceita = async () => {
+    if (route.name === 'receita-sugestao') {
+        carregarSugestaoChefinho();
+        return;
+    }
+
+    ehSugestaoChefinho.value = false;
     if (route.params.id) {
         await carregarReceita(route.params.id);
+    } else {
+        carregando.value = false;
     }
-});
+};
 
-watch(() => route.params.id, (novoId) => {
-    if (novoId) {
-        carregarReceita(novoId);
-    }
+onMounted(async () => {
+    await carregarUsuarioAtual();
+    await carregarRotaReceita();
 });
 
 const ehUsuarioAtual = computed(() => {
@@ -619,9 +718,8 @@ const exibirPopup = (texto) => {
 };
 
 const abrirPerfilAutor = () => {
-    if (ehChefinho.value) {
-        router.push('/chefinho');
-    } else if (ehUsuarioAtual.value) {
+    if (ehChefinho.value) return;
+    if (ehUsuarioAtual.value) {
         router.push('/perfil');
     } else if (receita.value.autorId) {
         router.push({ path: '/others-perfil', query: { id: receita.value.autorId } });
@@ -684,12 +782,37 @@ const toggleSeguir = async () => {
 const ingredientesAdicionadosNaLista = ref(false);
 const adicionandoLista = ref(false);
 
-watch(() => route.params.id, (novoId) => {
-    if (novoId) {
-        ingredientesAdicionadosNaLista.value = false;
-        carregarReceita(novoId);
-    }
+watch(() => route.fullPath, () => {
+    ingredientesAdicionadosNaLista.value = false;
+    carregarRotaReceita();
 });
+
+const salvarSugestaoChefinho = async () => {
+    if (!ehSugestaoChefinho.value || salvandoSugestaoChefinho.value) return;
+
+    salvandoSugestaoChefinho.value = true;
+    erroSalvarSugestao.value = '';
+    try {
+        const salvo = sessionStorage.getItem(CHAVE_SUGESTAO_CHEFINHO);
+        const sugestao = salvo ? JSON.parse(salvo) : null;
+        if (!sugestao) throw new Error('A sugestão expirou. Faça a busca novamente.');
+
+        const resposta = await postSalvarSugestaoChefinho(sugestao);
+        const idReceita = Number(resposta?.response?.id ?? resposta?.response?.receita?.id ?? resposta?.response?.id_receita);
+        if (!Number.isInteger(idReceita) || idReceita <= 0) {
+            throw new Error('Não foi possível confirmar o cadastro da receita. Consulte suas receitas antes de tentar novamente.');
+        }
+
+        sessionStorage.removeItem(CHAVE_SUGESTAO_CHEFINHO);
+        ehSugestaoChefinho.value = false;
+        await router.replace({ name: 'receita', params: { id: idReceita } });
+    } catch (erro) {
+        console.error('Erro ao publicar sugestão do Chefinho:', erro);
+        erroSalvarSugestao.value = erro?.message || 'Não foi possível publicar a receita. Tente novamente.';
+    } finally {
+        salvandoSugestaoChefinho.value = false;
+    }
+};
 
 const adicionarTudoLista = async () => {
     if (!receita.value.id || adicionandoLista.value) return;
@@ -1078,6 +1201,28 @@ const getIconFilter = (tipo) => {
     border-radius: 16px;
     font-size: 12px;
     font-weight: 500;
+}
+
+.chefinho-preview-note {
+    margin: 8px 0 14px;
+    color: var(--verde-escuro);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.chefinho-like-btn {
+    min-width: 150px;
+}
+
+.chefinho-like-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.chefinho-save-error {
+    color: #b42318;
+    font-size: 13px;
+    margin: 8px 0;
 }
 
 .action-buttons-row {

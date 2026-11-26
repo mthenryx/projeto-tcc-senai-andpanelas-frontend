@@ -152,7 +152,7 @@
                                 <LoadingSpinner v-if="carregandoSemana" />
 
                                 <RecipePodiumRanking 
-                                    v-else-if="receitaOuro && receitaPrata && receitaBronze"
+                                    v-else-if="receitaOuro || receitaPrata || receitaBronze"
                                     :ouro="receitaOuro"
                                     :prata="receitaPrata"
                                     :bronze="receitaBronze"
@@ -297,15 +297,15 @@ const carregarUsuariosESeguidos = async () => {
             userId ? getSeguindoUsuario(userId, { limite: 100 }).catch(() => null) : Promise.resolve(null)
         ]);
 
-        const listaSeguindoApi = seguindoRes?.response?.dados || [];
+        const listaSeguindoApi = seguindoRes?.response?.seguindo || seguindoRes?.response?.dados || [];
         const idsSet = new Set(listaSeguindoApi.map(u => Number(u.id)));
         idsUsuariosSeguidos.value = idsSet;
 
-        const todosUsuariosApi = usuariosRes?.response?.dados || [];
+        const todosUsuariosApi = usuariosRes?.response?.usuarios || usuariosRes?.response?.dados || [];
         const mapaUsuarios = new Map();
 
         todosUsuariosApi.forEach(u => {
-            if (Number(u.id) === Number(userId)) return;
+            if (Number(u.id) === Number(userId) || Number(u.id) === 1) return;
             mapaUsuarios.set(Number(u.id), {
                 id: u.id,
                 nome: u.nome,
@@ -317,7 +317,7 @@ const carregarUsuariosESeguidos = async () => {
         });
 
         listaSeguindoApi.forEach(u => {
-            if (!mapaUsuarios.has(Number(u.id)) && Number(u.id) !== Number(userId)) {
+            if (!mapaUsuarios.has(Number(u.id)) && Number(u.id) !== Number(userId) && Number(u.id) !== 1) {
                 mapaUsuarios.set(Number(u.id), {
                     id: u.id,
                     nome: u.nome,
@@ -358,7 +358,7 @@ const receitasSeguindo = computed(() => {
 
 const carregarFeedReceitas = async () => {
     try {
-        const res = await getListarReceitas({ limite: 50, ordenar_por: 'recente' });
+        const res = await getListarReceitas({ limite: 12, ordenar_por: 'recente' });
         const dados = extrairListaReceitas(res);
         todasReceitasFeed.value = dados.map(normalizarReceita).filter(Boolean);
     } catch (erro) {
@@ -467,11 +467,13 @@ const carregarReceitasSemana = async () => {
 
     try {
         const res = await getReceitasDaSemana();
-        const dados = res?.response || {};
+        const dados = Array.isArray(res?.response?.receitas)
+            ? res.response.receitas
+            : (Array.isArray(res?.response) ? res.response : []);
 
-        receitaOuro.value = normalizarReceita(dados.top_1);
-        receitaPrata.value = normalizarReceita(dados.top_2);
-        receitaBronze.value = normalizarReceita(dados.top_3);
+        receitaOuro.value = normalizarReceita(dados[0]);
+        receitaPrata.value = normalizarReceita(dados[1]);
+        receitaBronze.value = normalizarReceita(dados[2]);
         semanaJaCarregado.value = true;
     } catch (erro) {
         console.error('Erro ao carregar receitas da semana:', erro);

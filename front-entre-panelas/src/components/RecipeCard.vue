@@ -1,9 +1,12 @@
 <template>
     <div class="recipe-card" @click="irParaDetalhes">
         <div class="recipe-image-container" :style="{ backgroundImage: `url(${imagemUrl})` }">
-            <span class="difficulty-badge" :class="dificuldadeClass">
-                {{ dificuldade }}
-            </span>
+            <div class="badges-topo">
+                <span v-if="textoCompatibilidade" class="compat-badge">{{ textoCompatibilidade }} compatível</span>
+                <span class="difficulty-badge" :class="dificuldadeClass">
+                    {{ dificuldade }}
+                </span>
+            </div>
 
             <div class="recipe-author">
                 <div class="avatar">
@@ -113,7 +116,13 @@ const props = defineProps({
     authorIniciais: { type: String, required: true },
     autorFotoUrl: { type: String, default: '' },
     dificuldade: { type: String, required: true },
-    salvo: { type: Boolean, default: false }
+    salvo: { type: Boolean, default: false },
+    compatibilidade: { type: [Number, String], default: null }
+});
+
+const textoCompatibilidade = computed(() => {
+    if (props.compatibilidade === null || props.compatibilidade === undefined || props.compatibilidade === '') return '';
+    return typeof props.compatibilidade === 'number' ? `${props.compatibilidade}%` : props.compatibilidade;
 });
 
 const emit = defineEmits(['update:salvo', 'toggle-save']);
@@ -131,7 +140,7 @@ const toggleSalvo = () => {
 const dificuldadeClass = computed(() => {
     const diff = props.dificuldade.toLowerCase().trim();
     if (diff.includes('fácil') || diff.includes('facil')) return 'badge-facil';
-    if (diff.includes('médio') || diff.includes('medio')) return 'badge-medio';
+    if (diff.includes('médio') || diff.includes('medio') || diff.includes('média') || diff.includes('media')) return 'badge-medio';
     return 'badge-dificil';
 });
 
@@ -167,6 +176,23 @@ const custoClass = computed(() => {
     justify-content: space-between;
     padding: 16px;
     box-sizing: border-box;
+}
+
+.badges-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.compat-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #3b2219;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .difficulty-badge {

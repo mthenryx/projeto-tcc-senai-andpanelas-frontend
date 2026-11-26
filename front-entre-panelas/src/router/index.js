@@ -101,6 +101,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/receita/sugestao',
+      name: 'receita-sugestao',
+      component: ReceitaView,
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/receita/:id',
       name: 'receita',
       component: ReceitaView,

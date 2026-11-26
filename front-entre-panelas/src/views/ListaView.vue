@@ -213,7 +213,8 @@ import {
     getListaComprasReceitas,
     getListaComprasDaReceita,
     putItemListaCompras,
-    deleteItemListaCompras
+    deleteItemListaCompras,
+    deleteTodosListaCompras
 } from '@/services/listaCompras';
 
 const router = useRouter();
@@ -578,8 +579,7 @@ const limparListaCompleta = async () => {
     limpandoLista.value = true;
 
     try {
-        const itensBanco = itensLista.value.filter(i => !i.ehManual && i.id);
-        await Promise.all(itensBanco.map(i => deleteItemListaCompras(i.id)));
+        await deleteTodosListaCompras();
 
         itensLista.value = [];
         receitasVinculadas.value = [];

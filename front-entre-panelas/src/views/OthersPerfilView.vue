@@ -205,6 +205,7 @@ const route = useRoute()
 const router = useRouter()
 
 const usuarioId = computed(() => route.query.id ?? route.params.id)
+let requisicaoPerfilAtual = 0
 
 const abaAtiva = ref('receitas')
 const modalDenunciaAberta = ref(false)
@@ -236,6 +237,8 @@ const gradientesComunidade = [
 ]
 
 const obterIdUsuarioLogado = () => {
+    const idAutenticado = authService.getUserId?.()
+    if (idAutenticado) return Number(idAutenticado)
     const user = authService.getUser?.()
     return user?.id ?? user?.id_usuario ?? user?.usuario?.id ?? null
 }
@@ -290,18 +293,18 @@ const normalizarReceita = (item) => {
 
     return {
         id: item.id ?? item.id_receita,
-        imagemUrl: item.imagem_url ?? item.imagemUrl ?? item.foto_url ?? item.imagem ?? '',
+        imagemUrl: item.imagem_url ?? item.imagemUrl ?? item.foto_url ?? item.imagem ?? item.foto ?? '',
         titulo: item.titulo ?? item.nome ?? 'Receita',
         tempo: formatarTempo(item.tempo_preparo ?? item.tempo ?? item.tempoPreparo),
-        porcoes: formatarPorcoes(item.porcoes ?? item.rendimento),
-        custo: item.custo ?? item.nivel_custo ?? 'Econômico',
-        curtidas: Number(item.curtidas ?? item.total_curtidas ?? item.quantidade_curtidas ?? 0),
-        comentarios: Number(item.comentarios ?? item.total_comentarios ?? item.quantidade_comentarios ?? 0),
+        porcoes: formatarPorcoes(item.porcao ?? item.porcoes ?? item.rendimento),
+        custo: typeof item.custo === 'string' ? item.custo : (item.nivel_custo ?? 'Econômico'),
+        curtidas: Number(item.qtd_curtidas ?? item.curtidas ?? item.total_curtidas ?? item.quantidade_curtidas ?? 0),
+        comentarios: Array.isArray(item.comentarios) ? item.comentarios.length : Number(item.qtd_comentarios ?? item.total_comentarios ?? item.quantidade_comentarios ?? 0),
         autorNome,
         authorIniciais: gerarIniciais(autorNome),
         autorFotoUrl: autorObj.foto_perfil ?? autorObj.foto_url ?? item.autor_foto_url ?? item.autorFotoUrl ?? '',
-        dificuldade: item.dificuldade ?? 'Fácil',
-        salvo: Boolean(item.salvo ?? item.is_salvo ?? false)
+        dificuldade: typeof item.dificuldade === 'string' ? item.dificuldade : 'Fácil',
+        salvo: Boolean(item.salvo_pelo_usuario ?? item.salvo ?? item.is_salvo ?? false)
     }
 }
 
@@ -311,17 +314,32 @@ const normalizarComunidade = (item, index) => {
     return {
         id,
         nome: dados.nome ?? dados.titulo ?? 'Comunidade',
-        membros: dados.membros ?? dados.total_membros ?? dados.quantidade_membros ?? 0,
+        membros: Number(dados.qtd_membros ?? dados.quantidade_pessoas ?? dados.membros ?? dados.total_membros ?? dados.quantidade_membros ?? dados.membros_count ?? 0),
         bannerUrl: dados.foto_capa ?? dados.banner_url ?? dados.imagem_url ?? '',
         gradiente: gradientesComunidade[Number(id) % gradientesComunidade.length]
     }
 }
 
 const carregarDadosUsuario = async (targetId) => {
-    if (!targetId) return
+    const requisicaoId = ++requisicaoPerfilAtual
+    if (!targetId || !Number.isInteger(Number(targetId)) || Number(targetId) <= 0) {
+        carregando.value = false
+        return
+    }
+
+    // O Chefinho é um perfil de sistema, não um perfil público navegável.
+    if (Number(targetId) === 1) {
+        carregando.value = false
+        receitasCriadas.value = []
+        receitasSalvas.value = []
+        comunidades.value = []
+        router.replace('/home')
+        return
+    }
 
     const meuId = obterIdUsuarioLogado()
     if (meuId && Number(targetId) === Number(meuId)) {
+        carregando.value = false
         router.replace('/perfil')
         return
     }
@@ -337,6 +355,8 @@ const carregarDadosUsuario = async (targetId) => {
             getComunidadesUsuario(targetId)
         ])
 
+        if (requisicaoId !== requisicaoPerfilAtual) return
+
         if (resUsuario.status === 'fulfilled' && resUsuario.value) {
             const raw = resUsuario.value.response?.usuario ?? resUsuario.value.usuario ?? resUsuario.value.data ?? resUsuario.value
             usuario.value = {
@@ -346,10 +366,10 @@ const carregarDadosUsuario = async (targetId) => {
                 descricao: raw.bio ?? raw.descricao ?? '',
                 fotoUrl: raw.foto_perfil ?? raw.foto_url ?? raw.fotoUrl ?? '',
                 bannerUrl: raw.foto_capa ?? raw.banner_url ?? raw.bannerUrl ?? '',
-                quantidadeReceitas: raw.total_receitas ?? raw.quantidade_receitas ?? raw.quantidadeReceitas ?? 0,
-                quantidadeSeguidores: Number(raw.total_seguidores ?? raw.quantidade_seguidores ?? raw.quantidadeSeguidores ?? 0),
-                quantidadeSeguindo: Number(raw.total_seguindo ?? raw.quantidade_seguindo ?? raw.quantidadeSeguindo ?? 0),
-                seguindo: Boolean(raw.seguindo ?? raw.is_seguindo ?? false)
+                quantidadeReceitas: raw.qtd_receitas ?? raw.total_receitas ?? raw.quantidade_receitas ?? raw.quantidadeReceitas ?? 0,
+                quantidadeSeguidores: Number(raw.qtd_seguidores ?? raw.total_seguidores ?? raw.quantidade_seguidores ?? raw.quantidadeSeguidores ?? 0),
+                quantidadeSeguindo: Number(raw.qtd_seguindo ?? raw.total_seguindo ?? raw.quantidade_seguindo ?? raw.quantidadeSeguindo ?? 0),
+                seguindo: Boolean(raw.segue_usuario ?? raw.seguindo ?? raw.is_seguindo ?? false)
             }
         }
 
@@ -373,7 +393,7 @@ const carregarDadosUsuario = async (targetId) => {
     } catch (error) {
         console.error('Erro ao carregar perfil do usuário:', error)
     } finally {
-        carregando.value = false
+        if (requisicaoId === requisicaoPerfilAtual) carregando.value = false
     }
 }
 

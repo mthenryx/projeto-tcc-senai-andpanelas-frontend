@@ -1,4 +1,5 @@
 import { authService } from './authService'
+import { fetchComTimeout } from './apiFetch'
 
 const BASE_URL = import.meta.env.VITE_API_URL
 const url = `${BASE_URL}/receitas`
@@ -13,7 +14,7 @@ async function request(fullUrl, { method = 'GET', dados, jwt, fallbackError } = 
   const options = { method, headers, ...(method === 'GET' ? { cache: 'no-store' } : {}) }
   if (dados !== undefined) options.body = JSON.stringify(dados)
 
-  const response = await fetch(fullUrl, options)
+  const response = await fetchComTimeout(fullUrl, options)
   const data = await response.json().catch(() => null)
 
   if (!response.ok || (data && data.status === false)) {
@@ -41,6 +42,15 @@ export async function postReceita(dados, jwt) {
     dados,
     jwt,
     fallbackError: 'Erro ao criar uma nova receita!'
+  })
+}
+
+export async function postSalvarSugestaoChefinho(receita, jwt) {
+  return request(`${url}/busca/sugestao/salvar`, {
+    method: 'POST',
+    dados: { receita },
+    jwt,
+    fallbackError: 'Não foi possível publicar a sugestão do Chefinho.'
   })
 }
 

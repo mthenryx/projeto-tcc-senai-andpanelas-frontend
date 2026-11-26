@@ -118,7 +118,7 @@ import { useRouter } from 'vue-router'
 import BarraNavegacao from '@/components/BarraNavegacao.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import { authService } from '@/services/authService'
-import { getBuscarUsuario, putUsuarioLogado } from '@/services/usuarios'
+import { getUsuarioLogado, putUsuarioLogado } from '@/services/usuarios'
 
 const router = useRouter()
 
@@ -140,6 +140,8 @@ const form = reactive({
 })
 
 const obterIdUsuarioLogado = () => {
+    const idAutenticado = authService.getUserId?.()
+    if (idAutenticado) return Number(idAutenticado)
     const user = authService.getUser?.()
     return user?.id ?? user?.id_usuario ?? user?.usuario?.id ?? null
 }
@@ -152,7 +154,7 @@ const carregarDadosAtuais = async () => {
     }
 
     try {
-        const resposta = await getBuscarUsuario(id)
+        const resposta = await getUsuarioLogado()
         const raw = resposta?.response?.usuario ?? resposta?.usuario ?? resposta?.data ?? resposta ?? {}
 
         form.nomeCompleto = raw.nome_completo ?? raw.nome ?? ''

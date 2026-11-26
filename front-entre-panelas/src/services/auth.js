@@ -1,7 +1,9 @@
+import { fetchComTimeout } from './apiFetch'
+
 const url = `${import.meta.env.VITE_API_URL}/auth`
 
 async function request(endpoint, dados, fallbackError) {
-  const response = await fetch(`${url}${endpoint}`, {
+  const response = await fetchComTimeout(`${url}${endpoint}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

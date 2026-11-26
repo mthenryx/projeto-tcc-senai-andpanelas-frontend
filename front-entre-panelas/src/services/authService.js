@@ -1,9 +1,10 @@
 import { postLogin } from './auth'
-import { getUsuarioLogado } from './usuarios'
+import { fetchComTimeout } from './apiFetch'
 
 const TOKEN_KEY = 'jwt_token'
 const USER_KEY = 'auth_user'
 const USER_ID_KEY = 'id_usuario'
+const API_BASE_URL = import.meta.env.VITE_API_URL
 
 function extrairIdDoToken(token) {
   try {
@@ -40,8 +41,14 @@ export const authService = {
 
     if (!dadosUsuario?.id) {
       try {
-        const perfilRes = await getUsuarioLogado(token)
-        const perfil = perfilRes?.response?.dados || perfilRes?.dados || null
+        const perfilResponse = await fetchComTimeout(`${API_BASE_URL}/usuarios/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const perfilRes = await perfilResponse.json().catch(() => null)
+        if (!perfilResponse.ok || perfilRes?.status === false) {
+          throw new Error(perfilRes?.message || 'Não foi possível recuperar o perfil.')
+        }
+        const perfil = perfilRes?.response?.usuario || perfilRes?.response?.dados || perfilRes?.usuario || perfilRes?.dados || null
         if (perfil) {
           dadosUsuario = { ...dadosUsuario, ...perfil }
         }

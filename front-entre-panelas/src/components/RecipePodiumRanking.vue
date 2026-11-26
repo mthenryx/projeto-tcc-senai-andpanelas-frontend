@@ -1,7 +1,7 @@
 <template>
   <div class="ranking-section">
 
-    <div class="podium-gold">
+    <div v-if="ouro" class="podium-gold">
 
       <div class="gold-image-side" :style="{ backgroundImage: `url(${ouro.imagemUrl})` }">
         <div class="gold-badge">
@@ -50,8 +50,8 @@
       </div>
     </div>
 
-    <div class="podium-row">
-      <div class="recipe-card-ranked">
+    <div v-if="prata || bronze" class="podium-row" :class="{ 'podium-row-single': !prata || !bronze }">
+      <div v-if="prata" class="recipe-card-ranked">
         <div class="card-img-wrapper" :style="{ backgroundImage: `url(${prata.imagemUrl})` }">
           <span class="rank-badge badge-prata">#2 LUGAR • PRATA</span>
           <span class="time-floating">{{ prata.tempo }}</span>
@@ -79,7 +79,7 @@
         </div>
       </div>
 
-      <div class="recipe-card-ranked">
+      <div v-if="bronze" class="recipe-card-ranked">
         <div class="card-img-wrapper" :style="{ backgroundImage: `url(${bronze.imagemUrl})` }">
           <span class="rank-badge badge-bronze">#3 LUGAR • BRONZE</span>
           <span class="time-floating">{{ bronze.tempo }}</span>
@@ -114,9 +114,9 @@
 import UserAvatar from '@/components/UserAvatar.vue';
 
 defineProps({
-  ouro: { type: Object, required: true },
-  prata: { type: Object, required: true },
-  bronze: { type: Object, required: true }
+  ouro: { type: Object, default: null },
+  prata: { type: Object, default: null },
+  bronze: { type: Object, default: null }
 });
 
 defineEmits(['ver-receita']);
@@ -305,6 +305,11 @@ defineEmits(['ver-receita']);
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;
+}
+
+.podium-row-single {
+  grid-template-columns: minmax(260px, 520px);
+  justify-content: center;
 }
 
 .recipe-card-ranked {

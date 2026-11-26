@@ -164,9 +164,6 @@
                                     v-bind="receita"
                                     v-model:salvo="receita.salvo"
                                 />
-                                <div class="badge-compatibilidade-flutuante">
-                                    {{ receita.compatibilidade }} compatível
-                                </div>
                             </div>
                         </div>
 
@@ -331,10 +328,22 @@ const buscarDetalhesReceitaPorId = async (id) => {
             headers: token ? { Authorization: `Bearer ${token}` } : {}
         })
         const data = await response.json().catch(() => null)
-        return data?.response?.dados || data?.response || data?.dados || null
+        const dados = data?.response?.dados || data?.response || data?.dados || null
+        return Array.isArray(dados) ? dados[0] || null : dados
     } catch {
         return null
     }
+}
+
+const MAPA_CATEGORIA_REFEICAO = {
+    'cafe da manha': ['cafe'],
+    'almoco': ['almoco'],
+    'janta': ['jantar'],
+    'salada': ['almoco', 'jantar'],
+    'sopa': ['almoco', 'jantar'],
+    'sobremesa': ['almoco', 'jantar'],
+    'lanche': ['cafe', 'jantar'],
+    'bebida': ['cafe', 'almoco', 'jantar']
 }
 
 const classificarTiposRefeicao = (categoriasRaw) => {
@@ -346,9 +355,8 @@ const classificarTiposRefeicao = (categoriasRaw) => {
 
     lista.forEach((cat) => {
         const norm = normalizarTexto(cat)
-        if (norm.includes('cafe')) tipos.add('cafe')
-        if (norm.includes('almoco')) tipos.add('almoco')
-        if (norm.includes('jantar') || norm.includes('janta')) tipos.add('jantar')
+        const chave = Object.keys(MAPA_CATEGORIA_REFEICAO).find(k => norm.includes(k))
+        if (chave) MAPA_CATEGORIA_REFEICAO[chave].forEach(t => tipos.add(t))
     })
 
     return Array.from(tipos)

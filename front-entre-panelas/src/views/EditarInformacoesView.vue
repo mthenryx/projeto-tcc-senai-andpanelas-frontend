@@ -47,13 +47,13 @@
                             <button
                                 type="button"
                                 class="botao-alterar-item"
-                                :disabled="enviandoCodigo"
-                                @click="solicitarValidacao('email')"
+                                disabled
+                                title="A API atual não oferece um fluxo seguro de troca de e-mail sem alteração do banco de dados."
                             >
-                                Alterar
+                                Indisponível
                             </button>
                         </div>
-                        <span v-if="erroEmailInvalido" class="texto-erro-input">Por favor, insira um e-mail válido.</span>
+                        <span class="texto-erro-input">A troca de e-mail depende de um fluxo de confirmação que não existe na API atual. O endereço permanece somente para consulta.</span>
                     </div>
 
                     <div class="grupo-campo-info">
@@ -124,7 +124,7 @@
                     </div>
 
                     <p class="aviso-rodape-info">
-                        Para alterar e-mail, senha ou data de nascimento, enviaremos um código de confirmação para o e-mail atual antes de liberar a edição.
+                        Para alterar a senha ou a data de nascimento, enviaremos um código de confirmação para o e-mail atual. A troca de e-mail permanece indisponível nesta versão para preservar a segurança sem alterar o banco de dados.
                     </p>
                 </div>
 
@@ -155,7 +155,7 @@
                     </div>
 
                     <span class="success-subtitle">
-                        {{ etapaModal === 'confirmar_novo_email' ? 'CONFIRMAR NOVO E-MAIL' : 'CONFIRMAR ALTERAÇÃO' }}
+                        CONFIRMAR ALTERAÇÃO
                     </span>
                     <h2 class="success-title">Digite o código</h2>
 
@@ -215,19 +215,12 @@ import { reactive, ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import BarraNavegacao from '@/components/BarraNavegacao.vue'
 import { authService } from '@/services/authService'
-import {
-    getBuscarUsuario,
-    putUsuarioLogado,
-    postAlterarEmail,
-    postConfirmarAlteracao,
-    postAlterarSenha
-} from '@/services/usuarios'
-import { postRecuperarSenha, postVerificarCodigoReset } from '@/services/auth'
+import { getUsuarioLogado, putUsuarioLogado } from '@/services/usuarios'
+import { postRecuperarSenha, postVerificarCodigoReset, postRedefinirSenha } from '@/services/auth'
 
 const router = useRouter()
 
 const modalValidacaoAberto = ref(false)
-const etapaModal = ref('validar_identidade')
 const campoEmValidacao = ref(null)
 const ultimoTempoValidacao = ref(null)
 const ultimoCodigoValidado = ref('')
@@ -247,43 +240,20 @@ const salvando = ref(false)
 const emailOriginal = ref('')
 const dataNascimentoOriginal = ref('')
 const emailAlvoValidacao = ref('')
-const pendenciasSalvarPosEmail = reactive({
-    senha: false,
-    dataNascimento: false
-})
-
 const tempoRestanteReenvio = ref(40)
 let timerReenvio = null
 
 const inputDataRef = ref(null)
-
-const dadosAcesso = reactive({
-    email: '',
-    senha: '',
-    dataNascimento: ''
-})
-
-const errosCampos = reactive({
-    email: false,
-    senha: false,
-    dataNascimento: false
-})
-
+const dadosAcesso = reactive({ email: '', senha: '', dataNascimento: '' })
+const errosCampos = reactive({ email: false, senha: false, dataNascimento: false })
 const senhaOcultaPlaceholder = '••••••••••••'
 const mostrarSenhaTexto = ref(false)
-
-const camposDesbloqueados = reactive({
-    email: false,
-    senha: false,
-    dataNascimento: false
-})
-
+const camposDesbloqueados = reactive({ email: false, senha: false, dataNascimento: false })
 const codigoValidacao = ref(['', '', '', '', '', ''])
 
 const dataMinimaPermitida = computed(() => {
     const hoje = new Date()
-    const ano = hoje.getFullYear() - 140
-    return `${ano}-01-01`
+    return `${hoje.getFullYear() - 140}-01-01`
 })
 
 const dataMaximaPermitida = computed(() => {
@@ -295,57 +265,51 @@ const dataMaximaPermitida = computed(() => {
 })
 
 const obterIdUsuarioLogado = () => {
+    const idAutenticado = authService.getUserId?.()
+    if (idAutenticado) return Number(idAutenticado)
     const user = authService.getUser?.()
     return user?.id ?? user?.id_usuario ?? user?.usuario?.id ?? null
 }
 
-const formatarDataParaInput = (dataValor) => {
-    if (!dataValor) return ''
-    const texto = String(dataValor)
-    if (texto.includes('T')) return texto.split('T')[0]
-    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) return texto
+const formatarDataParaInput = (valor) => {
+    if (!valor) return ''
+    const texto = String(valor)
+    if (/^\d{4}-\d{2}-\d{2}/.test(texto)) return texto.slice(0, 10)
     const parsed = new Date(texto)
     if (Number.isNaN(parsed.getTime())) return ''
-    return parsed.toISOString().split('T')[0]
+    const ano = parsed.getFullYear()
+    const mes = String(parsed.getMonth() + 1).padStart(2, '0')
+    const dia = String(parsed.getDate()).padStart(2, '0')
+    return `${ano}-${mes}-${dia}`
 }
 
 const carregarDadosUsuario = async () => {
-    const id = obterIdUsuarioLogado()
-    if (!id) {
+    if (!obterIdUsuarioLogado()) {
         router.push('/')
         return
     }
 
     try {
-        const resposta = await getBuscarUsuario(id)
+        const resposta = await getUsuarioLogado()
         const raw = resposta?.response?.usuario ?? resposta?.usuario ?? resposta?.data ?? resposta ?? {}
-
-        const email = raw.email ?? ''
-        const nascimento = formatarDataParaInput(raw.data_nascimento ?? raw.dataNascimento)
-
-        emailOriginal.value = email
-        dataNascimentoOriginal.value = nascimento
-        dadosAcesso.email = email
-        dadosAcesso.dataNascimento = nascimento
-        emailAlvoValidacao.value = email
+        emailOriginal.value = raw.email ?? ''
+        dataNascimentoOriginal.value = formatarDataParaInput(raw.data_nascimento ?? raw.dataNascimento)
+        dadosAcesso.email = emailOriginal.value
+        dadosAcesso.dataNascimento = dataNascimentoOriginal.value
+        emailAlvoValidacao.value = emailOriginal.value
     } catch (error) {
         mensagemErroGeral.value = error.message || 'Erro ao carregar suas informações.'
     }
 }
 
-onMounted(() => {
-    carregarDadosUsuario()
-})
+onMounted(carregarDadosUsuario)
 
 const iniciarTimerReenvio = () => {
     tempoRestanteReenvio.value = 40
     if (timerReenvio) clearInterval(timerReenvio)
     timerReenvio = setInterval(() => {
-        if (tempoRestanteReenvio.value > 0) {
-            tempoRestanteReenvio.value--
-        } else {
-            clearInterval(timerReenvio)
-        }
+        if (tempoRestanteReenvio.value > 0) tempoRestanteReenvio.value--
+        else clearInterval(timerReenvio)
     }, 1000)
 }
 
@@ -353,76 +317,60 @@ onUnmounted(() => {
     if (timerReenvio) clearInterval(timerReenvio)
 })
 
-const voltarPerfil = () => {
-    router.push('/perfil')
-}
-
+const voltarPerfil = () => router.push('/perfil')
 const sairDaConta = () => {
     authService.logout()
     router.push('/')
 }
 
 const abrirSeletorData = () => {
-    if (camposDesbloqueados.dataNascimento && inputDataRef.value) {
-        if (typeof inputDataRef.value.showPicker === 'function') {
-            inputDataRef.value.showPicker()
-        } else {
-            inputDataRef.value.focus()
-        }
-    }
-}
-
-const validarEmailRegex = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return re.test(email)
+    if (!camposDesbloqueados.dataNascimento || !inputDataRef.value) return
+    if (typeof inputDataRef.value.showPicker === 'function') inputDataRef.value.showPicker()
+    else inputDataRef.value.focus()
 }
 
 const validarIdade = (dataStr) => {
     if (!dataStr) return false
     const nascimento = new Date(`${dataStr}T00:00:00`)
+    if (Number.isNaN(nascimento.getTime()) || nascimento > new Date()) return false
     const hoje = new Date()
     let idade = hoje.getFullYear() - nascimento.getFullYear()
-    const m = hoje.getMonth() - nascimento.getMonth()
-    if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
-        idade--
-    }
+    const mes = hoje.getMonth() - nascimento.getMonth()
+    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) idade--
     return idade >= 10 && idade <= 140
 }
 
 const tratarMudancaEmail = () => {
+    // O campo permanece bloqueado enquanto a API não oferecer troca segura de e-mail.
     errosCampos.email = false
     erroEmailInvalido.value = false
-    mensagemErroGeral.value = ''
 }
 
 const tratarMudancaData = () => {
     errosCampos.dataNascimento = false
-    erroIdadeInvalida.value = false
+    erroIdadeInvalida.value = !validarIdade(dadosAcesso.dataNascimento)
+    if (erroIdadeInvalida.value) errosCampos.dataNascimento = true
     mensagemErroGeral.value = ''
-    if (!validarIdade(dadosAcesso.dataNascimento)) {
-        erroIdadeInvalida.value = true
-        errosCampos.dataNascimento = true
-    }
 }
 
 const verificarSePrecisaValidar = () => {
     if (!ultimoTempoValidacao.value) return true
-    const agora = new Date().getTime()
-    const diferencaMinutos = (agora - ultimoTempoValidacao.value) / (1000 * 60)
-    return diferencaMinutos > tempoExpiracaoMinutos
+    const minutos = (Date.now() - ultimoTempoValidacao.value) / 60000
+    return minutos > tempoExpiracaoMinutos
 }
 
 const enviarCodigoParaEmailAtual = async () => {
-    if (!emailOriginal.value) {
-        throw new Error('E-mail atual não encontrado para enviar o código.')
-    }
+    if (!emailOriginal.value) throw new Error('E-mail atual não encontrado para enviar o código.')
     await postRecuperarSenha({ email: emailOriginal.value })
 }
 
 const solicitarValidacao = async (campo) => {
     mensagemErroGeral.value = ''
+    if (campo === 'email') {
+        mensagemErroGeral.value = 'A troca de e-mail não está disponível na API atual. Nenhuma alteração foi enviada.'
+        return
+    }
     campoEmValidacao.value = campo
-
     if (!verificarSePrecisaValidar()) {
         desbloquearCampo(campo)
         return
@@ -431,7 +379,6 @@ const solicitarValidacao = async (campo) => {
     enviandoCodigo.value = true
     try {
         await enviarCodigoParaEmailAtual()
-        etapaModal.value = 'validar_identidade'
         emailAlvoValidacao.value = emailOriginal.value
         erroCodigoValidacao.value = false
         codigoValidacao.value = ['', '', '', '', '', '']
@@ -463,41 +410,27 @@ const fecharModal = () => {
 const tratarInputCodigo = (index, event) => {
     erroCodigoValidacao.value = false
     const valor = event.target.value.replace(/\D/g, '')
-    codigoValidacao.value[index] = valor
-    if (valor && index < 5) {
-        const proximoInput = event.target.nextElementSibling
-        if (proximoInput) proximoInput.focus()
-    }
+    codigoValidacao.value[index] = valor.slice(-1)
+    if (codigoValidacao.value[index] && index < 5) event.target.nextElementSibling?.focus()
 }
 
 const tratarBackspaceCodigo = (index, event) => {
-    if (!codigoValidacao.value[index] && index > 0) {
-        const inputAnterior = event.target.previousElementSibling
-        if (inputAnterior) inputAnterior.focus()
-    }
+    if (!codigoValidacao.value[index] && index > 0) event.target.previousElementSibling?.focus()
 }
 
 const tratarColarCodigo = (event) => {
     const texto = event.clipboardData?.getData('text')?.replace(/\D/g, '').slice(0, 6) || ''
     if (!texto) return
     erroCodigoValidacao.value = false
-    for (let i = 0; i < 6; i++) {
-        codigoValidacao.value[i] = texto[i] || ''
-    }
+    for (let i = 0; i < 6; i++) codigoValidacao.value[i] = texto[i] || ''
 }
 
 const reenviarCodigo = async () => {
     if (tempoRestanteReenvio.value > 0 || enviandoCodigo.value) return
-
     enviandoCodigo.value = true
     erroCodigoValidacao.value = false
     try {
-        if (etapaModal.value === 'confirmar_novo_email') {
-            const novoEmail = dadosAcesso.email.trim()
-            await postAlterarEmail({ novo_email: novoEmail, email: novoEmail })
-        } else {
-            await enviarCodigoParaEmailAtual()
-        }
+        await enviarCodigoParaEmailAtual()
         iniciarTimerReenvio()
     } catch (error) {
         textoErroModal.value = error.message || 'Erro ao reenviar o código.'
@@ -507,27 +440,9 @@ const reenviarCodigo = async () => {
     }
 }
 
-const finalizarAlteracoesRestantes = async () => {
-    if (pendenciasSalvarPosEmail.senha) {
-        await postAlterarSenha({
-            nova_senha: dadosAcesso.senha,
-            senha: dadosAcesso.senha,
-            codigo: ultimoCodigoValidado.value
-        })
-        pendenciasSalvarPosEmail.senha = false
-    }
-
-    if (pendenciasSalvarPosEmail.dataNascimento) {
-        await putUsuarioLogado({
-            data_nascimento: dadosAcesso.dataNascimento
-        })
-        pendenciasSalvarPosEmail.dataNascimento = false
-    }
-}
-
 const confirmarCodigoValidacao = async () => {
-    const codigoCompleto = codigoValidacao.value.join('')
-    if (codigoCompleto.length < 6 || codigoValidacao.value.some(d => d.trim() === '')) {
+    const codigo = codigoValidacao.value.join('')
+    if (!/^\d{6}$/.test(codigo)) {
         textoErroModal.value = 'Por favor, preencha todos os dígitos do código.'
         erroCodigoValidacao.value = true
         return
@@ -535,37 +450,12 @@ const confirmarCodigoValidacao = async () => {
 
     validandoCodigo.value = true
     erroCodigoValidacao.value = false
-
     try {
-        if (etapaModal.value === 'confirmar_novo_email') {
-            const novoEmail = dadosAcesso.email.trim()
-            await postConfirmarAlteracao({
-                codigo: codigoCompleto,
-                novo_email: novoEmail
-            })
-
-            const userLocal = authService.getUser?.()
-            if (userLocal && typeof authService.setUser === 'function') {
-                authService.setUser({ ...userLocal, email: novoEmail })
-            }
-
-            await finalizarAlteracoesRestantes()
-            fecharModal()
-            router.push('/perfil')
-            return
-        }
-
-        await postVerificarCodigoReset({
-            email: emailOriginal.value,
-            codigo: codigoCompleto
-        })
-
-        ultimoCodigoValidado.value = codigoCompleto
-        ultimoTempoValidacao.value = new Date().getTime()
+        await postVerificarCodigoReset({ email: emailOriginal.value, codigo })
+        ultimoCodigoValidado.value = codigo
+        ultimoTempoValidacao.value = Date.now()
         modalValidacaoAberto.value = false
-        if (campoEmValidacao.value) {
-            desbloquearCampo(campoEmValidacao.value)
-        }
+        desbloquearCampo(campoEmValidacao.value)
         codigoValidacao.value = ['', '', '', '', '', '']
         if (timerReenvio) clearInterval(timerReenvio)
     } catch (error) {
@@ -578,55 +468,36 @@ const confirmarCodigoValidacao = async () => {
 
 const salvarInformacoes = async () => {
     mensagemErroGeral.value = ''
-    let possuiErro = false
-
-    const emailAlterado = camposDesbloqueados.email && dadosAcesso.email.trim() !== emailOriginal.value
     const senhaAlterada = camposDesbloqueados.senha
     const dataAlterada = camposDesbloqueados.dataNascimento && dadosAcesso.dataNascimento !== dataNascimentoOriginal.value
-
-    if (camposDesbloqueados.email) {
-        if (!dadosAcesso.email.trim() || !validarEmailRegex(dadosAcesso.email.trim())) {
-            errosCampos.email = true
-            erroEmailInvalido.value = true
-            possuiErro = true
-        }
-    }
 
     if (senhaAlterada && (!dadosAcesso.senha.trim() || dadosAcesso.senha.trim().length < 6)) {
         errosCampos.senha = true
         mensagemErroGeral.value = 'A nova senha deve ter pelo menos 6 caracteres.'
-        possuiErro = true
+        return
     }
-
-    if (camposDesbloqueados.dataNascimento) {
-        if (!dadosAcesso.dataNascimento.trim() || !validarIdade(dadosAcesso.dataNascimento)) {
-            errosCampos.dataNascimento = true
-            erroIdadeInvalida.value = true
-            possuiErro = true
-        }
+    if (senhaAlterada && dadosAcesso.senha.length > 15) {
+        errosCampos.senha = true
+        mensagemErroGeral.value = 'A nova senha deve ter no máximo 15 caracteres.'
+        return
     }
-
-    if (possuiErro) return
-
-    if (!emailAlterado && !senhaAlterada && !dataAlterada) {
+    if (dataAlterada && (!dadosAcesso.dataNascimento.trim() || !validarIdade(dadosAcesso.dataNascimento))) {
+        errosCampos.dataNascimento = true
+        erroIdadeInvalida.value = true
+        mensagemErroGeral.value = 'Informe uma data de nascimento válida.'
+        return
+    }
+    if (!senhaAlterada && !dataAlterada) {
         router.push('/perfil')
         return
     }
 
     salvando.value = true
     try {
-        if (emailAlterado) {
-            const novoEmail = dadosAcesso.email.trim()
-            pendenciasSalvarPosEmail.senha = senhaAlterada
-            pendenciasSalvarPosEmail.dataNascimento = dataAlterada
-
-            await postAlterarEmail({
-                novo_email: novoEmail,
-                email: novoEmail
-            })
-
-            etapaModal.value = 'confirmar_novo_email'
-            emailAlvoValidacao.value = novoEmail
+        if (verificarSePrecisaValidar()) {
+            campoEmValidacao.value = senhaAlterada ? 'senha' : 'dataNascimento'
+            await enviarCodigoParaEmailAtual()
+            emailAlvoValidacao.value = emailOriginal.value
             erroCodigoValidacao.value = false
             codigoValidacao.value = ['', '', '', '', '', '']
             modalValidacaoAberto.value = true
@@ -635,19 +506,18 @@ const salvarInformacoes = async () => {
         }
 
         if (senhaAlterada) {
-            await postAlterarSenha({
+            await postRedefinirSenha({
+                email: emailOriginal.value,
                 nova_senha: dadosAcesso.senha,
-                senha: dadosAcesso.senha,
+                confirmar_senha: dadosAcesso.senha,
                 codigo: ultimoCodigoValidado.value
             })
+            ultimoCodigoValidado.value = ''
+            ultimoTempoValidacao.value = null
         }
-
         if (dataAlterada) {
-            await putUsuarioLogado({
-                data_nascimento: dadosAcesso.dataNascimento
-            })
+            await putUsuarioLogado({ data_nascimento: dadosAcesso.dataNascimento })
         }
-
         router.push('/perfil')
     } catch (error) {
         mensagemErroGeral.value = error.message || 'Erro ao salvar as informações.'

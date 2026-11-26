@@ -1,10 +1,10 @@
 import { authService } from './authService'
+import { fetchComTimeout } from './apiFetch'
 
 const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 const API_ROOT = API_URL.replace(/\/v1\/entrepanelas\/?$/, '')
-const CHEFINHO_URL = import.meta.env.VITE_CHEFINHO_URL || 'http://localhost:3001'
 const url = `${API_ROOT}/v1/chefinho/conversas`
-const urlStatus = `${CHEFINHO_URL}/v1/chefinho/status`
+const urlStatus = '/v1/chefinho/status'
 const urlSugestao = `${API_URL}/receitas/busca/sugestao`
 
 function adicionarUsuarioNaQuery(params = {}) {
@@ -14,7 +14,7 @@ function adicionarUsuarioNaQuery(params = {}) {
   return new URLSearchParams(query).toString()
 }
 
-async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackError, baseUrl = url } = {}) {
+async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackError, baseUrl = url, timeoutMs } = {}) {
   const token = jwt || authService.getToken()
   const headers = {}
 
@@ -24,7 +24,9 @@ async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackErro
   const options = { method, headers }
   if (dados !== undefined) options.body = JSON.stringify(dados)
 
-  const response = await fetch(`${baseUrl}${endpoint}`, options)
+  const response = timeoutMs
+    ? await fetchComTimeout(`${baseUrl}${endpoint}`, options, timeoutMs)
+    : await fetch(`${baseUrl}${endpoint}`, options)
   const data = await response.json().catch(() => null)
 
   if (!response.ok || (data && (data.status === false || data.success === false))) {
@@ -104,6 +106,7 @@ export async function postSugestaoBuscaReceita(dados, jwt) {
     dados: payload,
     jwt,
     baseUrl: urlSugestao,
-    fallbackError: 'Erro ao buscar sugestão de receita com o Chefinho!'
+    fallbackError: 'Erro ao buscar sugestão de receita com o Chefinho!',
+    timeoutMs: 65000
   })
 }

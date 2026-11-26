@@ -1,4 +1,5 @@
 import { authService } from './authService'
+import { fetchComTimeout } from './apiFetch'
 
 const BASE_URL = import.meta.env.VITE_API_URL
 const url = `${BASE_URL}/comunidades`
@@ -13,7 +14,7 @@ async function request(endpoint = '', { method = 'GET', dados, jwt, fallbackErro
   const options = { method, headers, ...(method === 'GET' ? { cache: 'no-store' } : {}) }
   if (dados !== undefined) options.body = JSON.stringify(dados)
 
-  const response = await fetch(`${baseUrl}${endpoint}`, options)
+  const response = await fetchComTimeout(`${baseUrl}${endpoint}`, options)
   const data = await response.json().catch(() => null)
 
   if (!response.ok || (data && data.status === false)) {
@@ -63,7 +64,7 @@ export async function obterIdUsuarioLogado() {
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/usuarios/me`, {
+      const response = await fetchComTimeout(`${BASE_URL}/usuarios/me`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       const data = await response.json().catch(() => null)
@@ -151,6 +152,12 @@ export async function getReceitasDaComunidade(id, params = {}) {
   const query = new URLSearchParams(params).toString()
   return request(`/${id}/receitas${query ? `?${query}` : ''}`, {
     fallbackError: `Erro ao listar as receitas da comunidade: ${id}`
+  })
+}
+
+export async function getMembrosComunidade(id) {
+  return request(`/${id}/membros`, {
+    fallbackError: `Erro ao listar os membros da comunidade: ${id}`
   })
 }
 

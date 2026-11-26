@@ -173,7 +173,7 @@ import UserAvatar from '@/components/UserAvatar.vue'
 import RecipeCard from '@/components/RecipeCard.vue'
 import { authService } from '@/services/authService'
 import {
-    getBuscarUsuario,
+    getUsuarioLogado,
     getReceitasUsuario,
     getReceitasSalvasUsuario,
     getComunidadesUsuario
@@ -209,6 +209,8 @@ const gradientesComunidade = [
 ]
 
 const obterIdUsuarioLogado = () => {
+    const idAutenticado = authService.getUserId?.()
+    if (idAutenticado) return Number(idAutenticado)
     const user = authService.getUser?.()
     return user?.id ?? user?.id_usuario ?? user?.usuario?.id ?? null
 }
@@ -263,17 +265,17 @@ const normalizarReceita = (item, salvoPadrao = false) => {
 
     return {
         id: item.id ?? item.id_receita,
-        imagemUrl: item.imagem_url ?? item.imagemUrl ?? item.foto_url ?? item.imagem ?? '',
+        imagemUrl: item.imagem_url ?? item.imagemUrl ?? item.foto_url ?? item.imagem ?? item.foto ?? '',
         titulo: item.titulo ?? item.nome ?? 'Receita',
         tempo: formatarTempo(item.tempo_preparo ?? item.tempo ?? item.tempoPreparo),
-        porcoes: formatarPorcoes(item.porcoes ?? item.rendimento),
-        custo: item.custo ?? item.nivel_custo ?? 'Econômico',
-        curtidas: Number(item.curtidas ?? item.total_curtidas ?? item.quantidade_curtidas ?? 0),
-        comentarios: Number(item.comentarios ?? item.total_comentarios ?? item.quantidade_comentarios ?? 0),
+        porcoes: formatarPorcoes(item.porcao ?? item.porcoes ?? item.rendimento),
+        custo: typeof item.custo === 'string' ? item.custo : (item.nivel_custo ?? 'Econômico'),
+        curtidas: Number(item.qtd_curtidas ?? item.curtidas ?? item.total_curtidas ?? item.quantidade_curtidas ?? 0),
+        comentarios: Array.isArray(item.comentarios) ? item.comentarios.length : Number(item.qtd_comentarios ?? item.total_comentarios ?? item.quantidade_comentarios ?? 0),
         autorNome,
         authorIniciais: gerarIniciais(autorNome),
         autorFotoUrl: autorObj.foto_perfil ?? autorObj.foto_url ?? item.autor_foto_url ?? item.autorFotoUrl ?? '',
-        dificuldade: item.dificuldade ?? 'Fácil',
+        dificuldade: typeof item.dificuldade === 'string' ? item.dificuldade : 'Fácil',
         salvo: Boolean(item.salvo_pelo_usuario ?? item.salvo ?? item.is_salvo ?? salvoPadrao)
     }
 }
@@ -284,7 +286,7 @@ const normalizarComunidade = (item, index) => {
     return {
         id,
         nome: dados.nome ?? dados.titulo ?? 'Comunidade',
-        membros: dados.membros ?? dados.total_membros ?? dados.quantidade_membros ?? 0,
+        membros: Number(dados.qtd_membros ?? dados.quantidade_pessoas ?? dados.membros ?? dados.total_membros ?? dados.quantidade_membros ?? dados.membros_count ?? 0),
         bannerUrl: dados.foto_capa ?? dados.banner_url ?? dados.imagem_url ?? '',
         gradiente: gradientesComunidade[Number(id) % gradientesComunidade.length]
     }
@@ -302,7 +304,7 @@ const carregarPerfilCompleto = async () => {
 
     try {
         const [resUsuario, resReceitas, resSalvas, resComunidades] = await Promise.allSettled([
-            getBuscarUsuario(id),
+            getUsuarioLogado(),
             getReceitasUsuario(id, { idUserLogado: id }),
             getReceitasSalvasUsuario(id, { idUserLogado: id }),
             getComunidadesUsuario(id)
@@ -316,9 +318,9 @@ const carregarPerfilCompleto = async () => {
                 descricao: raw.bio ?? raw.descricao ?? '',
                 fotoUrl: raw.foto_perfil ?? raw.foto_url ?? raw.fotoUrl ?? '',
                 bannerUrl: raw.foto_capa ?? raw.banner_url ?? raw.bannerUrl ?? '',
-                quantidadeReceitas: raw.total_receitas ?? raw.quantidade_receitas ?? raw.quantidadeReceitas ?? 0,
-                quantidadeSeguidores: raw.total_seguidores ?? raw.quantidade_seguidores ?? raw.quantidadeSeguidores ?? 0,
-                quantidadeSeguindo: raw.total_seguindo ?? raw.quantidade_seguindo ?? raw.quantidadeSeguindo ?? 0
+                quantidadeReceitas: raw.qtd_receitas ?? raw.total_receitas ?? raw.quantidade_receitas ?? raw.quantidadeReceitas ?? 0,
+                quantidadeSeguidores: raw.qtd_seguidores ?? raw.total_seguidores ?? raw.quantidade_seguidores ?? raw.quantidadeSeguidores ?? 0,
+                quantidadeSeguindo: raw.qtd_seguindo ?? raw.total_seguindo ?? raw.quantidade_seguindo ?? raw.quantidadeSeguindo ?? 0
             }
         }
 

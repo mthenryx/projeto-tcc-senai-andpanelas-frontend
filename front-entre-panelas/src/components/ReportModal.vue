@@ -73,9 +73,13 @@
                             privacidade de todos os envolvidos.</p>
                     </div>
 
+                    <p v-if="erroEnvio" class="request-error" role="alert">{{ erroEnvio }}</p>
+
                     <div class="actions-footer">
-                        <button class="btn-cancelar" @click="fechar">Cancelar</button>
-                        <button class="btn-enviar" @click="enviarDenuncia">Enviar denúncia</button>
+                        <button class="btn-cancelar" @click="fechar" :disabled="enviando">Cancelar</button>
+                        <button class="btn-enviar" @click="enviarDenuncia" :disabled="enviando">
+                            {{ enviando ? 'Enviando...' : 'Enviar denúncia' }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -104,7 +108,6 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { authService } from '@/services/authService';
 import { postDenunciaUsuario, postDenunciaComunidade, postDenunciaReceita } from '@/services/denuncias';
 
 const props = defineProps({
@@ -124,6 +127,8 @@ const detalhes = ref('');
 const erroMotivo = ref(false);
 const erroDetalhes = ref(false);
 const enviado = ref(false);
+const enviando = ref(false);
+const erroEnvio = ref('');
 
 const isOutroMotivo = computed(() => motivoSelecionado.value === 'Outro motivo');
 
@@ -147,6 +152,7 @@ const listaMotivos = [
 ];
 
 const aoSelecionarMotivo = () => {
+    erroEnvio.value = '';
     erroMotivo.value = false;
     if (!isOutroMotivo.value) {
         erroDetalhes.value = false;
@@ -154,6 +160,9 @@ const aoSelecionarMotivo = () => {
 };
 
 const enviarDenuncia = async () => {
+    if (enviando.value) return;
+    erroEnvio.value = '';
+
     if (!motivoSelecionado.value) {
         erroMotivo.value = true;
         return;
@@ -164,26 +173,34 @@ const enviarDenuncia = async () => {
         return;
     }
 
-    const idUsuario = authService.getUserId();
+    const idAlvo = Number(props.targetId);
+    if (!Number.isInteger(idAlvo) || idAlvo <= 0) {
+        erroEnvio.value = 'Não foi possível identificar o usuário ou o conteúdo denunciado.';
+        return;
+    }
+
     const base = {
-        id_usuario: idUsuario,
         motivo: motivoSelecionado.value,
         detalhe: detalhes.value.trim()
     };
 
+    enviando.value = true;
     try {
         if (props.tipo === 'comunidade') {
-            await postDenunciaComunidade({ ...base, id_comunidade: Number(props.targetId) });
+            await postDenunciaComunidade(idAlvo, base);
         } else if (props.tipo === 'receita') {
-            await postDenunciaReceita({ ...base, id_receita: Number(props.targetId) });
+            await postDenunciaReceita(idAlvo, base);
         } else {
-            await postDenunciaUsuario({ ...base, id_usuario_denunciado: Number(props.targetId) });
+            await postDenunciaUsuario(idAlvo, base);
         }
 
-        emit('send', { tipo: props.tipo, targetId: props.targetId, ...base });
+        emit('send', { tipo: props.tipo, targetId: idAlvo, ...base });
         enviado.value = true;
     } catch (error) {
-        console.error(error.message);
+        console.error('Erro ao enviar denúncia:', error);
+        erroEnvio.value = error?.message || 'Não foi possível enviar a denúncia. Tente novamente.';
+    } finally {
+        enviando.value = false;
     }
 };
 
@@ -194,6 +211,8 @@ const fechar = () => {
         detalhes.value = '';
         erroMotivo.value = false;
         erroDetalhes.value = false;
+        erroEnvio.value = '';
+        enviando.value = false;
         enviado.value = false;
     }, 200);
 };
@@ -658,6 +677,23 @@ textarea.textarea-erro {
         border-radius: 12px;
         padding: 12px;
         width: 100%;
+    }
+
+    .request-error {
+        color: #b42318;
+        background: #fff1f0;
+        border: 1px solid #ffd2cf;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 13px;
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    .btn-enviar:disabled,
+    .btn-cancelar:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
     }
 }
 </style>

@@ -113,18 +113,46 @@
                     <div v-else-if="abaAtiva === 'receitas'" class="tab-content">
 
                         <template v-if="buscaReceitaAtiva">
-                            <div class="results-header">
+                            <div class="results-header results-header-recipes">
                                 <button class="btn-voltar-inline" @click="resetarBusca">
                                     ← Voltar para explorar
                                 </button>
-                                <span class="results-count">
-                                    {{ tituloResultadoReceitas }} ({{ resultadosReceitas.length }})
-                                </span>
+                                <div class="results-tools">
+                                    <span class="results-count">
+                                        {{ tituloResultadoReceitas }} ({{ resultadosReceitas.length }})
+                                    </span>
+                                    <label class="sort-control">
+                                        <span>Ordenar por</span>
+                                        <select v-model="ordenacaoReceitas" aria-label="Ordenar receitas encontradas">
+                                            <option value="relevancia">Relevância</option>
+                                            <option value="recentes">Mais recentes</option>
+                                            <option value="curtidas">Mais curtidas</option>
+                                            <option value="tempo">Menor tempo</option>
+                                        </select>
+                                    </label>
+                                </div>
                             </div>
 
-                            <div v-if="resultadosReceitas.length > 0" class="recipes-results-list">
+                            <section v-if="carregandoSugestao || sugestaoChefinho" class="chefinho-suggestion-section">
+                                <div class="suggestion-heading">
+                                    <h3 class="section-label">Sugestão do Chefinho</h3>
+                                    <span v-if="carregandoSugestao" class="suggestion-status">Preparando uma ideia...</span>
+                                </div>
+                                <RecipeCardMini
+                                    v-if="sugestaoChefinho"
+                                    :id="'chefinho-suggestion'"
+                                    :imagemUrl="sugestaoChefinho.foto || ''"
+                                    :titulo="sugestaoChefinho.titulo || 'Receita sugerida pelo Chefinho'"
+                                    :tempo="formatarTempo(sugestaoChefinho.tempo)"
+                                    :porcoes="formatarPorcoes(sugestaoChefinho.porcao)"
+                                    :dificuldade="sugestaoChefinho.dificuldade || 'Fácil'"
+                                    @click="abrirSugestaoChefinho"
+                                />
+                            </section>
+
+                            <div v-if="resultadosReceitasOrdenados.length > 0" class="recipes-results-list">
                                 <RecipeCard
-                                    v-for="receita in resultadosReceitas"
+                                    v-for="receita in resultadosReceitasOrdenados"
                                     :key="receita.id"
                                     :id="receita.id"
                                     :imagemUrl="receita.imagemUrl"
@@ -143,10 +171,10 @@
                                 />
                             </div>
 
-                            <div v-else class="empty-state-container">
-                                <h3 class="empty-title">Nenhum item Encontrado</h3>
+                            <div v-else-if="!carregandoSugestao && !sugestaoChefinho" class="empty-state-container">
+                                <h3 class="empty-title">Nenhuma receita encontrada</h3>
                                 <p class="empty-desc">
-                                    De acordo com a sua pesquisa não conseguimos encontrar uma receita compatível!
+                                    Não encontramos receitas com esse nome. O Chefinho também não conseguiu gerar uma sugestão agora.
                                 </p>
                                 <button class="btn-voltar-empty" @click="resetarBusca">
                                     ← voltar
@@ -253,9 +281,6 @@
 
                             <div v-if="resultadosIngredientes.length > 0" class="recipes-results-list">
                                 <div v-for="item in resultadosIngredientes" :key="item.receita.id" class="compat-card-wrapper">
-                                    <span v-if="item.compatibilidade !== null" class="compat-badge">
-                                        {{ item.compatibilidade }}% compatível
-                                    </span>
                                     <RecipeCard
                                         :id="item.receita.id"
                                         :imagemUrl="item.receita.imagemUrl"
@@ -265,6 +290,7 @@
                                         :custo="item.receita.custo"
                                         :curtidas="item.receita.curtidas"
                                         :comentarios="item.receita.comentarios"
+                                        :compatibilidade="item.compatibilidade"
                                         :autorNome="item.receita.autorNome"
                                         :authorIniciais="item.receita.authorIniciais"
                                         :autorFotoUrl="item.receita.autorFotoUrl"
@@ -315,6 +341,7 @@ import { useRouter } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import RecipeCard from '@/components/RecipeCard.vue';
+import RecipeCardMini from '@/components/RecipeCardMini.vue';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
 
 import { authService } from '@/services/authService';
@@ -333,6 +360,7 @@ import {
     postSalvarReceita,
     deleteSalvarReceita
 } from '@/services/receitas';
+import { postSugestaoBuscaReceita } from '@/services/chefinho';
 import { getListarCategorias } from '@/services/catalogo';
 
 const router = useRouter();
@@ -371,9 +399,9 @@ const normalizarReceita = (rec) => {
         imagemUrl: rec.foto || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
         titulo: rec.titulo || 'Receita',
         tempo: formatarTempo(rec.tempo),
-        porcoes: formatarPorcoes(rec.id_porcao),
-        custo: MAPA_CUSTO[rec.id_custo] || 'Econômico',
-        dificuldade: MAPA_DIFICULDADE[rec.id_dificuldade] || 'Fácil',
+        porcoes: formatarPorcoes(rec.porcao ?? rec.id_porcao),
+        custo: MAPA_CUSTO[rec.id_custo] || (typeof rec.custo === 'string' ? rec.custo : 'Econômico'),
+        dificuldade: MAPA_DIFICULDADE[rec.id_dificuldade] || (typeof rec.dificuldade === 'string' ? rec.dificuldade : 'Fácil'),
         curtidas: Number(rec.qtd_curtidas ?? rec.qtd_curtida ?? 0),
         comentarios: Array.isArray(rec.comentarios) ? rec.comentarios.length : Number(rec.qtd_comentarios ?? 0),
         autorNome,
@@ -436,7 +464,7 @@ const carregarUsuariosIniciais = async () => {
 
         const dados = usuariosRes?.response?.dados || [];
         listaUsuarios.value = dados
-            .filter(u => Number(u.id) !== Number(userId))
+            .filter(u => Number(u.id) !== Number(userId) && Number(u.id) !== 1)
             .map(normalizarUsuario);
     } catch (erro) {
         console.error('Erro ao listar usuários:', erro);
@@ -456,13 +484,13 @@ const buscarUsuariosNaApi = async () => {
             const res = await getBuscarUsuarioPorUsername({ nome: termoLimpo.slice(1) });
             const dados = res?.response?.usuarios || res?.response?.receitas || res?.response?.dados || [];
             resultadosBuscaUsuarios.value = dados
-                .filter(u => Number(u.id) !== Number(usuarioLogadoId.value))
+                .filter(u => Number(u.id) !== Number(usuarioLogadoId.value) && Number(u.id) !== 1)
                 .map(normalizarUsuario);
         } else {
             const res = await getListarUsuarios({ busca: termoLimpo, limite: 30 });
             const dados = res?.response?.usuarios || res?.response?.receitas || res?.response?.dados || [];
             resultadosBuscaUsuarios.value = dados
-                .filter(u => Number(u.id) !== Number(usuarioLogadoId.value))
+                .filter(u => Number(u.id) !== Number(usuarioLogadoId.value) && Number(u.id) !== 1)
                 .map(normalizarUsuario);
         }
     } catch (erro) {
@@ -534,6 +562,57 @@ const buscaReceitaAtiva = ref(false);
 const tituloResultadoReceitas = ref('');
 const resultadosReceitas = ref([]);
 const emAlta = ref([]);
+const sugestaoChefinho = ref(null);
+const carregandoSugestao = ref(false);
+const ordenacaoReceitas = ref('relevancia');
+let sequenciaBuscaReceitas = 0;
+
+const extrairMinutos = (tempo) => {
+    if (typeof tempo === 'number' && Number.isFinite(tempo)) return tempo;
+    const texto = String(tempo || '').trim().toLowerCase();
+    const formatoHora = texto.match(/^(\d{1,3}):(\d{1,2})(?::(\d{1,2}))?$/);
+    if (formatoHora) return Number(formatoHora[1]) * 60 + Number(formatoHora[2]);
+    const valor = texto.match(/\d+(?:[,.]\d+)?/);
+    return valor ? Number(valor[0].replace(',', '.')) : Number.POSITIVE_INFINITY;
+};
+
+const resultadosReceitasOrdenados = computed(() => {
+    const itens = resultadosReceitas.value.map((receita, indice) => ({ receita, indice }));
+    itens.sort((a, b) => {
+        if (ordenacaoReceitas.value === 'recentes') {
+            return Number(b.receita.id || 0) - Number(a.receita.id || 0) || a.indice - b.indice;
+        }
+        if (ordenacaoReceitas.value === 'curtidas') {
+            return Number(b.receita.curtidas || 0) - Number(a.receita.curtidas || 0) || a.indice - b.indice;
+        }
+        if (ordenacaoReceitas.value === 'tempo') {
+            return extrairMinutos(a.receita.tempo) - extrairMinutos(b.receita.tempo) || a.indice - b.indice;
+        }
+        if (ordenacaoReceitas.value === 'relevancia') {
+            const termo = termoBusca.value.trim().toLocaleLowerCase('pt-BR');
+            if (!termo) return a.indice - b.indice;
+            const pontuar = (titulo) => {
+                const texto = String(titulo || '').toLocaleLowerCase('pt-BR');
+                if (texto === termo) return 0;
+                if (texto.startsWith(termo)) return 1;
+                return texto.includes(termo) ? 2 : 3;
+            };
+            return pontuar(a.receita.titulo) - pontuar(b.receita.titulo) || a.indice - b.indice;
+        }
+        return a.indice - b.indice;
+    });
+    return itens.map(item => item.receita);
+});
+
+const abrirSugestaoChefinho = () => {
+    if (!sugestaoChefinho.value) return;
+    try {
+        sessionStorage.setItem('entre-panelas:receita-sugestao-chefinho', JSON.stringify(sugestaoChefinho.value));
+        router.push({ name: 'receita-sugestao' });
+    } catch (erro) {
+        console.error('Não foi possível abrir a sugestão do Chefinho:', erro);
+    }
+};
 
 const carregarDadosReceitas = async () => {
     try {
@@ -569,26 +648,72 @@ const buscarPorTermo = async (termo) => {
 };
 
 const buscarReceitasPorNomeApi = async (nome) => {
-    const query = nome.trim();
+    const query = nome.trim().slice(0, 50);
     if (!query) return;
 
+    const idBusca = ++sequenciaBuscaReceitas;
     carregando.value = true;
     buscaReceitaAtiva.value = true;
-    tituloResultadoReceitas.value = `Resultados para "${query}"`;
+    tituloResultadoReceitas.value = `Resultados para \"${query}\"`;
+    resultadosReceitas.value = [];
+    sugestaoChefinho.value = null;
+    carregandoSugestao.value = false;
 
+    let receitasEncontradas = [];
     try {
         const res = await getBuscarReceitasPorNome({ nome: query, limite: 30 });
-        const dados = res?.response?.usuarios || res?.response?.receitas || res?.response?.dados || [];
-        resultadosReceitas.value = dados.map(normalizarReceita).filter(Boolean);
+        const dados = res?.response?.receitas || res?.response?.usuarios || res?.response?.dados || [];
+        receitasEncontradas = Array.isArray(dados) ? dados : [];
+        if (idBusca !== sequenciaBuscaReceitas) return;
+        resultadosReceitas.value = receitasEncontradas.map(normalizarReceita).filter(Boolean);
     } catch (erro) {
-        console.error('Erro ao buscar receitas por nome:', erro);
+        // A busca pode retornar 404 quando não há receitas na base. Ainda assim,
+        // a consulta ao Chefinho deve ocorrer com encontrados_db vazio.
+        console.warn('Busca no catálogo sem resultados ou com erro:', erro?.message || erro);
+        if (idBusca !== sequenciaBuscaReceitas) return;
         resultadosReceitas.value = [];
     } finally {
-        carregando.value = false;
+        if (idBusca === sequenciaBuscaReceitas) carregando.value = false;
+    }
+
+    if (idBusca !== sequenciaBuscaReceitas) return;
+    carregandoSugestao.value = true;
+
+    const encontradosDb = receitasEncontradas.slice(0, 50).map((receita) => ({
+        titulo: receita.titulo || '',
+        descricao: receita.descricao || '',
+        foto: receita.foto || '',
+        video: receita.video || '',
+        tempo: receita.tempo || '00:30:00',
+        custo: receita.custo?.[0]?.tipo_custo || receita.custo || MAPA_CUSTO[receita.id_custo] || 'Baixo',
+        dificuldade: receita.dificuldade?.[0]?.dificuldade || receita.dificuldade || MAPA_DIFICULDADE[receita.id_dificuldade] || 'Fácil',
+        porcao: Number(receita.porcao?.[0]?.numero_porcao ?? receita.porcao ?? receita.id_porcao ?? 1)
+    }));
+
+    try {
+        const sugestaoRes = await postSugestaoBuscaReceita({
+            pesquisa_usuario: query,
+            encontrados_db: encontradosDb
+        });
+        if (idBusca !== sequenciaBuscaReceitas) return;
+        const resposta = sugestaoRes?.response || {};
+        sugestaoChefinho.value = resposta.possui_sugestao && resposta.receita
+            ? resposta.receita
+            : null;
+    } catch (erro) {
+        if (idBusca === sequenciaBuscaReceitas) {
+            console.warn('O Chefinho não conseguiu sugerir uma receita:', erro?.message || erro);
+            sugestaoChefinho.value = null;
+        }
+    } finally {
+        if (idBusca === sequenciaBuscaReceitas) carregandoSugestao.value = false;
     }
 };
 
 const buscarPorCategoria = async (cat) => {
+    ++sequenciaBuscaReceitas;
+    sugestaoChefinho.value = null;
+    carregandoSugestao.value = false;
     carregando.value = true;
     buscaReceitaAtiva.value = true;
     tituloResultadoReceitas.value = `Categoria: ${cat.nome}`;
@@ -706,7 +831,7 @@ const executarBuscaPorIngredientes = async () => {
         resultadosIngredientes.value = receitasBase
             .map(item => ({
                 receita: normalizarReceita(item.receita || item),
-                compatibilidade: item.compatibilidade_percentual ?? null
+                compatibilidade: item.compatibilidade_percentual ?? item.compatibilidade ?? null
             }))
             .filter(item => item.receita !== null);
     } catch (erro) {
@@ -719,6 +844,9 @@ const executarBuscaPorIngredientes = async () => {
 
 // --- Controle de Abas e Busca ---
 const mudarAba = (aba) => {
+    ++sequenciaBuscaReceitas;
+    sugestaoChefinho.value = null;
+    carregandoSugestao.value = false;
     abaAtiva.value = aba;
     termoBusca.value = '';
     resultadosBuscaUsuarios.value = null;
@@ -730,8 +858,11 @@ const tratarDigitacaoBusca = () => {
         resultadosBuscaUsuarios.value = null;
     }
     if (abaAtiva.value === 'receitas' && !termoBusca.value.trim()) {
+        ++sequenciaBuscaReceitas;
         buscaReceitaAtiva.value = false;
         resultadosReceitas.value = [];
+        sugestaoChefinho.value = null;
+        carregandoSugestao.value = false;
     }
 };
 
@@ -746,10 +877,13 @@ const executarBusca = () => {
 };
 
 const resetarBusca = () => {
+    ++sequenciaBuscaReceitas;
     termoBusca.value = '';
     resultadosBuscaUsuarios.value = null;
     buscaReceitaAtiva.value = false;
     resultadosReceitas.value = [];
+    sugestaoChefinho.value = null;
+    carregandoSugestao.value = false;
 };
 
 const voltarParaHome = () => router.push('/home');
@@ -1129,6 +1263,64 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+.results-header-recipes {
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.results-tools {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.sort-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--cinza);
+    font-size: 12px;
+}
+
+.sort-control select {
+    max-width: 190px;
+    border: 1px solid var(--bege);
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: var(--marrom);
+    background: #fff;
+    font: inherit;
+}
+
+.chefinho-suggestion-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--bege);
+    border-radius: 18px;
+    background: #fffdf9;
+}
+
+.suggestion-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.suggestion-heading .section-label {
+    margin: 0;
+}
+
+.suggestion-status {
+    color: var(--cinza);
+    font-size: 12px;
 }
 
 .compat-card-wrapper {
