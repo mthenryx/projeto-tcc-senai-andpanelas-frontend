@@ -4,7 +4,7 @@
             <div class="badges-topo">
                 <span v-if="textoCompatibilidade" class="compat-badge">{{ textoCompatibilidade }} compatível</span>
                 <span class="difficulty-badge" :class="dificuldadeClass">
-                    {{ dificuldade }}
+                    {{ dificuldadeExibida }}
                 </span>
             </div>
 
@@ -47,7 +47,7 @@
                         <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
-                    <span>{{ porcoes }}</span>
+                    <span>{{ porcoesExibidas }}</span>
                 </div>
 
                 <div class="meta-item cost-item" :class="custoClass">
@@ -56,7 +56,7 @@
                         <line x1="12" y1="1" x2="12" y2="23"></line>
                         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                     </svg>
-                    <span>{{ custo }}</span>
+                    <span>{{ custoExibido }}</span>
                 </div>
             </div>
 
@@ -108,17 +108,56 @@ const props = defineProps({
     imagemUrl: { type: String, required: true },
     titulo: { type: String, required: true },
     tempo: { type: String, required: true },
-    porcoes: { type: String, required: true },
-    custo: { type: String, required: true },
+    porcoes: { type: [String, Number, Object, Array], default: '1 porção' },
+    custo: { type: [String, Number, Object, Array], default: 'Econômico' },
     curtidas: { type: Number, default: 0 },
     comentarios: { type: Number, default: 0 },
     autorNome: { type: String, required: true },
     authorIniciais: { type: String, required: true },
     autorFotoUrl: { type: String, default: '' },
-    dificuldade: { type: String, required: true },
+    dificuldade: { type: [String, Number, Object, Array], default: 'Fácil' },
     salvo: { type: Boolean, default: false },
     compatibilidade: { type: [Number, String], default: null }
 });
+
+const porcoesExibidas = computed(() => {
+    const valor = Array.isArray(props.porcoes) ? props.porcoes[0] : props.porcoes;
+    const quantidade = valor && typeof valor === 'object'
+        ? valor.numero_porcao ?? valor.numero_porcoes ?? valor.quantidade ?? valor.porcao
+        : valor;
+
+    if (quantidade === null || quantidade === undefined || quantidade === '') return '1 porção';
+
+    const numero = Number(quantidade);
+    if (Number.isFinite(numero)) {
+        return `${numero} ${numero === 1 ? 'porção' : 'porções'}`;
+    }
+
+    return String(quantidade).trim() || '1 porção';
+});
+
+const extrairTextoMetadado = (valor, campos) => {
+    const item = Array.isArray(valor) ? valor[0] : valor;
+    if (item === null || item === undefined || item === '') return '';
+    if (typeof item !== 'object') return String(item).trim();
+
+    for (const campo of campos) {
+        const texto = item[campo];
+        if (texto !== null && texto !== undefined && typeof texto !== 'object' && String(texto).trim()) {
+            return String(texto).trim();
+        }
+    }
+
+    return '';
+};
+
+const dificuldadeExibida = computed(() =>
+    extrairTextoMetadado(props.dificuldade, ['dificuldade', 'nivel_dificuldade', 'nome']) || 'Fácil'
+);
+
+const custoExibido = computed(() =>
+    extrairTextoMetadado(props.custo, ['tipo_custo', 'custo', 'nome']) || 'Econômico'
+);
 
 const textoCompatibilidade = computed(() => {
     if (props.compatibilidade === null || props.compatibilidade === undefined || props.compatibilidade === '') return '';
@@ -138,14 +177,14 @@ const toggleSalvo = () => {
 };
 
 const dificuldadeClass = computed(() => {
-    const diff = props.dificuldade.toLowerCase().trim();
+    const diff = dificuldadeExibida.value.toLowerCase().trim();
     if (diff.includes('fácil') || diff.includes('facil')) return 'badge-facil';
     if (diff.includes('médio') || diff.includes('medio') || diff.includes('média') || diff.includes('media')) return 'badge-medio';
     return 'badge-dificil';
 });
 
 const custoClass = computed(() => {
-    const c = props.custo.toLowerCase().trim();
+    const c = custoExibido.value.toLowerCase().trim();
     if (c.includes('econômico') || c.includes('economico')) return 'cost-economico';
     if (c.includes('moderado')) return 'cost-moderado';
     return 'cost-alto';

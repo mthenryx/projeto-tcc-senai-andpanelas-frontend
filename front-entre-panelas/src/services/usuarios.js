@@ -127,3 +127,28 @@ export async function getComunidadesUsuario(idUsuario) {
     fallbackError: `Erro ao listar as comunidades do usuário: ${idUsuario}`
   })
 }
+
+export async function getMinhasComunidades(jwt) {
+  return request('/comunidades/me', {
+    jwt,
+    fallbackError: 'Erro ao listar as comunidades das quais você participa!'
+  })
+}
+
+export async function postSolicitarAlteracaoEmail(dados, jwt) {
+  return request('/me/alterar-email', {
+    method: 'POST',
+    dados,
+    jwt,
+    fallbackError: 'Erro ao solicitar a alteração do e-mail!'
+  })
+}
+
+export async function postConfirmarAlteracaoEmail(dados, jwt) {
+  return request('/me/confirmar-alteracao-email', {
+    method: 'POST',
+    dados,
+    jwt,
+    fallbackError: 'Erro ao confirmar a alteração do e-mail!'
+  })
+}

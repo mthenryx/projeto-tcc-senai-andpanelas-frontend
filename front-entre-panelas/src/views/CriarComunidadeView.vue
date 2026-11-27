@@ -120,29 +120,8 @@
                                 </button>
                             </div>
                             <p v-else class="section-subtitle" style="margin-top: 2px;">
-                                Nenhuma categoria cadastrada ainda. Adicione a primeira abaixo:
+                                Não há categorias disponíveis para seleção no momento.
                             </p>
-
-                            <div class="outra-categoria-row">
-                                <input
-                                    type="text"
-                                    v-model="novaCategoriaInput"
-                                    class="text-input flex-1"
-                                    :class="{ 'error-input': erros.categoria }"
-                                    maxlength="50"
-                                    :disabled="adicionandoCategoria"
-                                    placeholder="Outra categoria..."
-                                    @keyup.enter.prevent="adicionarCategoriaPersonalizada"
-                                />
-                                <button
-                                    type="button"
-                                    class="btn-add-cat-btn"
-                                    :disabled="adicionandoCategoria || !novaCategoriaInput.trim()"
-                                    @click="adicionarCategoriaPersonalizada"
-                                >
-                                    {{ adicionandoCategoria ? '...' : '+' }}
-                                </button>
-                            </div>
                         </div>
                     </div>
 
@@ -213,7 +192,6 @@ import {
     putComunidade,
     getBuscarComunidade,
     getListarCategoriasComunidade,
-    postCategoriaComunidade,
     obterIdUsuarioLogado
 } from '@/services/comunidades';
 
@@ -234,7 +212,6 @@ const modoEdicao = computed(() => Boolean(comunidadeIdEdicao.value));
 const sucessoCriacao = ref(false);
 const carregandoInicial = ref(false);
 const salvando = ref(false);
-const adicionandoCategoria = ref(false);
 const enviandoCapa = ref(false);
 const enviandoAvatar = ref(false);
 const erroApi = ref('');
@@ -248,7 +225,6 @@ const previewAvatar = ref(null);
 
 const todasCategoriasApi = ref([]);
 const categoriasDisponiveis = ref([]);
-const novaCategoriaInput = ref('');
 
 const form = reactive({
     nome: '',
@@ -483,66 +459,6 @@ const tratarUploadAvatar = async (event) => {
 const selecionarCategoria = (nomeCategoria) => {
     form.categoria = nomeCategoria;
     erros.categoria = false;
-};
-
-const adicionarCategoriaPersonalizada = async () => {
-    const catNome = novaCategoriaInput.value.trim();
-    if (!catNome || catNome.length > 50 || adicionandoCategoria.value) return;
-
-    erroApi.value = '';
-    erros.categoria = false;
-
-    // Se já existe na lista da API (mesmo além das 16 primeiras), apenas traz para as 16 visíveis e seleciona
-    const existenteNaApi = todasCategoriasApi.value.find(
-        c => c.nome.toLowerCase() === catNome.toLowerCase()
-    );
-
-    if (existenteNaApi) {
-        const jaVisivel = categoriasDisponiveis.value.some(
-            c => c.nome.toLowerCase() === existenteNaApi.nome.toLowerCase()
-        );
-        if (!jaVisivel) {
-            categoriasDisponiveis.value = [existenteNaApi, ...categoriasDisponiveis.value].slice(
-                0,
-                LIMITE_CATEGORIAS_EXIBIDAS
-            );
-        }
-        form.categoria = existenteNaApi.nome;
-        novaCategoriaInput.value = '';
-        return;
-    }
-
-    adicionandoCategoria.value = true;
-    try {
-        const res = await postCategoriaComunidade({
-            categoria_principal: catNome
-        });
-
-        const dadosCriados = res?.response?.dados || res?.response || res?.dados || res || {};
-        const novaCategoria = {
-            id: dadosCriados?.id ? Number(dadosCriados.id) : null,
-            nome: String(
-                dadosCriados?.categoria_principal ||
-                dadosCriados?.categoria ||
-                dadosCriados?.nome ||
-                catNome
-            ).trim()
-        };
-
-        todasCategoriasApi.value.unshift(novaCategoria);
-        categoriasDisponiveis.value = [novaCategoria, ...categoriasDisponiveis.value].slice(
-            0,
-            LIMITE_CATEGORIAS_EXIBIDAS
-        );
-
-        form.categoria = novaCategoria.nome;
-        novaCategoriaInput.value = '';
-    } catch (erro) {
-        console.error('Erro ao cadastrar categoria de comunidade:', erro);
-        erroApi.value = erro.message || 'Não foi possível cadastrar a nova categoria.';
-    } finally {
-        adicionandoCategoria.value = false;
-    }
 };
 
 const validarECriarComunidade = async () => {

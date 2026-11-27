@@ -296,6 +296,7 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
 import { authService } from '@/services/authService';
+import { getMinhasComunidades } from '@/services/usuarios';
 import {
     postReceita,
     putReceita,
@@ -305,7 +306,6 @@ import {
     getListarCategorias,
     getListarTags
 } from '@/services/catalogo';
-import { getListarComunidades } from '@/services/comunidades';
 
 const router = useRouter();
 const route = useRoute();
@@ -489,7 +489,7 @@ const carregarOpcoesDaApi = async () => {
     const [catRes, tagsRes, comRes] = await Promise.all([
         getListarCategorias().catch(() => null),
         getListarTags({ limite: 50 }).catch(() => null),
-        getListarComunidades({ limite: 100 }).catch(() => null)
+        getMinhasComunidades().catch(() => null)
     ]);
 
     const listaCategorias = extrairLista(catRes);
@@ -510,20 +510,13 @@ const carregarOpcoesDaApi = async () => {
             .filter(t => t.nome.length > 0);
     }
 
-    const listaComunidades = extrairLista(comRes);
-    if (listaComunidades.length > 0) {
-        const possuiFlagParticipacao = listaComunidades.some(
-            c => typeof c.participa === 'boolean' || typeof c.eh_membro === 'boolean'
-        );
-        const filtradas = possuiFlagParticipacao
-            ? listaComunidades.filter(c => c.participa === true || c.eh_membro === true)
-            : listaComunidades;
-
-        comunidadesDisponiveis.value = filtradas.map(c => ({
+    const listaComunidades = comRes?.response?.comunidade || extrairLista(comRes);
+    comunidadesDisponiveis.value = Array.isArray(listaComunidades)
+        ? listaComunidades.map(c => ({
             id: Number(c.id),
             nome: c.nome
-        }));
-    }
+        })).filter(c => Number.isInteger(c.id) && c.id > 0 && c.nome)
+        : [];
 };
 
 const preencherFormularioParaEdicao = async (id) => {

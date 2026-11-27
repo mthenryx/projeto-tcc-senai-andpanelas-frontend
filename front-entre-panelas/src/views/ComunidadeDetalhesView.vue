@@ -126,17 +126,37 @@
                     </div>
 
                     <div v-if="abaAtiva === 'receitas'" class="lista-receitas-grid">
-                        <RecipeCard v-for="rec in receitasComunidade" :key="rec.id" :id="rec.id" :imagemUrl="rec.imagem_url"
-                            :titulo="rec.titulo" :tempo="rec.tempo" :porcoes="String(rec.porcoes)" :custo="rec.custo"
-                            :curtidas="rec.curtidas" :comentarios="rec.comentarios" :autorNome="rec.autor_nome"
-                            :authorIniciais="obterIniciais(rec.autor_nome)" :dificuldade="rec.dificuldade"
-                            v-model:salvo="rec.salvo" @click="irParaReceita(rec.id)" />
-                        <div v-if="receitasComunidade.length === 0" class="sem-resultados">
-                            <p>Nenhuma receita cadastrada nesta comunidade ainda.</p>
+                        <div v-if="carregandoReceitas" class="sem-resultados">
+                            <p>Carregando receitas da comunidade...</p>
                         </div>
+                        <div v-else-if="erroReceitas" class="sem-resultados">
+                            <p>{{ erroReceitas }}</p>
+                        </div>
+                        <template v-else>
+                            <RecipeCard v-for="rec in receitasVisiveis" :key="rec.id" :id="rec.id" :imagemUrl="rec.imagem_url"
+                                :titulo="rec.titulo" :tempo="rec.tempo" :porcoes="rec.porcoes" :custo="rec.custo"
+                                :curtidas="rec.curtidas" :comentarios="rec.comentarios" :autorNome="rec.autor_nome"
+                                :authorIniciais="obterIniciais(rec.autor_nome)" :dificuldade="rec.dificuldade"
+                                v-model:salvo="rec.salvo" />
+                            <div v-if="receitasComunidade.length === 0" class="sem-resultados">
+                                <p>Nenhuma receita cadastrada nesta comunidade ainda.</p>
+                            </div>
+                            <button
+                                v-if="receitasVisiveis.length < receitasComunidade.length"
+                                type="button"
+                                class="btn-carregar-mais-receitas"
+                                @click="carregarMaisReceitas"
+                            >
+                                Carregar mais receitas
+                            </button>
+                        </template>
                     </div>
 
                     <div v-else-if="abaAtiva === 'membros'" class="lista-membros-vertical">
+                        <div v-if="carregandoMembros" class="sem-resultados">
+                            <p>Carregando membros da comunidade...</p>
+                        </div>
+                        <template v-else>
                         <div v-for="membro in comunidade.participantes" :key="membro.id" class="membro-card-item" @click="abrirPerfilMembro(membro.id)">
                             <div class="membro-left">
                                 <img v-if="membro.foto_url && membro.foto_url.trim() !== ''" :src="membro.foto_url"
@@ -163,6 +183,7 @@
                         <div v-if="comunidade.participantes.length === 0" class="sem-resultados">
                             <p>Nenhum membro listado nesta comunidade ainda.</p>
                         </div>
+                        </template>
                     </div>
                 </main>
             </template>
@@ -174,7 +195,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
 import ReportModal from '@/components/ReportModal.vue';
@@ -195,7 +216,10 @@ const route = useRoute();
 const abaAtiva = ref('receitas');
 const modalDenunciaAberto = ref(false);
 const carregando = ref(false);
+const carregandoReceitas = ref(false);
+const carregandoMembros = ref(false);
 const erroApi = ref('');
+const erroReceitas = ref('');
 const processandoParticipacao = ref(false);
 const excluindoComunidade = ref(false);
 
@@ -213,15 +237,24 @@ const comunidade = ref({
     quantidade_pessoas: 0,
     quantidade_receitas: 0,
     criador_id: null,
+    sou_criador: false,
     participantes: []
 });
 
 const receitasComunidade = ref([]);
+const limiteReceitasVisiveis = ref(12);
+
+const receitasVisiveis = computed(() => receitasComunidade.value.slice(0, limiteReceitasVisiveis.value));
+
+const carregarMaisReceitas = () => {
+    limiteReceitasVisiveis.value += 12;
+};
 
 const ehCriador = computed(() => {
-    return Boolean(usuarioAtualId.value) &&
-        Boolean(comunidade.value.criador_id) &&
-        Number(usuarioAtualId.value) === Number(comunidade.value.criador_id);
+    return Boolean(comunidade.value.sou_criador) ||
+        (Boolean(usuarioAtualId.value) &&
+            Boolean(comunidade.value.criador_id) &&
+            Number(usuarioAtualId.value) === Number(comunidade.value.criador_id));
 });
 
 const primeirosMembros = computed(() => {
@@ -274,7 +307,11 @@ const normalizarReceita = (rec) => ({
     id: Number(rec.id),
     titulo: rec.titulo || 'Receita',
     dificuldade: rec.dificuldade || rec.nivel_dificuldade || 'Fácil',
-    autor_nome: rec.autor_nome || rec.nome_usuario || rec.usuario?.nome || rec.autor || 'Chef',
+    autor_nome: (() => {
+        const usuario = Array.isArray(rec.usuario) ? rec.usuario[0] : rec.usuario;
+        const autor = typeof rec.autor === 'string' ? rec.autor : rec.autor?.nome;
+        return rec.autor_nome || rec.nome_usuario || usuario?.nome || autor || 'Chef';
+    })(),
     tempo: formatarTempoReceita(rec.tempo),
     porcoes: rec.porcao ?? rec.porcoes ?? rec.quantidade_porcoes ?? rec.id_porcao ?? 1,
     custo: rec.custo || 'Econômico',
@@ -284,36 +321,100 @@ const normalizarReceita = (rec) => ({
     imagem_url: rec.imagem_url || rec.foto || ''
 });
 
-const carregarDetalhesComunidade = async (idParam) => {
-    const id = Number(idParam);
-    if (!id) return;
+let sequenciaCarregamento = 0;
 
-    carregando.value = true;
-    erroApi.value = '';
+const carregarReceitasComunidade = async (id, sequencia) => {
+    carregandoReceitas.value = true;
+    erroReceitas.value = '';
 
     try {
-        usuarioAtualId.value = await obterIdUsuarioLogado();
-
-        const [comRes, recRes, membrosRes] = await Promise.all([
-            getBuscarComunidade(id),
-            getReceitasDaComunidade(id, { limite: 50 }).catch(() => null),
-            getMembrosComunidade(id).catch(() => null)
-        ]);
-
-        const dados = comRes?.response?.comunidade?.[0] || comRes?.response?.dados || comRes?.response || comRes?.dados || comRes;
-
-        if (!dados || !dados.nome) {
-            throw new Error('Comunidade não encontrada.');
+        const resposta = await getReceitasDaComunidade(id);
+        if (sequencia !== sequenciaCarregamento) return;
+        receitasComunidade.value = extrairLista(resposta).map(normalizarReceita);
+    } catch (erro) {
+        if (sequencia !== sequenciaCarregamento) return;
+        receitasComunidade.value = [];
+        if (erro?.status !== 404) {
+            erroReceitas.value = erro.message || 'Não foi possível carregar as receitas desta comunidade.';
         }
+    } finally {
+        if (sequencia === sequenciaCarregamento) {
+            carregandoReceitas.value = false;
+        }
+    }
+};
 
-        const listaParticipantesRaw = Array.isArray(membrosRes?.response) ? membrosRes.response : extrairLista(membrosRes);
+const carregarMembrosComunidade = async (id, sequencia) => {
+    carregandoMembros.value = true;
 
-        const participantesNormalizados = listaParticipantesRaw.map(m => ({
+    try {
+        const resposta = await getMembrosComunidade(id);
+        if (sequencia !== sequenciaCarregamento) return;
+
+        const lista = Array.isArray(resposta?.response) ? resposta.response : extrairLista(resposta);
+        const participantes = lista.map(m => ({
             id: Number(m.id || m.id_usuario),
             nome: m.nome || 'Membro',
             foto_url: m.foto_perfil || m.foto_url || m.foto || '',
             quantidade_receitas: Number(m.quantidade_receitas ?? m.total_receitas ?? 0)
         }));
+
+        comunidade.value.participantes = participantes;
+
+        const estaNaLista = usuarioAtualId.value
+            ? participantes.some(p => Number(p.id) === Number(usuarioAtualId.value))
+            : false;
+        ehParticipante.value = ehParticipante.value || estaNaLista;
+    } catch {
+        if (sequencia === sequenciaCarregamento) {
+            comunidade.value.participantes = [];
+        }
+    } finally {
+        if (sequencia === sequenciaCarregamento) {
+            carregandoMembros.value = false;
+        }
+    }
+};
+
+const carregarDetalhesComunidade = async (idParam) => {
+    const id = Number(idParam);
+    if (!id) return;
+
+    const sequencia = ++sequenciaCarregamento;
+    carregando.value = true;
+    carregandoReceitas.value = false;
+    carregandoMembros.value = false;
+    erroApi.value = '';
+    erroReceitas.value = '';
+    receitasComunidade.value = [];
+    limiteReceitasVisiveis.value = 12;
+    comunidade.value = {
+        id,
+        nome: '',
+        descricao: '',
+        banner_url: BANNER_FALLBACK,
+        foto_url: '',
+        quantidade_pessoas: 0,
+        quantidade_receitas: 0,
+        criador_id: null,
+        sou_criador: false,
+        participantes: []
+    };
+
+    try {
+        const respostaComunidade = await getBuscarComunidade(id);
+
+        if (sequencia !== sequenciaCarregamento) return;
+
+        const dados = respostaComunidade?.response?.comunidade?.[0]
+            || respostaComunidade?.response?.dados
+            || respostaComunidade?.response
+            || respostaComunidade?.dados
+            || respostaComunidade;
+
+        if (!dados || !dados.nome) {
+            throw new Error('Comunidade não encontrada.');
+        }
 
         const criadorId = Number(
             dados.criador_id ||
@@ -323,45 +424,49 @@ const carregarDetalhesComunidade = async (idParam) => {
             0
         );
 
-        const listaReceitas = extrairLista(recRes).map(normalizarReceita);
-        receitasComunidade.value = listaReceitas;
-
         comunidade.value = {
             id: Number(dados.id || id),
             nome: dados.nome,
             descricao: dados.descricao || '',
             banner_url: dados.banner_url || dados.banner || dados.foto_capa || dados.foto_url || BANNER_FALLBACK,
             foto_url: dados.foto_url || dados.foto || dados.icone || '',
-            quantidade_pessoas: Number(dados.qtd_membros ?? dados.quantidade_pessoas ?? dados.total_membros ?? participantesNormalizados.length ?? 0),
-            quantidade_receitas: Number(dados.qtd_receitas ?? dados.quantidade_receitas ?? dados.total_receitas ?? listaReceitas.length ?? 0),
+            quantidade_pessoas: Number(dados.qtd_membros ?? dados.quantidade_pessoas ?? dados.total_membros ?? 0),
+            quantidade_receitas: Number(dados.qtd_receitas ?? dados.quantidade_receitas ?? dados.total_receitas ?? 0),
             criador_id: criadorId,
-            participantes: participantesNormalizados
+            sou_criador: Boolean(dados.sou_criador),
+            participantes: []
         };
 
-        const estaNaLista = usuarioAtualId.value
-            ? participantesNormalizados.some(p => Number(p.id) === Number(usuarioAtualId.value))
-            : false;
+        ehParticipante.value = Boolean(
+            dados.participa || dados.eh_membro || dados.participando
+        );
 
-        ehParticipante.value = Boolean(dados.participa || dados.eh_membro || dados.participando || estaNaLista);
-    } catch (erro) {
-        console.error('Erro ao carregar detalhes da comunidade:', erro);
-        erroApi.value = erro.message || 'Erro ao carregar os detalhes da comunidade.';
-    } finally {
         carregando.value = false;
+        void obterIdUsuarioLogado().then((idUsuario) => {
+            if (sequencia === sequenciaCarregamento && idUsuario) {
+                usuarioAtualId.value = idUsuario;
+            }
+        }).catch(() => {});
+        void carregarReceitasComunidade(id, sequencia);
+        void carregarMembrosComunidade(id, sequencia);
+    } catch (erro) {
+        if (sequencia === sequenciaCarregamento) {
+            console.error('Erro ao carregar detalhes da comunidade:', erro);
+            erroApi.value = erro.message || 'Erro ao carregar os detalhes da comunidade.';
+        }
+    } finally {
+        if (sequencia === sequenciaCarregamento) {
+            carregando.value = false;
+        }
     }
 };
-
-onMounted(() => {
-    carregarDetalhesComunidade(route.params.id);
-});
 
 watch(
     () => route.params.id,
     (novoId) => {
-        if (novoId) {
-            carregarDetalhesComunidade(novoId);
-        }
-    }
+        if (novoId) carregarDetalhesComunidade(novoId);
+    },
+    { immediate: true }
 );
 
 const abrirPerfilMembro = (membroId) => {
@@ -370,10 +475,6 @@ const abrirPerfilMembro = (membroId) => {
 
 const voltar = () => {
     router.back();
-};
-
-const irParaReceita = (id) => {
-    router.push({ name: 'receita', params: { id } });
 };
 
 const obterIniciais = (nome) => {
@@ -828,6 +929,19 @@ const compartilhar = () => {
     display: flex;
     flex-direction: column;
     gap: 20px;
+}
+
+.btn-carregar-mais-receitas {
+    align-self: center;
+    min-width: 220px;
+    padding: 12px 20px;
+    border: 1px solid var(--verde);
+    border-radius: 14px;
+    background-color: #ffffff;
+    color: var(--marrom);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 .sem-resultados {

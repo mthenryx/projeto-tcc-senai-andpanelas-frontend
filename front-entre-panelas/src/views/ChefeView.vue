@@ -188,25 +188,33 @@ const extrairIdDoToken = (token) => {
 };
 
 const obterIdUsuarioLogado = async () => {
-    const usuarioSalvo = authService.getUser();
-    if (usuarioSalvo?.id) {
-        localStorage.setItem('id_usuario', String(usuarioSalvo.id));
-        return Number(usuarioSalvo.id);
+    const idAutenticado = Number(authService.getUserId?.());
+    if (Number.isInteger(idAutenticado) && idAutenticado > 0) {
+        localStorage.setItem('id_usuario', String(idAutenticado));
+        return idAutenticado;
     }
 
-    const idDiretoStorage = localStorage.getItem('id_usuario');
-    if (idDiretoStorage) {
-        return Number(idDiretoStorage);
+    const usuarioSalvo = authService.getUser();
+    const idUsuarioSalvo = Number(usuarioSalvo?.id ?? usuarioSalvo?.id_usuario ?? usuarioSalvo?.usuario?.id);
+    if (Number.isInteger(idUsuarioSalvo) && idUsuarioSalvo > 0) {
+        localStorage.setItem('id_usuario', String(idUsuarioSalvo));
+        return idUsuarioSalvo;
+    }
+
+    const idDiretoStorage = Number(localStorage.getItem('id_usuario'));
+    if (Number.isInteger(idDiretoStorage) && idDiretoStorage > 0) {
+        return idDiretoStorage;
     }
 
     try {
         const res = await getUsuarioLogado();
-        const dadosUsuario = res?.response?.dados || res?.dados || res;
+        const dadosUsuario = res?.response?.usuario || res?.response?.dados || res?.usuario || res?.dados || res;
+        const idUsuario = Number(dadosUsuario?.id ?? dadosUsuario?.id_usuario);
 
-        if (dadosUsuario?.id) {
-            authService.setUser({ ...usuarioSalvo, ...dadosUsuario });
-            localStorage.setItem('id_usuario', String(dadosUsuario.id));
-            return Number(dadosUsuario.id);
+        if (Number.isInteger(idUsuario) && idUsuario > 0) {
+            authService.setUser({ ...usuarioSalvo, ...dadosUsuario, id: idUsuario });
+            localStorage.setItem('id_usuario', String(idUsuario));
+            return idUsuario;
         }
     } catch {
         const idToken = extrairIdDoToken(authService.getToken());
@@ -229,14 +237,60 @@ const verificarStatusChefinho = async () => {
     }
 };
 
+const obterChaveConversasLocais = () => {
+    const idUsuario = authService.getUserId?.() || localStorage.getItem('id_usuario') || 'usuario';
+    return `entre-panelas:chefinho:conversas:${idUsuario}`;
+};
+
+const lerConversasLocais = () => {
+    try {
+        const dados = JSON.parse(localStorage.getItem(obterChaveConversasLocais()) || '[]');
+        return Array.isArray(dados) ? dados : [];
+    } catch {
+        return [];
+    }
+};
+
+const salvarConversasLocais = () => {
+    try {
+        localStorage.setItem(obterChaveConversasLocais(), JSON.stringify(conversasRecentes.value));
+    } catch {
+        erroApi.value = 'Não foi possível armazenar o histórico local neste navegador.';
+    }
+};
+
+const atualizarConversaLocal = () => {
+    if (!conversaAtualId.value) return;
+    const mensagens = mensagensAtuais.value
+        .filter(msg => !msg.padrao && !msg.digitando)
+        .map(msg => ({ remetente: msg.remetente, texto: msg.texto }));
+    const primeiraMensagem = mensagens.find(msg => msg.remetente === 'user');
+    const id = Number(conversaAtualId.value);
+    const conversa = {
+        id,
+        titulo: primeiraMensagem?.texto?.slice(0, 100) || 'Nova conversa',
+        mensagens,
+        atualizado_em: new Date().toISOString()
+    };
+    const lista = conversasRecentes.value.filter(item => Number(item.id) !== id);
+    conversasRecentes.value = [conversa, ...lista];
+    salvarConversasLocais();
+};
+
 const carregarListaConversas = async () => {
     carregandoConversas.value = true;
+    conversasRecentes.value = lerConversasLocais();
     try {
         const res = await getListarConversasChefinho();
-        const lista = res?.response?.dados || res?.dados || [];
-        conversasRecentes.value = Array.isArray(lista) ? lista : [];
-    } catch (error) {
-        erroApi.value = error.message || 'Não foi possível carregar as conversas recentes.';
+        const lista = res?.response?.conversas || res?.response?.dados || res?.dados || [];
+        if (Array.isArray(lista)) {
+            const idsLocais = new Set(conversasRecentes.value.map(item => Number(item.id)));
+            const conversasServidor = lista.filter(item => !idsLocais.has(Number(item.id)));
+            conversasRecentes.value = [...conversasRecentes.value, ...conversasServidor];
+            salvarConversasLocais();
+        }
+    } catch {
+        erroApi.value = '';
     } finally {
         carregandoConversas.value = false;
     }
@@ -303,8 +357,14 @@ const enviarMensagem = async (textoParaEnviar) => {
                 throw new Error('A API não retornou o ID da conversa criada.');
             }
 
-            conversaAtualId.value = idConversaCriada;
-            await carregarListaConversas();
+            conversaAtualId.value = Number(idConversaCriada);
+            conversasRecentes.value = [{
+                id: Number(idConversaCriada),
+                titulo: textoLimpo.slice(0, 100),
+                mensagens: [],
+                atualizado_em: new Date().toISOString()
+            }, ...conversasRecentes.value.filter(item => Number(item.id) !== Number(idConversaCriada))];
+            salvarConversasLocais();
         }
 
         const resMensagem = await postMensagemChefinho(conversaAtualId.value, {
@@ -322,8 +382,10 @@ const enviarMensagem = async (textoParaEnviar) => {
             remetente: 'chefinho',
             texto: textoResposta
         });
+        atualizarConversaLocal();
     } catch (error) {
         mensagensAtuais.value.pop();
+        atualizarConversaLocal();
         erroApi.value = error.message || 'Erro ao enviar mensagem para o Chefinho.';
         await verificarStatusChefinho();
     } finally {
@@ -342,19 +404,24 @@ const carregarConversa = async (id) => {
     conversasAbertas.value = false;
 
     try {
-        const res = await getBuscarConversaChefinho(id);
-        const mensagensApi = res?.response?.mensagens || res?.mensagens || [];
-
-        if (Array.isArray(mensagensApi) && mensagensApi.length > 0) {
-            mensagensAtuais.value = mensagensApi.map((msg) => ({
-                remetente: ['user', 'usuario'].includes(msg.tipo_remetente) ? 'user' : 'chefinho',
-                texto: msg.conteudo
-            }));
+        const conversaLocal = lerConversasLocais().find(item => Number(item.id) === Number(id));
+        if (conversaLocal && Array.isArray(conversaLocal.mensagens)) {
+            mensagensAtuais.value = [mensagemPadrao, ...conversaLocal.mensagens];
         } else {
-            mensagensAtuais.value = [mensagemPadrao];
+            const res = await getBuscarConversaChefinho(id);
+            const mensagensApi = res?.response?.mensagens || res?.mensagens || [];
+            if (Array.isArray(mensagensApi) && mensagensApi.length > 0) {
+                mensagensAtuais.value = [mensagemPadrao, ...mensagensApi.map((msg) => ({
+                    remetente: ['user', 'usuario'].includes(msg.tipo_remetente) ? 'user' : 'chefinho',
+                    texto: msg.conteudo
+                }))];
+            } else {
+                mensagensAtuais.value = [mensagemPadrao];
+            }
         }
-    } catch (error) {
-        erroApi.value = error.message || 'Erro ao carregar os detalhes da conversa.';
+    } catch {
+        mensagensAtuais.value = [mensagemPadrao];
+        erroApi.value = '';
     } finally {
         carregandoMensagens.value = false;
         await rolarParaBaixo();
@@ -367,22 +434,26 @@ const excluirConversa = async (id) => {
 
     try {
         await deleteConversaChefinho(id);
-        conversasRecentes.value = conversasRecentes.value.filter((c) => c.id !== id);
+    } catch {
+        erroApi.value = '';
+    }
 
-        if (conversaAtualId.value === id) {
-            conversaAtualId.value = null;
-            mensagensAtuais.value = [mensagemPadrao];
-        }
-    } catch (error) {
-        erroApi.value = error.message || 'Não foi possível excluir a conversa.';
+    conversasRecentes.value = conversasRecentes.value.filter((c) => Number(c.id) !== Number(id));
+    salvarConversasLocais();
+
+    if (Number(conversaAtualId.value) === Number(id)) {
+        conversaAtualId.value = null;
+        mensagensAtuais.value = [mensagemPadrao];
     }
 };
 
-onMounted(() => {
+onMounted(async () => {
     document.addEventListener('click', fecharMenuExterno);
-    obterIdUsuarioLogado();
-    verificarStatusChefinho();
-    carregarListaConversas();
+    await obterIdUsuarioLogado();
+    await Promise.all([
+        verificarStatusChefinho(),
+        carregarListaConversas()
+    ]);
 });
 
 onUnmounted(() => {

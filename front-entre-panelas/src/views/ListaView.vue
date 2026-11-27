@@ -159,7 +159,9 @@
                                             </svg>
                                         </div>
                                         <div class="item-textos">
-                                            <span class="item-nome" :class="{ 'riscado': item.comprado }">{{ item.nome }}</span>
+                                            <span class="item-nome" :class="{ 'riscado': item.comprado }">
+                                                {{ item.nome }}<span v-if="item.unidade" class="item-unidade"> · {{ item.unidade }}</span>
+                                            </span>
                                             <span class="item-receita-origem" v-if="item.receitaOrigem">{{ item.receitaOrigem }}</span>
                                         </div>
                                     </div>
@@ -209,6 +211,7 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
 import { authService } from '@/services/authService';
+import { getBuscarReceita } from '@/services/receitas';
 import {
     getListaComprasReceitas,
     getListaComprasDaReceita,
@@ -268,14 +271,20 @@ const mapearUnidadeMedida = (idUnidade) => {
     return encontrada ? encontrada.nome : '';
 };
 
-const formatarQuantidadeItem = (quantidade, idUnidadeMedida) => {
-    const qtdStr = String(quantidade ?? '').trim();
-    if (!qtdStr) return '1 un';
-    if (/^\d+([.,]\d+)?$/.test(qtdStr)) {
-        const unidade = mapearUnidadeMedida(idUnidadeMedida);
-        return unidade ? `${qtdStr} ${unidade}` : qtdStr;
+const extrairUnidadeTexto = (valor) => {
+    if (valor === null || valor === undefined) return '';
+    if (typeof valor === 'object') {
+        return String(valor.unidade ?? valor.sigla ?? valor.nome ?? valor.medida ?? '').trim();
     }
-    return qtdStr;
+    return String(valor).trim();
+};
+
+const extrairDadosReceita = (resposta) => {
+    const dados = resposta?.response;
+    if (Array.isArray(dados)) return dados[0] || {};
+    if (Array.isArray(dados?.receita)) return dados.receita[0] || {};
+    if (Array.isArray(dados?.dados)) return dados.dados[0] || {};
+    return dados?.receita ?? dados?.dados ?? resposta?.receita ?? resposta?.dados ?? dados ?? {};
 };
 
 const classificarCategoria = (nomeIngrediente) => {
@@ -357,8 +366,24 @@ const carregarListaCompras = async () => {
         const gruposDeItens = await Promise.all(
             receitasNormalizadas.map(async (rec) => {
                 try {
-                    const resItens = await getListaComprasDaReceita(rec.id, { status: 'Todos' });
+                    const [resItens, resReceita] = await Promise.all([
+                        getListaComprasDaReceita(rec.id, { status: 'Todos' }),
+                        getBuscarReceita(rec.id).catch(() => null)
+                    ]);
                     const listaItens = extrairLista(resItens);
+                    const dadosReceita = extrairDadosReceita(resReceita);
+                    const ingredientesReceita = Array.isArray(dadosReceita?.ingredientes)
+                        ? dadosReceita.ingredientes
+                        : (Array.isArray(dadosReceita?.ingrediente) ? dadosReceita.ingrediente : []);
+                    const unidadesPorIngrediente = new Map();
+                    ingredientesReceita.forEach((ingrediente) => {
+                        const idIngrediente = Number(ingrediente.id_ingrediente ?? ingrediente.id);
+                        const unidadeIngrediente = extrairUnidadeTexto(ingrediente.unidade_medida)
+                            || extrairUnidadeTexto(ingrediente.unidade);
+                        if (Number.isInteger(idIngrediente) && idIngrediente > 0 && unidadeIngrediente) {
+                            unidadesPorIngrediente.set(idIngrediente, unidadeIngrediente);
+                        }
+                    });
 
                     return listaItens.map((item) => {
                         const nomeItem = String(item.nome || item.nome_ingrediente || '').trim();
@@ -366,12 +391,22 @@ const carregarListaCompras = async () => {
                         const comprado =
                             Number(item.id_status) === 1 ||
                             String(item.status || '').toLowerCase() === 'comprado';
+                        const idIngrediente = Number(item.id_ingrediente ?? item.ingrediente_id ?? item.id);
+                        const unidade = extrairUnidadeTexto(item.unidade_medida)
+                            || extrairUnidadeTexto(item.unidade)
+                            || unidadesPorIngrediente.get(idIngrediente)
+                            || mapearUnidadeMedida(item.id_unidade_medida);
+                        const quantidadeBase = String(item.quantidade ?? '').trim();
+                        const quantidadeFormatada = quantidadeBase && unidade && !quantidadeBase.toLowerCase().endsWith(unidade.toLowerCase())
+                            ? `${quantidadeBase} ${unidade}`
+                            : (quantidadeBase || (unidade ? `1 ${unidade}` : '1'));
 
                         return {
                             id: Number(item.id),
                             receitaId: rec.id,
                             nome: nomeItem,
-                            quantidade: formatarQuantidadeItem(item.quantidade, item.id_unidade_medida),
+                            quantidade: quantidadeFormatada,
+                            unidade,
                             id_unidade_medida: item.id_unidade_medida ? Number(item.id_unidade_medida) : null,
                             categoria: classif.categoria,
                             icone: classif.icone,
@@ -1046,6 +1081,12 @@ header.header-normal {
     font-size: 14px;
     font-weight: 600;
     color: var(--marrom);
+}
+
+.item-unidade {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--cinza);
 }
 
 .item-nome.riscado {

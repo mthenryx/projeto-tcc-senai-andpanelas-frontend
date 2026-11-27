@@ -165,13 +165,6 @@
                             </div>
                         </template>
 
-                        <ReportModal 
-                            :is-open="isReportOpen" 
-                            :tipo="tipoDenuncia" 
-                            :target-id="targetIdDenuncia"
-                            @close="isReportOpen = false"
-                            @send="tratarEnvioDenuncia"
-                        />
                     </div>
                 </template>
             </div>
@@ -184,13 +177,11 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import BarraNavegacao from '@/components/BarraNavegacao.vue';
 import HeaderAplicacao from '@/components/HeaderAplicacao.vue';
-import UserCarousel from '@/components/UserCarousel.vue';
 import UserSearchModal from '@/components/UserSearchModal.vue';
 import RecipeCard from '@/components/RecipeCard.vue';
 import RecipeCardMini from '@/components/RecipeCardMini.vue';
 import RecipeBannerCard from '@/components/RecipeBannerCard.vue';
 import RecipePodiumRanking from '@/components/RecipePodiumRanking.vue';
-import ReportModal from '@/components/ReportModal.vue';
 import LoadingSpinner from '@/components/LoadingSpinner.vue';
 
 import { authService } from '@/services/authService';
@@ -281,10 +272,6 @@ const tabs = [
 const listaDeUsuarios = ref([]);
 const isModalOpen = ref(false);
 const idsUsuariosSeguidos = ref(new Set());
-
-const usuariosSeguidos = computed(() => {
-    return listaDeUsuarios.value.filter(user => user.seguindo === true);
-});
 
 const fecharModal = () => { isModalOpen.value = false; };
 
@@ -502,14 +489,6 @@ const tratarSalvarReceita = async ({ id, salvo }) => {
         const alvo = todasReceitasFeed.value.find(r => r.id === id);
         if (alvo) alvo.salvo = !salvo;
     }
-};
-
-const isReportOpen = ref(false);
-const tipoDenuncia = ref('usuario');
-const targetIdDenuncia = ref(null);
-
-const tratarEnvioDenuncia = (dados) => {
-    console.log('Dados da denúncia enviados:', dados);
 };
 
 watch(abaAtiva, (novaAba) => {

@@ -134,10 +134,25 @@
                             </div>
 
                             <section v-if="carregandoSugestao || sugestaoChefinho" class="chefinho-suggestion-section">
-                                <div class="suggestion-heading">
-                                    <h3 class="section-label">Sugestão do Chefinho</h3>
-                                    <span v-if="carregandoSugestao" class="suggestion-status">Preparando uma ideia...</span>
+                                <div v-if="sugestaoChefinho" class="chefinho-suggestion-banner">
+                                    <div class="chefinho-suggestion-message">
+                                        <img src="/iconPaginas/chefe_icon_cinza.png" alt="Chefinho" />
+                                        <div>
+                                            <strong>Dica do Chefinho</strong>
+                                            <p>O Chefinho teve uma ideia, o que você acha?</p>
+                                        </div>
+                                    </div>
+                                    <div class="chefinho-suggestion-actions">
+                                        <button type="button" class="suggestion-like-btn" :disabled="salvandoSugestao" @click="salvarSugestaoChefinho">
+                                            {{ salvandoSugestao ? 'Salvando...' : 'Gostei' }}
+                                        </button>
+                                        <button type="button" class="suggestion-dislike-btn" :disabled="salvandoSugestao" @click="recusarSugestaoChefinho">
+                                            Não gostei
+                                        </button>
+                                    </div>
                                 </div>
+                                <div v-if="carregandoSugestao" class="suggestion-status">Preparando uma ideia...</div>
+                                <p v-if="mensagemErroSugestao" class="suggestion-error" role="alert">{{ mensagemErroSugestao }}</p>
                                 <RecipeCardMini
                                     v-if="sugestaoChefinho"
                                     :id="'chefinho-suggestion'"
@@ -347,8 +362,6 @@ import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import { authService } from '@/services/authService';
 import {
     getListarUsuarios,
-    getBuscarUsuarioPorUsername,
-    getSeguindoUsuario,
     postSeguirUsuario,
     postDeixarSeguirUsuario
 } from '@/services/usuarios';
@@ -357,6 +370,7 @@ import {
     getBuscarReceitasPorCategoria,
     postBuscarReceitasPorIngredientes,
     getBuscasEmAlta,
+    postSalvarSugestaoChefinho,
     postSalvarReceita,
     deleteSalvarReceita
 } from '@/services/receitas';
@@ -424,7 +438,6 @@ const placeholderDinamico = computed(() => {
 
 // --- Aba Usuários (Lógica adaptada do UserSearchModal + API) ---
 const listaUsuarios = ref([]);
-const resultadosBuscaUsuarios = ref(null);
 const idsUsuariosSeguidos = ref(new Set());
 
 const normalizarUsuario = (u) => ({
@@ -434,70 +447,30 @@ const normalizarUsuario = (u) => ({
     descricao: u.descricao || '',
     fotoUrl: u.foto_perfil || '',
     iniciais: gerarIniciais(u.nome),
-    seguindo: idsUsuariosSeguidos.value.has(Number(u.id))
+    seguindo: Boolean(u.segue_usuario) || idsUsuariosSeguidos.value.has(Number(u.id))
 });
 
 const usuariosExibidos = computed(() => {
-    const fonte = resultadosBuscaUsuarios.value !== null
-        ? resultadosBuscaUsuarios.value
-        : listaUsuarios.value;
+    const termo = termoBusca.value.toLocaleLowerCase('pt-BR').replace(/^@/, '').trim();
+    if (!termo) return listaUsuarios.value;
 
-    const termo = termoBusca.value.toLowerCase().replace(/^@/, '').trim();
-    if (!termo) return fonte;
-
-    return fonte.filter(user =>
-        user.nome.toLowerCase().includes(termo) ||
-        user.username.toLowerCase().includes(termo)
+    return listaUsuarios.value.filter(user =>
+        user.nome.toLocaleLowerCase('pt-BR').includes(termo) ||
+        user.username.toLocaleLowerCase('pt-BR').includes(termo)
     );
 });
 
 const carregarUsuariosIniciais = async () => {
     const userId = authService.getUserId();
     try {
-        const [usuariosRes, seguindoRes] = await Promise.all([
-            getListarUsuarios({ limite: 50 }).catch(() => null),
-            userId ? getSeguindoUsuario(userId, { limite: 100 }).catch(() => null) : Promise.resolve(null)
-        ]);
-
-        const seguidos = seguindoRes?.response?.dados || [];
-        idsUsuariosSeguidos.value = new Set(seguidos.map(u => Number(u.id)));
-
-        const dados = usuariosRes?.response?.dados || [];
+        const usuariosRes = await getListarUsuarios();
+        const dados = usuariosRes?.response?.usuarios || [];
         listaUsuarios.value = dados
             .filter(u => Number(u.id) !== Number(userId) && Number(u.id) !== 1)
             .map(normalizarUsuario);
     } catch (erro) {
         console.error('Erro ao listar usuários:', erro);
-    }
-};
-
-const buscarUsuariosNaApi = async () => {
-    const termoLimpo = termoBusca.value.trim();
-    if (!termoLimpo) {
-        resultadosBuscaUsuarios.value = null;
-        return;
-    }
-
-    carregando.value = true;
-    try {
-        if (termoLimpo.startsWith('@') && termoLimpo.length > 1) {
-            const res = await getBuscarUsuarioPorUsername({ nome: termoLimpo.slice(1) });
-            const dados = res?.response?.usuarios || res?.response?.receitas || res?.response?.dados || [];
-            resultadosBuscaUsuarios.value = dados
-                .filter(u => Number(u.id) !== Number(usuarioLogadoId.value) && Number(u.id) !== 1)
-                .map(normalizarUsuario);
-        } else {
-            const res = await getListarUsuarios({ busca: termoLimpo, limite: 30 });
-            const dados = res?.response?.usuarios || res?.response?.receitas || res?.response?.dados || [];
-            resultadosBuscaUsuarios.value = dados
-                .filter(u => Number(u.id) !== Number(usuarioLogadoId.value) && Number(u.id) !== 1)
-                .map(normalizarUsuario);
-        }
-    } catch (erro) {
-        console.error('Erro ao buscar usuários:', erro);
-        resultadosBuscaUsuarios.value = [];
-    } finally {
-        carregando.value = false;
+        listaUsuarios.value = [];
     }
 };
 
@@ -564,6 +537,8 @@ const resultadosReceitas = ref([]);
 const emAlta = ref([]);
 const sugestaoChefinho = ref(null);
 const carregandoSugestao = ref(false);
+const salvandoSugestao = ref(false);
+const mensagemErroSugestao = ref('');
 const ordenacaoReceitas = ref('relevancia');
 let sequenciaBuscaReceitas = 0;
 
@@ -612,6 +587,33 @@ const abrirSugestaoChefinho = () => {
     } catch (erro) {
         console.error('Não foi possível abrir a sugestão do Chefinho:', erro);
     }
+};
+
+
+const salvarSugestaoChefinho = async () => {
+    if (!sugestaoChefinho.value || salvandoSugestao.value) return;
+    salvandoSugestao.value = true;
+    mensagemErroSugestao.value = '';
+    try {
+        const resposta = await postSalvarSugestaoChefinho(sugestaoChefinho.value);
+        const idReceita = Number(resposta?.response?.id ?? resposta?.response?.receita?.id ?? resposta?.response?.id_receita);
+        if (!Number.isInteger(idReceita) || idReceita <= 0) {
+            throw new Error('A API não confirmou o cadastro da receita sugerida.')
+        }
+        sessionStorage.removeItem('entre-panelas:receita-sugestao-chefinho');
+        await router.push({ name: 'receita', params: { id: idReceita } });
+    } catch (erro) {
+        console.error('Erro ao salvar a sugestão do Chefinho:', erro);
+        mensagemErroSugestao.value = erro?.message || 'Não foi possível salvar a sugestão do Chefinho.';
+    } finally {
+        salvandoSugestao.value = false;
+    }
+};
+
+const recusarSugestaoChefinho = () => {
+    mensagemErroSugestao.value = '';
+    sugestaoChefinho.value = null;
+    sessionStorage.removeItem('entre-panelas:receita-sugestao-chefinho');
 };
 
 const carregarDadosReceitas = async () => {
@@ -849,14 +851,10 @@ const mudarAba = (aba) => {
     carregandoSugestao.value = false;
     abaAtiva.value = aba;
     termoBusca.value = '';
-    resultadosBuscaUsuarios.value = null;
     buscaReceitaAtiva.value = false;
 };
 
 const tratarDigitacaoBusca = () => {
-    if (abaAtiva.value === 'usuarios' && !termoBusca.value.trim()) {
-        resultadosBuscaUsuarios.value = null;
-    }
     if (abaAtiva.value === 'receitas' && !termoBusca.value.trim()) {
         ++sequenciaBuscaReceitas;
         buscaReceitaAtiva.value = false;
@@ -869,9 +867,7 @@ const tratarDigitacaoBusca = () => {
 const executarBusca = () => {
     if (!termoBusca.value.trim()) return;
 
-    if (abaAtiva.value === 'usuarios') {
-        buscarUsuariosNaApi();
-    } else if (abaAtiva.value === 'receitas') {
+    if (abaAtiva.value === 'receitas') {
         buscarReceitasPorNomeApi(termoBusca.value);
     }
 };
@@ -879,14 +875,12 @@ const executarBusca = () => {
 const resetarBusca = () => {
     ++sequenciaBuscaReceitas;
     termoBusca.value = '';
-    resultadosBuscaUsuarios.value = null;
     buscaReceitaAtiva.value = false;
     resultadosReceitas.value = [];
     sugestaoChefinho.value = null;
     carregandoSugestao.value = false;
 };
 
-const voltarParaHome = () => router.push('/home');
 const irParaGeladeira = () => router.push('/geladeira');
 const irParaChefinho = () => router.push('/chefinho');
 
@@ -1120,6 +1114,16 @@ onMounted(async () => {
     min-width: 0;
 }
 
+.user-card-left :deep(.user-avatar-component) {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    max-width: 48px !important;
+    max-height: 48px !important;
+    flex: 0 0 48px;
+}
+
 .user-card-info {
     display: flex;
     flex-direction: column;
@@ -1300,22 +1304,115 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
-    padding: 16px;
-    border: 1px solid var(--bege);
+    gap: 16px;
+    padding: 0;
+    border: 0;
     border-radius: 18px;
-    background: #fffdf9;
+    background: transparent;
 }
 
-.suggestion-heading {
+.chefinho-suggestion-banner {
+    width: 100%;
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px 22px;
+    border: 1px solid var(--bege);
+    border-radius: 16px;
+    background: #fff8e9;
+    box-sizing: border-box;
 }
 
-.suggestion-heading .section-label {
+.chefinho-suggestion-message {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.chefinho-suggestion-message img {
+    width: 54px;
+    height: 54px;
+    flex: 0 0 54px;
+    object-fit: contain;
+}
+
+.chefinho-suggestion-message strong {
+    display: block;
+    color: var(--marrom);
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.chefinho-suggestion-message p {
     margin: 0;
+    color: var(--marrom);
+    font-size: 14px;
+}
+
+.chefinho-suggestion-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.suggestion-like-btn,
+.suggestion-dislike-btn {
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.suggestion-like-btn {
+    background: #72bca5;
+    color: #fff;
+}
+
+.suggestion-dislike-btn {
+    background: #bc0b27;
+    color: #fff;
+}
+
+.suggestion-like-btn:disabled,
+.suggestion-dislike-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.chefinho-suggestion-section :deep(.recipe-card-mini) {
+    max-width: 380px;
+}
+
+.chefinho-suggestion-section :deep(.recipe-image-container) {
+    height: 212px;
+}
+
+@media (max-width: 650px) {
+    .chefinho-suggestion-banner {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .chefinho-suggestion-actions {
+        width: 100%;
+    }
+
+    .suggestion-like-btn,
+    .suggestion-dislike-btn {
+        flex: 1;
+    }
+}
+
+.suggestion-error {
+    margin: 8px 0 0;
+    color: #a12f2f;
+    font-size: 13px;
 }
 
 .suggestion-status {

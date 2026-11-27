@@ -246,8 +246,20 @@ const formatarTempo = (tempo) => {
 
 const formatarPorcoes = (porcoes) => {
     if (porcoes === null || porcoes === undefined || porcoes === '') return '1 porção'
-    if (typeof porcoes === 'number') return `${porcoes} ${porcoes === 1 ? 'porção' : 'porções'}`
-    return String(porcoes)
+
+    const valor = Array.isArray(porcoes) ? porcoes[0] : porcoes
+    const quantidade = valor && typeof valor === 'object'
+        ? valor.numero_porcao ?? valor.numero_porcoes ?? valor.quantidade ?? valor.porcao
+        : valor
+
+    if (quantidade === null || quantidade === undefined || quantidade === '') return '1 porção'
+
+    const numero = Number(quantidade)
+    if (Number.isFinite(numero)) {
+        return `${numero} ${numero === 1 ? 'porção' : 'porções'}`
+    }
+
+    return String(quantidade).trim() || '1 porção'
 }
 
 const formatarContador = (valor) => {

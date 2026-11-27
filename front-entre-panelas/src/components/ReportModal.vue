@@ -114,7 +114,7 @@ const props = defineProps({
     isOpen: { type: Boolean, default: false },
     tipo: {
         type: String,
-        default: 'usuario',
+        required: true,
         validator: (value) => ['usuario', 'comunidade', 'receita'].includes(value)
     },
     targetId: { type: [Number, String], default: null }
@@ -190,8 +190,10 @@ const enviarDenuncia = async () => {
             await postDenunciaComunidade(idAlvo, base);
         } else if (props.tipo === 'receita') {
             await postDenunciaReceita(idAlvo, base);
-        } else {
+        } else if (props.tipo === 'usuario') {
             await postDenunciaUsuario(idAlvo, base);
+        } else {
+            throw new Error('Tipo de denúncia inválido.');
         }
 
         emit('send', { tipo: props.tipo, targetId: idAlvo, ...base });

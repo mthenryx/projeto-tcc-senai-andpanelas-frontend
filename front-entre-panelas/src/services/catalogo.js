@@ -58,3 +58,27 @@ export async function postCategoriaComunidade(dados, jwt) {
     fallbackError: 'Erro ao cadastrar a categoria de comunidade!'
   })
 }
+
+export async function getListarDificuldades() {
+  return request('/dificuldade', {
+    fallbackError: 'Erro ao listar as dificuldades!'
+  })
+}
+
+export async function getListarCustos() {
+  return request('/custo', {
+    fallbackError: 'Erro ao listar os custos!'
+  })
+}
+
+export async function getListarPorcoes() {
+  return request('/porcao', {
+    fallbackError: 'Erro ao listar as porções!'
+  })
+}
+
+export async function getListarUnidadesMedida() {
+  return request('/unidade_medida', {
+    fallbackError: 'Erro ao listar as unidades de medida!'
+  })
+}

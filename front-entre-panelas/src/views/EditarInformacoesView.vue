@@ -47,13 +47,24 @@
                             <button
                                 type="button"
                                 class="botao-alterar-item"
-                                disabled
-                                title="A API atual não oferece um fluxo seguro de troca de e-mail sem alteração do banco de dados."
+                                :disabled="enviandoCodigo || camposDesbloqueados.email"
+                                @click="solicitarValidacao('email')"
                             >
-                                Indisponível
+                                Alterar
                             </button>
                         </div>
-                        <span class="texto-erro-input">A troca de e-mail depende de um fluxo de confirmação que não existe na API atual. O endereço permanece somente para consulta.</span>
+                        <div v-if="camposDesbloqueados.email && dadosAcesso.email.trim() !== emailOriginal" class="grupo-campo-info campo-senha-email">
+                            <label class="label-info">Senha atual para confirmar o novo e-mail</label>
+                            <input
+                                type="password"
+                                v-model="senhaAtualEmail"
+                                maxlength="15"
+                                autocomplete="current-password"
+                                class="input-personalizado"
+                                placeholder="Digite sua senha atual"
+                            />
+                        </div>
+                        <span v-if="errosCampos.email || erroEmailInvalido" class="texto-erro-input">{{ erroEmailInvalido ? 'Informe um endereço de e-mail válido.' : 'Não foi possível validar a alteração do e-mail.' }}</span>
                     </div>
 
                     <div class="grupo-campo-info">
@@ -124,7 +135,7 @@
                     </div>
 
                     <p class="aviso-rodape-info">
-                        Para alterar a senha ou a data de nascimento, enviaremos um código de confirmação para o e-mail atual. A troca de e-mail permanece indisponível nesta versão para preservar a segurança sem alterar o banco de dados.
+                        Para alterar a senha ou a data de nascimento, enviaremos um código de confirmação para o e-mail atual. Ao informar um novo e-mail, enviaremos outro código para confirmar o novo endereço antes de salvar as alterações.
                     </p>
                 </div>
 
@@ -215,7 +226,12 @@ import { reactive, ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import BarraNavegacao from '@/components/BarraNavegacao.vue'
 import { authService } from '@/services/authService'
-import { getUsuarioLogado, putUsuarioLogado } from '@/services/usuarios'
+import {
+    getUsuarioLogado,
+    putUsuarioLogado,
+    postSolicitarAlteracaoEmail,
+    postConfirmarAlteracaoEmail
+} from '@/services/usuarios'
 import { postRecuperarSenha, postVerificarCodigoReset, postRedefinirSenha } from '@/services/auth'
 
 const router = useRouter()
@@ -240,6 +256,9 @@ const salvando = ref(false)
 const emailOriginal = ref('')
 const dataNascimentoOriginal = ref('')
 const emailAlvoValidacao = ref('')
+const senhaAtualEmail = ref('')
+const emailNovoPendente = ref('')
+const continuarSalvamentoAposEmail = ref(false)
 const tempoRestanteReenvio = ref(40)
 let timerReenvio = null
 
@@ -341,9 +360,9 @@ const validarIdade = (dataStr) => {
 }
 
 const tratarMudancaEmail = () => {
-    // O campo permanece bloqueado enquanto a API não oferecer troca segura de e-mail.
     errosCampos.email = false
     erroEmailInvalido.value = false
+    mensagemErroGeral.value = ''
 }
 
 const tratarMudancaData = () => {
@@ -366,10 +385,6 @@ const enviarCodigoParaEmailAtual = async () => {
 
 const solicitarValidacao = async (campo) => {
     mensagemErroGeral.value = ''
-    if (campo === 'email') {
-        mensagemErroGeral.value = 'A troca de e-mail não está disponível na API atual. Nenhuma alteração foi enviada.'
-        return
-    }
     campoEmValidacao.value = campo
     if (!verificarSePrecisaValidar()) {
         desbloquearCampo(campo)
@@ -430,7 +445,17 @@ const reenviarCodigo = async () => {
     enviandoCodigo.value = true
     erroCodigoValidacao.value = false
     try {
-        await enviarCodigoParaEmailAtual()
+        if (campoEmValidacao.value === 'emailNovo') {
+            const resposta = await postSolicitarAlteracaoEmail({
+                email: emailNovoPendente.value,
+                senha: senhaAtualEmail.value
+            })
+            if (resposta?.response?.email_enviado === false) {
+                throw new Error('Não foi possível enviar o código para o novo e-mail.')
+            }
+        } else {
+            await enviarCodigoParaEmailAtual()
+        }
         iniciarTimerReenvio()
     } catch (error) {
         textoErroModal.value = error.message || 'Erro ao reenviar o código.'
@@ -451,13 +476,34 @@ const confirmarCodigoValidacao = async () => {
     validandoCodigo.value = true
     erroCodigoValidacao.value = false
     try {
-        await postVerificarCodigoReset({ email: emailOriginal.value, codigo })
-        ultimoCodigoValidado.value = codigo
-        ultimoTempoValidacao.value = Date.now()
-        modalValidacaoAberto.value = false
-        desbloquearCampo(campoEmValidacao.value)
-        codigoValidacao.value = ['', '', '', '', '', '']
-        if (timerReenvio) clearInterval(timerReenvio)
+        if (campoEmValidacao.value === 'emailNovo') {
+            const resposta = await postConfirmarAlteracaoEmail({ codigo })
+            const emailConfirmado = resposta?.response?.email || emailNovoPendente.value
+            emailOriginal.value = emailConfirmado
+            dadosAcesso.email = emailConfirmado
+            emailAlvoValidacao.value = emailConfirmado
+            const usuarioAtual = authService.getUser() || {}
+            authService.setUser({ ...usuarioAtual, email: emailConfirmado })
+            ultimoTempoValidacao.value = Date.now()
+            emailNovoPendente.value = ''
+            senhaAtualEmail.value = ''
+            errosCampos.email = false
+            erroEmailInvalido.value = false
+            modalValidacaoAberto.value = false
+            codigoValidacao.value = ['', '', '', '', '', '']
+            if (timerReenvio) clearInterval(timerReenvio)
+            const continuar = continuarSalvamentoAposEmail.value
+            continuarSalvamentoAposEmail.value = false
+            if (continuar) await concluirSalvamento()
+        } else {
+            await postVerificarCodigoReset({ email: emailOriginal.value, codigo })
+            ultimoCodigoValidado.value = codigo
+            ultimoTempoValidacao.value = Date.now()
+            modalValidacaoAberto.value = false
+            desbloquearCampo(campoEmValidacao.value)
+            codigoValidacao.value = ['', '', '', '', '', '']
+            if (timerReenvio) clearInterval(timerReenvio)
+        }
     } catch (error) {
         textoErroModal.value = error.message || 'Código inválido ou expirado.'
         erroCodigoValidacao.value = true
@@ -466,44 +512,11 @@ const confirmarCodigoValidacao = async () => {
     }
 }
 
-const salvarInformacoes = async () => {
-    mensagemErroGeral.value = ''
-    const senhaAlterada = camposDesbloqueados.senha
-    const dataAlterada = camposDesbloqueados.dataNascimento && dadosAcesso.dataNascimento !== dataNascimentoOriginal.value
-
-    if (senhaAlterada && (!dadosAcesso.senha.trim() || dadosAcesso.senha.trim().length < 6)) {
-        errosCampos.senha = true
-        mensagemErroGeral.value = 'A nova senha deve ter pelo menos 6 caracteres.'
-        return
-    }
-    if (senhaAlterada && dadosAcesso.senha.length > 15) {
-        errosCampos.senha = true
-        mensagemErroGeral.value = 'A nova senha deve ter no máximo 15 caracteres.'
-        return
-    }
-    if (dataAlterada && (!dadosAcesso.dataNascimento.trim() || !validarIdade(dadosAcesso.dataNascimento))) {
-        errosCampos.dataNascimento = true
-        erroIdadeInvalida.value = true
-        mensagemErroGeral.value = 'Informe uma data de nascimento válida.'
-        return
-    }
-    if (!senhaAlterada && !dataAlterada) {
-        router.push('/perfil')
-        return
-    }
-
+const concluirSalvamento = async () => {
     salvando.value = true
     try {
-        if (verificarSePrecisaValidar()) {
-            campoEmValidacao.value = senhaAlterada ? 'senha' : 'dataNascimento'
-            await enviarCodigoParaEmailAtual()
-            emailAlvoValidacao.value = emailOriginal.value
-            erroCodigoValidacao.value = false
-            codigoValidacao.value = ['', '', '', '', '', '']
-            modalValidacaoAberto.value = true
-            iniciarTimerReenvio()
-            return
-        }
+        const senhaAlterada = camposDesbloqueados.senha
+        const dataAlterada = camposDesbloqueados.dataNascimento && dadosAcesso.dataNascimento !== dataNascimentoOriginal.value
 
         if (senhaAlterada) {
             await postRedefinirSenha({
@@ -525,6 +538,92 @@ const salvarInformacoes = async () => {
         salvando.value = false
     }
 }
+
+const salvarInformacoes = async () => {
+    mensagemErroGeral.value = ''
+    const senhaAlterada = camposDesbloqueados.senha
+    const dataAlterada = camposDesbloqueados.dataNascimento && dadosAcesso.dataNascimento !== dataNascimentoOriginal.value
+    const emailAlterado = camposDesbloqueados.email && dadosAcesso.email.trim() !== emailOriginal.value
+    const emailNovo = dadosAcesso.email.trim()
+
+    if (emailAlterado && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNovo)) {
+        errosCampos.email = true
+        erroEmailInvalido.value = true
+        return
+    }
+    if (emailAlterado && !senhaAtualEmail.value.trim()) {
+        errosCampos.email = true
+        mensagemErroGeral.value = 'Informe sua senha atual para solicitar a troca de e-mail.'
+        return
+    }
+    if (senhaAlterada && (!dadosAcesso.senha.trim() || dadosAcesso.senha.trim().length < 6)) {
+        errosCampos.senha = true
+        mensagemErroGeral.value = 'A nova senha deve ter pelo menos 6 caracteres.'
+        return
+    }
+    if (senhaAlterada && dadosAcesso.senha.length > 15) {
+        errosCampos.senha = true
+        mensagemErroGeral.value = 'A nova senha deve ter no máximo 15 caracteres.'
+        return
+    }
+    if (dataAlterada && (!dadosAcesso.dataNascimento.trim() || !validarIdade(dadosAcesso.dataNascimento))) {
+        errosCampos.dataNascimento = true
+        erroIdadeInvalida.value = true
+        mensagemErroGeral.value = 'Informe uma data de nascimento válida.'
+        return
+    }
+    if (!emailAlterado && !senhaAlterada && !dataAlterada) {
+        router.push('/perfil')
+        return
+    }
+
+    if (verificarSePrecisaValidar()) {
+        campoEmValidacao.value = emailAlterado ? 'email' : (senhaAlterada ? 'senha' : 'dataNascimento')
+        salvando.value = true
+        try {
+            await enviarCodigoParaEmailAtual()
+            emailAlvoValidacao.value = emailOriginal.value
+            erroCodigoValidacao.value = false
+            codigoValidacao.value = ['', '', '', '', '', '']
+            modalValidacaoAberto.value = true
+            iniciarTimerReenvio()
+        } catch (error) {
+            mensagemErroGeral.value = error.message || 'Erro ao enviar o código de verificação para seu e-mail.'
+        } finally {
+            salvando.value = false
+        }
+        return
+    }
+
+    if (emailAlterado) {
+        salvando.value = true
+        try {
+            const resposta = await postSolicitarAlteracaoEmail({
+                email: emailNovo,
+                senha: senhaAtualEmail.value
+            })
+            if (resposta?.response?.email_enviado === false) {
+                throw new Error('Não foi possível enviar o código para o novo e-mail.')
+            }
+            emailNovoPendente.value = emailNovo
+            continuarSalvamentoAposEmail.value = true
+            campoEmValidacao.value = 'emailNovo'
+            emailAlvoValidacao.value = emailNovo
+            erroCodigoValidacao.value = false
+            codigoValidacao.value = ['', '', '', '', '', '']
+            modalValidacaoAberto.value = true
+            iniciarTimerReenvio()
+        } catch (error) {
+            mensagemErroGeral.value = error.message || 'Não foi possível enviar o código para o novo e-mail.'
+        } finally {
+            salvando.value = false
+        }
+        return
+    }
+
+    await concluirSalvamento()
+}
+
 </script>
 
 <style scoped>
@@ -701,6 +800,10 @@ const salvarInformacoes = async () => {
 
 .input-erro {
     border-color: var(--vermelho) !important;
+}
+
+.campo-senha-email {
+    margin-top: 12px;
 }
 
 .texto-erro-input,
